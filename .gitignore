@@ -1,0 +1,13 @@
+**/tmp
+**/.env
+**/static
+.DS_Store
+.codex
+AGENTS.md
+CLAUDE.md
+.pnpm-store
+.codex-home
+.claude
+test.sh
+test/
+start.sh

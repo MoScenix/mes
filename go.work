@@ -1,0 +1,13 @@
+go 1.25.5
+
+use (
+	./app/ai
+	./app/app
+	./app/bff
+	./app/document
+	./app/inventory
+	./app/user
+	./app/workorder
+	./common
+	./rpc_gen
+)

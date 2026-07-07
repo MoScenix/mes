@@ -1,0 +1,266 @@
+syntax = "proto3";
+
+package inventory;
+
+option go_package = "inventory";
+
+enum FlowType {
+  FLOW_TYPE_UNKNOWN = 0;
+  FLOW_TYPE_IN = 1;
+  FLOW_TYPE_OUT = 2;
+}
+
+enum FlowStatus {
+  FLOW_STATUS_UNKNOWN = 0;
+  FLOW_STATUS_DRAFT = 1;
+  FLOW_STATUS_SUBMITTED = 2;
+  FLOW_STATUS_APPROVED = 3;
+  FLOW_STATUS_REJECTED = 4;
+}
+
+enum StockStatus {
+  STOCK_STATUS_UNKNOWN = 0;
+  STOCK_STATUS_IN_STOCK = 1;
+  STOCK_STATUS_RESERVED = 2;
+  STOCK_STATUS_OUT_STOCK = 3;
+}
+
+enum QualityStatus {
+  QUALITY_STATUS_UNKNOWN = 0;
+  QUALITY_STATUS_PENDING = 1;
+  QUALITY_STATUS_QUALIFIED = 2;
+  QUALITY_STATUS_UNQUALIFIED = 3;
+}
+
+message ItemInfo {
+  int64 id = 1;
+  string name = 2;
+  string unit = 3;
+  string description = 4;
+  int64 totalCount = 5;
+  int64 inStockCount = 6;
+  int64 reservedCount = 7;
+  int64 outStockCount = 8;
+  int64 pendingCount = 9;
+  int64 qualifiedCount = 10;
+  int64 unqualifiedCount = 11;
+  int64 availableCount = 12;
+  string createTime = 13;
+  string updateTime = 14;
+}
+
+message ItemUnitInfo {
+  int64 id = 1;
+  int64 itemId = 2;
+  StockStatus stockStatus = 3;
+  QualityStatus qualityStatus = 4;
+  string description = 5;
+  string createTime = 6;
+  string updateTime = 7;
+}
+
+message InventoryFlowItemInfo {
+  int64 id = 1;
+  int64 inventoryFlowId = 2;
+  int64 itemId = 3;
+  int64 applyQuantity = 4;
+  int64 finishedQuantity = 5;
+  ItemInfo item = 6;
+}
+
+message InventoryFlowInfo {
+  int64 id = 1;
+  int64 fromUserId = 2;
+  int64 toUserId = 3;
+  FlowType flowType = 4;
+  FlowStatus flowStatus = 5;
+  string description = 6;
+  int64 approvedBy = 7;
+  string approvedAt = 8;
+  repeated InventoryFlowItemInfo items = 9;
+  repeated ItemUnitInfo itemUnits = 10;
+  string createTime = 11;
+  string updateTime = 12;
+}
+
+message AddItemReq {
+  string name = 1;
+  string unit = 2;
+  string description = 3;
+}
+
+message AddItemResp {
+  int64 id = 1;
+}
+
+message UpdateItemReq {
+  int64 id = 1;
+  string name = 2;
+  string unit = 3;
+  string description = 4;
+}
+
+message UpdateItemResp {
+  bool success = 1;
+}
+
+message GetItemReq {
+  int64 id = 1;
+}
+
+message GetItemResp {
+  ItemInfo item = 1;
+}
+
+message ListItemReq {
+  int64 pageNum = 1;
+  int64 pageSize = 2;
+  string namePrefix = 3;
+}
+
+message ListItemResp {
+  repeated ItemInfo itemList = 1;
+  int64 total = 2;
+}
+
+message AddItemUnitReq {
+  int64 itemId = 1;
+  StockStatus stockStatus = 2;
+  QualityStatus qualityStatus = 3;
+  string description = 4;
+}
+
+message AddItemUnitResp {
+  int64 id = 1;
+}
+
+message UpdateItemUnitStatusReq {
+  int64 id = 1;
+  StockStatus stockStatus = 2;
+  QualityStatus qualityStatus = 3;
+}
+
+message UpdateItemUnitStatusResp {
+  bool success = 1;
+}
+
+message GetItemUnitReq {
+  int64 id = 1;
+}
+
+message GetItemUnitResp {
+  ItemUnitInfo itemUnit = 1;
+}
+
+message ListItemUnitReq {
+  int64 pageNum = 1;
+  int64 pageSize = 2;
+  int64 itemId = 3;
+  StockStatus stockStatus = 4;
+  QualityStatus qualityStatus = 5;
+}
+
+message ListItemUnitResp {
+  repeated ItemUnitInfo itemUnitList = 1;
+  int64 total = 2;
+}
+
+message InventoryFlowItemReq {
+  int64 itemId = 1;
+  int64 applyQuantity = 2;
+}
+
+message CreateInventoryFlowReq {
+  int64 fromUserId = 1;
+  int64 toUserId = 2;
+  FlowType flowType = 3;
+  string description = 4;
+  repeated InventoryFlowItemReq items = 5;
+  repeated int64 itemUnitIds = 6;
+}
+
+message CreateInventoryFlowResp {
+  int64 id = 1;
+}
+
+message UpdateInventoryFlowDraftReq {
+  int64 id = 1;
+  int64 fromUserId = 2;
+  int64 toUserId = 3;
+  FlowType flowType = 4;
+  string description = 5;
+  repeated InventoryFlowItemReq items = 6;
+  repeated int64 itemUnitIds = 7;
+}
+
+message UpdateInventoryFlowDraftResp {
+  bool success = 1;
+}
+
+message DeleteInventoryFlowDraftReq {
+  int64 id = 1;
+}
+
+message DeleteInventoryFlowDraftResp {
+  bool success = 1;
+}
+
+message SubmitInventoryFlowReq {
+  int64 id = 1;
+}
+
+message SubmitInventoryFlowResp {
+  bool success = 1;
+}
+
+message AuditInventoryFlowReq {
+  int64 id = 1;
+  int64 approvedBy = 2;
+  bool approved = 3;
+}
+
+message AuditInventoryFlowResp {
+  bool success = 1;
+}
+
+message GetInventoryFlowReq {
+  int64 id = 1;
+}
+
+message GetInventoryFlowResp {
+  InventoryFlowInfo inventoryFlow = 1;
+}
+
+message ListInventoryFlowReq {
+  int64 pageNum = 1;
+  int64 pageSize = 2;
+  int64 fromUserId = 3;
+  int64 toUserId = 4;
+  FlowType flowType = 5;
+  FlowStatus flowStatus = 6;
+}
+
+message ListInventoryFlowResp {
+  repeated InventoryFlowInfo inventoryFlowList = 1;
+  int64 total = 2;
+}
+
+service InventoryService {
+  rpc AddItem(AddItemReq) returns (AddItemResp);
+  rpc UpdateItem(UpdateItemReq) returns (UpdateItemResp);
+  rpc GetItem(GetItemReq) returns (GetItemResp);
+  rpc ListItem(ListItemReq) returns (ListItemResp);
+
+  rpc AddItemUnit(AddItemUnitReq) returns (AddItemUnitResp);
+  rpc UpdateItemUnitStatus(UpdateItemUnitStatusReq) returns (UpdateItemUnitStatusResp);
+  rpc GetItemUnit(GetItemUnitReq) returns (GetItemUnitResp);
+  rpc ListItemUnit(ListItemUnitReq) returns (ListItemUnitResp);
+
+  rpc CreateInventoryFlow(CreateInventoryFlowReq) returns (CreateInventoryFlowResp);
+  rpc UpdateInventoryFlowDraft(UpdateInventoryFlowDraftReq) returns (UpdateInventoryFlowDraftResp);
+  rpc DeleteInventoryFlowDraft(DeleteInventoryFlowDraftReq) returns (DeleteInventoryFlowDraftResp);
+  rpc SubmitInventoryFlow(SubmitInventoryFlowReq) returns (SubmitInventoryFlowResp);
+  rpc AuditInventoryFlow(AuditInventoryFlowReq) returns (AuditInventoryFlowResp);
+  rpc GetInventoryFlow(GetInventoryFlowReq) returns (GetInventoryFlowResp);
+  rpc ListInventoryFlow(ListInventoryFlowReq) returns (ListInventoryFlowResp);
+}

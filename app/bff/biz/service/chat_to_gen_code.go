@@ -1,0 +1,80 @@
+package service
+
+import (
+	"context"
+	"encoding/json"
+	"strconv"
+
+	"github.com/MoScenix/mes/app/bff/biz/utils"
+	lapp "github.com/MoScenix/mes/app/bff/hertz_gen/bff/app"
+	"github.com/MoScenix/mes/app/bff/infra/rpc"
+	"github.com/MoScenix/mes/rpc_gen/kitex_gen/ai"
+	rpcapp "github.com/MoScenix/mes/rpc_gen/kitex_gen/app"
+	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/cloudwego/hertz/pkg/protocol/sse"
+)
+
+type ChatToGenCodeService struct {
+	RequestContext *app.RequestContext
+	Context        context.Context
+}
+
+func NewChatToGenCodeService(Context context.Context, RequestContext *app.RequestContext) *ChatToGenCodeService {
+	return &ChatToGenCodeService{RequestContext: RequestContext, Context: Context}
+}
+
+func (h *ChatToGenCodeService) Run(req *lapp.ChatToGenCodeRequest) (resp *lapp.ServerSentEventString, err error) {
+	w := sse.NewWriter(h.RequestContext)
+	defer w.Close()
+	q := rpc.AppClient
+	userID, _ := utils.UserIDFromContext(h.Context)
+	_, err = q.AddMessage(h.Context, &rpcapp.AddMessageReq{
+		AppId:   req.AppId,
+		UserId:  userID,
+		Content: req.Message,
+		Role:    "user",
+	})
+	if err != nil {
+		return SendErr(w, err)
+	}
+	var Queryc = ai.AiReq{
+		ProjectId: strconv.FormatInt(req.AppId, 10),
+	}
+	data, err := rpc.AiClient.Chat(h.Context, &Queryc)
+	if err != nil {
+		return SendErr(w, err)
+	}
+	queued := data.GetAnswer() == "true"
+	event := "queued"
+	message := "true"
+	if !queued {
+		event = "business-error"
+		message = "false"
+	}
+	Msg, err := json.Marshal(lapp.ServerSentEventString{
+		D:       message,
+		Message: message,
+	})
+	if err != nil {
+		return SendErr(w, err)
+	}
+	w.WriteEvent("", event, []byte(Msg))
+	w.WriteEvent("", "done", []byte("1"))
+	return &lapp.ServerSentEventString{
+		Message: "success",
+	}, nil
+}
+func SendErr(w *sse.Writer, err error) (*lapp.ServerSentEventString, error) {
+	Msg, err := json.Marshal(lapp.ServerSentEventString{
+		Message: err.Error(),
+	})
+	if err != nil {
+		return &lapp.ServerSentEventString{
+			Message: "business-error",
+		}, err
+	}
+	w.WriteEvent("", "business-error", Msg)
+	return &lapp.ServerSentEventString{
+		Message: "business-error",
+	}, err
+}

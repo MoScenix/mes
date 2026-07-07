@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package ai;
+
+option go_package = "ai";
+
+message AiReq {
+  string project_id = 1;
+}
+
+message AiResp {
+  string answer = 1;
+}
+
+service AiService {
+  rpc Chat(AiReq) returns (AiResp);
+}

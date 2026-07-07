@@ -1,0 +1,290 @@
+services:
+  consul:
+    image: consul:1.15.4
+    ports:
+      - "8500:8500"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8500/v1/status/leader"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  mysql:
+    image: mysql:8.0
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: YOUR_PASSWORD
+      MYSQL_DATABASE: YOU_DB
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-pYOU_PASSWORD"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.19.6
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - xpack.ml.enabled=false
+      - ingest.geoip.downloader.enabled=false
+      - ES_JAVA_OPTS=-Xms256m -Xmx256m
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:9200 >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+  etcd:
+    image: quay.io/coreos/etcd:v3.5.18
+    environment:
+      - ETCD_AUTO_COMPACTION_MODE=revision
+      - ETCD_AUTO_COMPACTION_RETENTION=1000
+      - ETCD_QUOTA_BACKEND_BYTES=4294967296
+      - ETCD_SNAPSHOT_COUNT=50000
+    command: etcd -advertise-client-urls=http://127.0.0.1:2379 -listen-client-urls=http://0.0.0.0:2379 --data-dir /etcd
+    volumes:
+      - etcd_data:/etcd
+    healthcheck:
+      test: ["CMD", "etcdctl", "endpoint", "health"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+  minio:
+    image: minio/minio:RELEASE.2024-12-18T13-15-44Z
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: minio server /minio_data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/minio_data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+  milvus:
+    image: milvusdb/milvus:v2.6.1
+    command: ["milvus", "run", "standalone"]
+    ports:
+      - "19530:19530"
+      - "9091:9091"
+    environment:
+      ETCD_ENDPOINTS: etcd:2379
+      MINIO_ADDRESS: minio:9000
+    volumes:
+      - milvus_data:/var/lib/milvus
+    depends_on:
+      etcd:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:9091/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./deploy/config/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    ports:
+      - "9090:9090"
+  grafana:
+    image: grafana/grafana:latest
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+    ports:
+      - "3000:3000"
+  jaeger:
+    image: jaegertracing/jaeger:2.6.0
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+      - "4318:4318"
+  user:
+    # image: app-user:dev
+    build:
+      context: .
+      dockerfile: docker_files/DockerFile.user
+    ports:
+      - "8888:8888"
+    volumes:
+      - static:/static
+    environment:
+      - GO_ENV=online
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=YOUR_PASSWORD
+      - MYSQL_DATABASE=YOU_DB
+      - MYSQL_HOST=mysql
+      - OTEL_EXPORTER_OTLP_ENDPOINT=jaeger:4317
+    depends_on:
+      jaeger:
+        condition: service_started
+      consul:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+  ai:
+    # image: app-user:dev
+    build:
+      context: .
+      dockerfile: docker_files/DockerFile.ai
+    env_file:
+      - ./app/ai/.env
+    ports:
+      - "8889:8888"
+    volumes:
+      - static:/static
+    environment:
+      - GO_ENV=online
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=YOUR_PASSWORD
+      - MYSQL_DATABASE=YOU_DB
+      - MYSQL_HOST=mysql
+      - OTEL_EXPORTER_OTLP_ENDPOINT=jaeger:4317
+      # - MODEL_NAME=
+      # - DASHSCOPE_API_KEY=
+    depends_on:
+      jaeger:
+        condition: service_started
+      consul:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+  app:
+    build:
+      context: .
+      dockerfile: docker_files/DockerFile.app
+    ports:
+      - "8890:8888"
+    volumes:
+      - static:/static
+    environment:
+      - GO_ENV=online
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=YOUR_PASSWORD
+      - MYSQL_DATABASE=YOU_DB
+      - MYSQL_HOST=mysql
+      - OTEL_EXPORTER_OTLP_ENDPOINT=jaeger:4317
+    depends_on:
+      jaeger:
+        condition: service_started
+      consul:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+  document:
+    build:
+      context: .
+      dockerfile: docker_files/DockerFile.document
+    env_file:
+      - ./app/ai/.env
+    ports:
+      - "8891:8888"
+    volumes:
+      - static:/static
+    environment:
+      - GO_ENV=online
+      - OTEL_EXPORTER_OTLP_ENDPOINT=jaeger:4317
+    depends_on:
+      jaeger:
+        condition: service_started
+      consul:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      milvus:
+        condition: service_healthy
+  bff:
+    build:
+      context: .
+      dockerfile: docker_files/DockerFile.bff
+    ports:
+      - "8082:8080"
+    environment:
+      - GO_ENV=online
+      - SESSION_SECRET=YOUR_SESSION_SECRET
+      - OTEL_EXPORTER_OTLP_ENDPOINT=jaeger:4317
+    volumes:
+      - static:/static
+    depends_on:
+      jaeger:
+        condition: service_started
+      consul:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      user:
+        condition: service_started
+      app:
+        condition: service_started
+      ai:
+        condition: service_started
+      document:
+        condition: service_started
+  frontend:
+    build:
+      dockerfile: docker_files/DockerFile.frontend
+    ports:
+      - "8080:80"
+    volumes:
+      - static:/static
+    depends_on:
+      consul:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      user:
+        condition: service_started
+      app:
+        condition: service_started
+      ai:
+        condition: service_started
+      bff:
+        condition: service_started
+    
+volumes:
+  mysql_data: {} 
+  static: {}
+  es_data: {}
+  etcd_data: {}
+  minio_data: {}
+  milvus_data: {}
