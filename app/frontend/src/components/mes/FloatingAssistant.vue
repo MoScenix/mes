@@ -2,7 +2,20 @@
   <div class="assistant-root" :class="{ open, 'page-mode': pageMode }">
     <!-- Floating mode: ball trigger -->
     <button v-if="!pageMode && !open" class="assistant-ball" type="button" @click="toggle">
-      <img :src="aiAvatar" alt="MES 助手" />
+      <svg class="assistant-gpt-logo" viewBox="0 0 48 48" aria-hidden="true">
+        <path
+          d="M13.5 14.5h21A5.5 5.5 0 0 1 40 20v9a5.5 5.5 0 0 1-5.5 5.5H26l-7.5 5v-5h-5A5.5 5.5 0 0 1 8 29v-9a5.5 5.5 0 0 1 5.5-5.5Z"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="3"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+        <circle cx="18" cy="24.5" r="1.8" fill="currentColor" />
+        <circle cx="24" cy="24.5" r="1.8" fill="currentColor" />
+        <circle cx="30" cy="24.5" r="1.8" fill="currentColor" />
+      </svg>
+      <span class="sr-only">打开 MES 助手</span>
     </button>
 
     <!-- Chat window -->
@@ -202,7 +215,6 @@ import request from '@/request'
 import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
 import PromptInputBox from '@/components/PromptInputBox.vue'
 import { useAIEvents, type AIFileMeta, type AIMessage } from '@/composables/useAIEvents'
-import aiAvatar from '@/assets/aiAvatar.png'
 
 const props = withDefaults(defineProps<{ pageMode?: boolean }>(), {
   pageMode: false,
@@ -1025,17 +1037,30 @@ onMounted(async () => {
   align-items: center;
   justify-content: center;
   border: 0;
-  border-radius: 999px;
-  background: #0066cc;
-  color: white;
-  box-shadow: 0 12px 32px rgba(0, 102, 204, 0.28);
+  border-radius: 50%;
+  background: #101010;
+  color: #ffffff;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
   cursor: pointer;
 }
 
-.assistant-ball img {
-  width: 36px;
-  height: 36px;
-  object-fit: contain;
+.assistant-gpt-logo {
+  width: 34px;
+  height: 34px;
+  display: block;
+  color: #fff;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 @media (max-width: 768px) {

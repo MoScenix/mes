@@ -1,6 +1,7 @@
 **/tmp
 **/.env
 **/static
+**/.vite
 .DS_Store
 .codex
 AGENTS.md
