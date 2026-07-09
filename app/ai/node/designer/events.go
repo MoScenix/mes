@@ -99,7 +99,9 @@ func publishMessageOutput(ctx context.Context, store redisstream.Store, projectI
 				lastID = id
 			}
 			if msg != nil {
-				content.WriteString(msg.Content)
+				if effectiveMessageRole(output.Role, msg) == schema.Assistant {
+					content.WriteString(msg.Content)
+				}
 			}
 		}
 	}
@@ -111,6 +113,9 @@ func publishMessageOutput(ctx context.Context, store redisstream.Store, projectI
 	if msg == nil {
 		return id, "", err
 	}
+	if effectiveMessageRole(output.Role, msg) != schema.Assistant {
+		return id, "", err
+	}
 	return id, msg.Content, err
 }
 
@@ -118,11 +123,15 @@ func publishSchemaMessage(ctx context.Context, store redisstream.Store, projectI
 	if msg == nil {
 		return "", nil
 	}
+	effectiveRole := effectiveMessageRole(role, msg)
 	eventType := aievent.EventMessage
 	content := msg.Content
-	if role == schema.Tool {
+	if effectiveRole == schema.Tool {
 		eventType = aievent.EventToolResult
 		content = aievent.TrimEventContent(content)
+		if toolName == "" {
+			toolName = msg.ToolName
+		}
 	}
 	return publishTaskEvent(ctx, store, aievent.TaskEvent{
 		ProjectID: projectID,
@@ -132,6 +141,16 @@ func publishSchemaMessage(ctx context.Context, store redisstream.Store, projectI
 		Name:      toolName,
 		CreatedAt: time.Now().UnixMilli(),
 	})
+}
+
+func effectiveMessageRole(role schema.RoleType, msg *schema.Message) schema.RoleType {
+	if role != "" {
+		return role
+	}
+	if msg == nil {
+		return ""
+	}
+	return msg.Role
 }
 
 func publishTaskEvent(ctx context.Context, store redisstream.Store, event aievent.TaskEvent) (string, error) {

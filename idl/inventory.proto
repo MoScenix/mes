@@ -32,6 +32,21 @@ enum QualityStatus {
   QUALITY_STATUS_UNQUALIFIED = 3;
 }
 
+enum DraftStatus {
+  DRAFT_STATUS_UNKNOWN = 0;
+  DRAFT_STATUS_DRAFT = 1;
+  DRAFT_STATUS_SUBMITTED = 2;
+  DRAFT_STATUS_DONE = 3;
+}
+
+enum ListScope {
+  LIST_SCOPE_UNSPECIFIED = 0;
+  LIST_SCOPE_MINE = 1;
+  LIST_SCOPE_ALL = 2;
+  LIST_SCOPE_AUDIT = 3;
+  LIST_SCOPE_BY_PROCESS = 4;
+}
+
 message ItemInfo {
   int64 id = 1;
   string name = 2;
@@ -49,6 +64,27 @@ message ItemInfo {
   string updateTime = 14;
 }
 
+message ProcessItemInfo {
+  int64 id = 1;
+  int64 processId = 2;
+  int64 consumeItemId = 3;
+  int64 quantity = 4;
+  ItemInfo consumeItem = 5;
+}
+
+message ProcessInfo {
+  int64 id = 1;
+  int64 itemId = 2;
+  int64 ownerUserId = 3;
+  string name = 4;
+  string description = 5;
+  DraftStatus status = 6;
+  ItemInfo item = 7;
+  repeated ProcessItemInfo items = 8;
+  string createTime = 9;
+  string updateTime = 10;
+}
+
 message ItemUnitInfo {
   int64 id = 1;
   int64 itemId = 2;
@@ -57,6 +93,26 @@ message ItemUnitInfo {
   string description = 5;
   string createTime = 6;
   string updateTime = 7;
+  int64 engineeringOrderId = 8;
+}
+
+message EngineeringOrderInfo {
+  int64 id = 1;
+  int64 leaderUserId = 2;
+  int64 itemId = 3;
+  ItemInfo item = 4;
+  int64 expectedQuantity = 5;
+  int64 qualifiedQuantity = 6;
+  int64 producedQuantity = 7;
+  string description = 8;
+  repeated ItemUnitInfo itemUnits = 9;
+  string createTime = 10;
+  string updateTime = 11;
+  int64 processId = 12;
+  ProcessInfo process = 13;
+  DraftStatus status = 14;
+  int64 unqualifiedQuantity = 15;
+  string name = 16;
 }
 
 message InventoryFlowItemInfo {
@@ -81,6 +137,7 @@ message InventoryFlowInfo {
   repeated ItemUnitInfo itemUnits = 10;
   string createTime = 11;
   string updateTime = 12;
+  string name = 13;
 }
 
 message AddItemReq {
@@ -116,11 +173,92 @@ message ListItemReq {
   int64 pageNum = 1;
   int64 pageSize = 2;
   string namePrefix = 3;
+  string cursorName = 4;
+  int64 cursorId = 5;
 }
 
 message ListItemResp {
   repeated ItemInfo itemList = 1;
   int64 total = 2;
+  bool hasMore = 3;
+  string nextCursorName = 4;
+  int64 nextCursorId = 5;
+}
+
+message ProcessItemReq {
+  int64 consumeItemId = 1;
+  int64 quantity = 2;
+}
+
+message CreateProcessDraftReq {
+  int64 ownerUserId = 1;
+  int64 itemId = 2;
+  string name = 3;
+  string description = 4;
+  repeated ProcessItemReq items = 5;
+}
+
+message CreateProcessDraftResp {
+  int64 id = 1;
+}
+
+message UpdateProcessDraftReq {
+  int64 id = 1;
+  int64 ownerUserId = 2;
+  int64 itemId = 3;
+  string name = 4;
+  string description = 5;
+  repeated ProcessItemReq items = 6;
+}
+
+message UpdateProcessDraftResp {
+  bool success = 1;
+}
+
+message DeleteProcessDraftReq {
+  int64 id = 1;
+}
+
+message DeleteProcessDraftResp {
+  bool success = 1;
+}
+
+message SubmitProcessReq {
+  int64 id = 1;
+}
+
+message SubmitProcessResp {
+  bool success = 1;
+}
+
+message GetProcessReq {
+  int64 id = 1;
+}
+
+message GetProcessResp {
+  ProcessInfo process = 1;
+}
+
+message ListProcessReq {
+  int64 ownerUserId = 1;
+  int64 itemId = 2;
+  DraftStatus status = 3;
+  int64 pageNum = 4;
+  int64 pageSize = 5;
+  string sinceTime = 6;
+  int64 recentSeconds = 7;
+  string cursorUpdatedAt = 8;
+  int64 cursorId = 9;
+  string namePrefix = 10;
+  string itemNamePrefix = 11;
+}
+
+message ListProcessResp {
+  repeated ProcessInfo processList = 1;
+  int64 total = 2;
+  bool hasMore = 3;
+  string nextCursorUpdatedAt = 4;
+  int64 nextCursorId = 5;
 }
 
 message AddItemUnitReq {
@@ -128,6 +266,7 @@ message AddItemUnitReq {
   StockStatus stockStatus = 2;
   QualityStatus qualityStatus = 3;
   string description = 4;
+  int64 engineeringOrderId = 5;
 }
 
 message AddItemUnitResp {
@@ -158,11 +297,16 @@ message ListItemUnitReq {
   int64 itemId = 3;
   StockStatus stockStatus = 4;
   QualityStatus qualityStatus = 5;
+  int64 engineeringOrderId = 6;
+  int64 cursorId = 7;
+  string itemNamePrefix = 8;
 }
 
 message ListItemUnitResp {
   repeated ItemUnitInfo itemUnitList = 1;
   int64 total = 2;
+  bool hasMore = 3;
+  int64 nextCursorId = 4;
 }
 
 message InventoryFlowItemReq {
@@ -177,6 +321,7 @@ message CreateInventoryFlowReq {
   string description = 4;
   repeated InventoryFlowItemReq items = 5;
   repeated int64 itemUnitIds = 6;
+  string name = 7;
 }
 
 message CreateInventoryFlowResp {
@@ -191,6 +336,7 @@ message UpdateInventoryFlowDraftReq {
   string description = 5;
   repeated InventoryFlowItemReq items = 6;
   repeated int64 itemUnitIds = 7;
+  string name = 8;
 }
 
 message UpdateInventoryFlowDraftResp {
@@ -213,6 +359,15 @@ message SubmitInventoryFlowResp {
   bool success = 1;
 }
 
+message CompleteInventoryFlowReq {
+  int64 id = 1;
+  repeated int64 itemUnitIds = 2;
+}
+
+message CompleteInventoryFlowResp {
+  bool success = 1;
+}
+
 message AuditInventoryFlowReq {
   int64 id = 1;
   int64 approvedBy = 2;
@@ -232,17 +387,102 @@ message GetInventoryFlowResp {
 }
 
 message ListInventoryFlowReq {
-  int64 pageNum = 1;
-  int64 pageSize = 2;
-  int64 fromUserId = 3;
-  int64 toUserId = 4;
-  FlowType flowType = 5;
-  FlowStatus flowStatus = 6;
+  int64 userId = 1;
+  bool isTo = 2;
+  FlowStatus flowStatus = 3;
+  int64 pageNum = 4;
+  int64 pageSize = 5;
+  string sinceTime = 6;
+  int64 recentSeconds = 7;
+  string cursorUpdatedAt = 8;
+  int64 cursorId = 9;
+  string namePrefix = 10;
+  string itemNamePrefix = 11;
+  ListScope scope = 12;
 }
 
 message ListInventoryFlowResp {
   repeated InventoryFlowInfo inventoryFlowList = 1;
   int64 total = 2;
+  bool hasMore = 3;
+  string nextCursorUpdatedAt = 4;
+  int64 nextCursorId = 5;
+}
+
+message CreateEngineeringOrderDraftReq {
+  int64 leaderUserId = 1;
+  int64 itemId = 2;
+  int64 expectedQuantity = 3;
+  int64 qualifiedQuantity = 4;
+  string description = 5;
+  int64 processId = 6;
+  string name = 7;
+}
+
+message CreateEngineeringOrderDraftResp {
+  int64 id = 1;
+}
+
+message UpdateEngineeringOrderDraftReq {
+  int64 id = 1;
+  int64 leaderUserId = 2;
+  int64 itemId = 3;
+  int64 expectedQuantity = 4;
+  int64 qualifiedQuantity = 5;
+  string description = 6;
+  int64 processId = 7;
+  string name = 8;
+}
+
+message UpdateEngineeringOrderDraftResp {
+  bool success = 1;
+}
+
+message DeleteEngineeringOrderDraftReq {
+  int64 id = 1;
+}
+
+message DeleteEngineeringOrderDraftResp {
+  bool success = 1;
+}
+
+message SubmitEngineeringOrderReq {
+  int64 id = 1;
+}
+
+message SubmitEngineeringOrderResp {
+  bool success = 1;
+}
+
+message GetEngineeringOrderReq {
+  int64 id = 1;
+}
+
+message GetEngineeringOrderResp {
+  EngineeringOrderInfo engineeringOrder = 1;
+}
+
+message ListEngineeringOrderReq {
+  int64 leaderUserId = 1;
+  int64 itemId = 2;
+  int64 pageNum = 3;
+  int64 pageSize = 4;
+  int64 processId = 5;
+  DraftStatus status = 6;
+  string sinceTime = 7;
+  int64 recentSeconds = 8;
+  string cursorUpdatedAt = 9;
+  int64 cursorId = 10;
+  string namePrefix = 11;
+  string itemNamePrefix = 12;
+}
+
+message ListEngineeringOrderResp {
+  repeated EngineeringOrderInfo engineeringOrderList = 1;
+  int64 total = 2;
+  bool hasMore = 3;
+  string nextCursorUpdatedAt = 4;
+  int64 nextCursorId = 5;
 }
 
 service InventoryService {
@@ -250,6 +490,13 @@ service InventoryService {
   rpc UpdateItem(UpdateItemReq) returns (UpdateItemResp);
   rpc GetItem(GetItemReq) returns (GetItemResp);
   rpc ListItem(ListItemReq) returns (ListItemResp);
+
+  rpc CreateProcessDraft(CreateProcessDraftReq) returns (CreateProcessDraftResp);
+  rpc UpdateProcessDraft(UpdateProcessDraftReq) returns (UpdateProcessDraftResp);
+  rpc DeleteProcessDraft(DeleteProcessDraftReq) returns (DeleteProcessDraftResp);
+  rpc SubmitProcess(SubmitProcessReq) returns (SubmitProcessResp);
+  rpc GetProcess(GetProcessReq) returns (GetProcessResp);
+  rpc ListProcess(ListProcessReq) returns (ListProcessResp);
 
   rpc AddItemUnit(AddItemUnitReq) returns (AddItemUnitResp);
   rpc UpdateItemUnitStatus(UpdateItemUnitStatusReq) returns (UpdateItemUnitStatusResp);
@@ -260,7 +507,15 @@ service InventoryService {
   rpc UpdateInventoryFlowDraft(UpdateInventoryFlowDraftReq) returns (UpdateInventoryFlowDraftResp);
   rpc DeleteInventoryFlowDraft(DeleteInventoryFlowDraftReq) returns (DeleteInventoryFlowDraftResp);
   rpc SubmitInventoryFlow(SubmitInventoryFlowReq) returns (SubmitInventoryFlowResp);
+  rpc CompleteInventoryFlow(CompleteInventoryFlowReq) returns (CompleteInventoryFlowResp);
   rpc AuditInventoryFlow(AuditInventoryFlowReq) returns (AuditInventoryFlowResp);
   rpc GetInventoryFlow(GetInventoryFlowReq) returns (GetInventoryFlowResp);
   rpc ListInventoryFlow(ListInventoryFlowReq) returns (ListInventoryFlowResp);
+
+  rpc CreateEngineeringOrderDraft(CreateEngineeringOrderDraftReq) returns (CreateEngineeringOrderDraftResp);
+  rpc UpdateEngineeringOrderDraft(UpdateEngineeringOrderDraftReq) returns (UpdateEngineeringOrderDraftResp);
+  rpc DeleteEngineeringOrderDraft(DeleteEngineeringOrderDraftReq) returns (DeleteEngineeringOrderDraftResp);
+  rpc SubmitEngineeringOrder(SubmitEngineeringOrderReq) returns (SubmitEngineeringOrderResp);
+  rpc GetEngineeringOrder(GetEngineeringOrderReq) returns (GetEngineeringOrderResp);
+  rpc ListEngineeringOrder(ListEngineeringOrderReq) returns (ListEngineeringOrderResp);
 }

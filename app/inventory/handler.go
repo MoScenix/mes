@@ -93,6 +93,13 @@ func (s *InventoryServiceImpl) SubmitInventoryFlow(ctx context.Context, req *inv
 	return resp, err
 }
 
+// CompleteInventoryFlow implements the InventoryServiceImpl interface.
+func (s *InventoryServiceImpl) CompleteInventoryFlow(ctx context.Context, req *inventory.CompleteInventoryFlowReq) (resp *inventory.CompleteInventoryFlowResp, err error) {
+	resp, err = service.NewCompleteInventoryFlowService(ctx).Run(req)
+
+	return resp, err
+}
+
 // AuditInventoryFlow implements the InventoryServiceImpl interface.
 func (s *InventoryServiceImpl) AuditInventoryFlow(ctx context.Context, req *inventory.AuditInventoryFlowReq) (resp *inventory.AuditInventoryFlowResp, err error) {
 	resp, err = service.NewAuditInventoryFlowService(ctx).Run(req)
@@ -110,6 +117,90 @@ func (s *InventoryServiceImpl) GetInventoryFlow(ctx context.Context, req *invent
 // ListInventoryFlow implements the InventoryServiceImpl interface.
 func (s *InventoryServiceImpl) ListInventoryFlow(ctx context.Context, req *inventory.ListInventoryFlowReq) (resp *inventory.ListInventoryFlowResp, err error) {
 	resp, err = service.NewListInventoryFlowService(ctx).Run(req)
+
+	return resp, err
+}
+
+// GetEngineeringOrder implements the InventoryServiceImpl interface.
+func (s *InventoryServiceImpl) GetEngineeringOrder(ctx context.Context, req *inventory.GetEngineeringOrderReq) (resp *inventory.GetEngineeringOrderResp, err error) {
+	resp, err = service.NewGetEngineeringOrderService(ctx).Run(req)
+
+	return resp, err
+}
+
+// ListEngineeringOrder implements the InventoryServiceImpl interface.
+func (s *InventoryServiceImpl) ListEngineeringOrder(ctx context.Context, req *inventory.ListEngineeringOrderReq) (resp *inventory.ListEngineeringOrderResp, err error) {
+	resp, err = service.NewListEngineeringOrderService(ctx).Run(req)
+
+	return resp, err
+}
+
+// CreateProcessDraft implements the InventoryServiceImpl interface.
+func (s *InventoryServiceImpl) CreateProcessDraft(ctx context.Context, req *inventory.CreateProcessDraftReq) (resp *inventory.CreateProcessDraftResp, err error) {
+	resp, err = service.NewCreateProcessDraftService(ctx).Run(req)
+
+	return resp, err
+}
+
+// UpdateProcessDraft implements the InventoryServiceImpl interface.
+func (s *InventoryServiceImpl) UpdateProcessDraft(ctx context.Context, req *inventory.UpdateProcessDraftReq) (resp *inventory.UpdateProcessDraftResp, err error) {
+	resp, err = service.NewUpdateProcessDraftService(ctx).Run(req)
+
+	return resp, err
+}
+
+// DeleteProcessDraft implements the InventoryServiceImpl interface.
+func (s *InventoryServiceImpl) DeleteProcessDraft(ctx context.Context, req *inventory.DeleteProcessDraftReq) (resp *inventory.DeleteProcessDraftResp, err error) {
+	resp, err = service.NewDeleteProcessDraftService(ctx).Run(req)
+
+	return resp, err
+}
+
+// SubmitProcess implements the InventoryServiceImpl interface.
+func (s *InventoryServiceImpl) SubmitProcess(ctx context.Context, req *inventory.SubmitProcessReq) (resp *inventory.SubmitProcessResp, err error) {
+	resp, err = service.NewSubmitProcessService(ctx).Run(req)
+
+	return resp, err
+}
+
+// GetProcess implements the InventoryServiceImpl interface.
+func (s *InventoryServiceImpl) GetProcess(ctx context.Context, req *inventory.GetProcessReq) (resp *inventory.GetProcessResp, err error) {
+	resp, err = service.NewGetProcessService(ctx).Run(req)
+
+	return resp, err
+}
+
+// ListProcess implements the InventoryServiceImpl interface.
+func (s *InventoryServiceImpl) ListProcess(ctx context.Context, req *inventory.ListProcessReq) (resp *inventory.ListProcessResp, err error) {
+	resp, err = service.NewListProcessService(ctx).Run(req)
+
+	return resp, err
+}
+
+// CreateEngineeringOrderDraft implements the InventoryServiceImpl interface.
+func (s *InventoryServiceImpl) CreateEngineeringOrderDraft(ctx context.Context, req *inventory.CreateEngineeringOrderDraftReq) (resp *inventory.CreateEngineeringOrderDraftResp, err error) {
+	resp, err = service.NewCreateEngineeringOrderDraftService(ctx).Run(req)
+
+	return resp, err
+}
+
+// UpdateEngineeringOrderDraft implements the InventoryServiceImpl interface.
+func (s *InventoryServiceImpl) UpdateEngineeringOrderDraft(ctx context.Context, req *inventory.UpdateEngineeringOrderDraftReq) (resp *inventory.UpdateEngineeringOrderDraftResp, err error) {
+	resp, err = service.NewUpdateEngineeringOrderDraftService(ctx).Run(req)
+
+	return resp, err
+}
+
+// DeleteEngineeringOrderDraft implements the InventoryServiceImpl interface.
+func (s *InventoryServiceImpl) DeleteEngineeringOrderDraft(ctx context.Context, req *inventory.DeleteEngineeringOrderDraftReq) (resp *inventory.DeleteEngineeringOrderDraftResp, err error) {
+	resp, err = service.NewDeleteEngineeringOrderDraftService(ctx).Run(req)
+
+	return resp, err
+}
+
+// SubmitEngineeringOrder implements the InventoryServiceImpl interface.
+func (s *InventoryServiceImpl) SubmitEngineeringOrder(ctx context.Context, req *inventory.SubmitEngineeringOrderReq) (resp *inventory.SubmitEngineeringOrderResp, err error) {
+	resp, err = service.NewSubmitEngineeringOrderService(ctx).Run(req)
 
 	return resp, err
 }

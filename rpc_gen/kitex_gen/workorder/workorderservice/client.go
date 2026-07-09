@@ -17,6 +17,7 @@ type Client interface {
 	SubmitWorkOrder(ctx context.Context, Req *workorder.SubmitWorkOrderReq, callOptions ...callopt.Option) (r *workorder.SubmitWorkOrderResp, err error)
 	GetWorkOrder(ctx context.Context, Req *workorder.GetWorkOrderReq, callOptions ...callopt.Option) (r *workorder.GetWorkOrderResp, err error)
 	ListWorkOrder(ctx context.Context, Req *workorder.ListWorkOrderReq, callOptions ...callopt.Option) (r *workorder.ListWorkOrderResp, err error)
+	MarkWorkOrderRead(ctx context.Context, Req *workorder.MarkWorkOrderReadReq, callOptions ...callopt.Option) (r *workorder.MarkWorkOrderReadResp, err error)
 }
 
 // NewClient creates a client for the service defined in IDL.
@@ -76,4 +77,9 @@ func (p *kWorkOrderServiceClient) GetWorkOrder(ctx context.Context, Req *workord
 func (p *kWorkOrderServiceClient) ListWorkOrder(ctx context.Context, Req *workorder.ListWorkOrderReq, callOptions ...callopt.Option) (r *workorder.ListWorkOrderResp, err error) {
 	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
 	return p.kClient.ListWorkOrder(ctx, Req)
+}
+
+func (p *kWorkOrderServiceClient) MarkWorkOrderRead(ctx context.Context, Req *workorder.MarkWorkOrderReadReq, callOptions ...callopt.Option) (r *workorder.MarkWorkOrderReadResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.MarkWorkOrderRead(ctx, Req)
 }

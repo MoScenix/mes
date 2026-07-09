@@ -5,7 +5,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/MoScenix/mes/app/ai/node/control"
 	"github.com/MoScenix/mes/app/ai/utils"
 	"github.com/MoScenix/mes/common/aievent"
 	"github.com/MoScenix/mes/common/redisstate"
@@ -14,25 +13,7 @@ import (
 	"github.com/cloudwego/eino/schema"
 )
 
-func watchStream(ctx context.Context, stateStore *redisstate.Store, store redisstream.Store, projectID string, loop *adk.TurnLoop[[]*schema.Message, *schema.Message], lastEventID *string, assistantOutput *utils.StringBuffer) {
-	control.Watch(ctx, store, projectID, controlCursor(ctx), control.Handler{
-		OnPush: func(ctx context.Context, msg redisstream.Message, event aievent.TaskEvent) {
-			utils.SetControlCursor(ctx, msg.ID)
-			handlePush(ctx, stateStore, store, projectID, event.Content, loop, lastEventID, assistantOutput)
-		},
-		OnCancel: func(ctx context.Context, msg redisstream.Message, event aievent.TaskEvent) {
-			utils.SetControlCursor(ctx, msg.ID)
-			reason := strings.TrimSpace(event.Content)
-			if reason == "" {
-				reason = "cancelled"
-			}
-			utils.CancelRuntime(ctx)
-			loop.Stop(adk.WithImmediate(), adk.WithStopCause(reason), adk.WithSkipCheckpoint())
-		},
-	})
-}
-
-func handlePush(ctx context.Context, stateStore *redisstate.Store, store redisstream.Store, projectID string, rawContent string, loop *adk.TurnLoop[[]*schema.Message, *schema.Message], lastEventID *string, assistantOutput *utils.StringBuffer) {
+func HandlePush(ctx context.Context, stateStore *redisstate.Store, store redisstream.Store, projectID string, agent string, rawContent string, loop *adk.TurnLoop[[]*schema.Message, *schema.Message], lastEventID *string, assistantOutput *utils.StringBuffer) {
 	content := strings.TrimSpace(rawContent)
 	if content == "" {
 		return
@@ -50,11 +31,11 @@ func handlePush(ctx context.Context, stateStore *redisstate.Store, store redisst
 	}
 
 	if err := persistPushHistory(ctx, projectID, content, assistantOutput); err != nil {
-		setLastEventID(lastEventID, publishError(ctx, store, projectID, err))
+		setLastEventID(lastEventID, publishError(ctx, store, projectID, agent, err))
 		return
 	}
 
-	acceptedID := publishAccepted(ctx, store, projectID)
+	acceptedID := publishAccepted(ctx, store, projectID, agent)
 	setLastEventID(lastEventID, acceptedID)
 	_ = updateProjectLastEventID(ctx, stateStore, projectID, acceptedID)
 }
@@ -74,22 +55,22 @@ func persistPushHistory(ctx context.Context, projectID string, content string, a
 	return nil
 }
 
-func publishAccepted(ctx context.Context, store redisstream.Store, projectID string) string {
+func publishAccepted(ctx context.Context, store redisstream.Store, projectID string, agent string) string {
 	id, _ := publishTaskEvent(ctx, store, aievent.TaskEvent{
 		ProjectID: projectID,
 		Type:      aievent.EventAccepted,
-		Agent:     agentName,
+		Agent:     agent,
 		Content:   "push accepted",
 		CreatedAt: time.Now().UnixMilli(),
 	})
 	return id
 }
 
-func publishError(ctx context.Context, store redisstream.Store, projectID string, err error) string {
+func publishError(ctx context.Context, store redisstream.Store, projectID string, agent string, err error) string {
 	id, _ := publishTaskEvent(ctx, store, aievent.TaskEvent{
 		ProjectID: projectID,
 		Type:      aievent.EventError,
-		Agent:     agentName,
+		Agent:     agent,
 		Content:   aievent.TrimEventContent(err.Error()),
 		CreatedAt: time.Now().UnixMilli(),
 	})
@@ -100,11 +81,4 @@ func setLastEventID(lastEventID *string, id string) {
 	if lastEventID != nil && id != "" {
 		*lastEventID = id
 	}
-}
-
-func controlCursor(ctx context.Context) string {
-	if cursor := strings.TrimSpace(utils.ControlCursor(ctx)); cursor != "" {
-		return cursor
-	}
-	return "$"
 }

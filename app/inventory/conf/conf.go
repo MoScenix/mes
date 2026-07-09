@@ -21,11 +21,19 @@ type Config struct {
 	Env      string
 	Kitex    Kitex    `yaml:"kitex"`
 	MySQL    MySQL    `yaml:"mysql"`
+	Redis    Redis    `yaml:"redis"`
 	Registry Registry `yaml:"registry"`
 }
 
 type MySQL struct {
 	DSN string `yaml:"dsn"`
+}
+
+type Redis struct {
+	Address  string `yaml:"address"`
+	Username string `yaml:"username"`
+	Password string `yaml:"password"`
+	DB       int    `yaml:"db"`
 }
 
 type Kitex struct {
@@ -36,6 +44,7 @@ type Kitex struct {
 	LogMaxSize    int    `yaml:"log_max_size"`
 	LogMaxBackups int    `yaml:"log_max_backups"`
 	LogMaxAge     int    `yaml:"log_max_age"`
+	MetricsPort   string `yaml:"metrics_port"`
 }
 
 type Registry struct {

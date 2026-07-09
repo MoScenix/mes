@@ -43,6 +43,48 @@ var serviceMethods = map[string]kitex.MethodInfo{
 		false,
 		kitex.WithStreamingMode(kitex.StreamingUnary),
 	),
+	"CreateProcessDraft": kitex.NewMethodInfo(
+		createProcessDraftHandler,
+		newCreateProcessDraftArgs,
+		newCreateProcessDraftResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingUnary),
+	),
+	"UpdateProcessDraft": kitex.NewMethodInfo(
+		updateProcessDraftHandler,
+		newUpdateProcessDraftArgs,
+		newUpdateProcessDraftResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingUnary),
+	),
+	"DeleteProcessDraft": kitex.NewMethodInfo(
+		deleteProcessDraftHandler,
+		newDeleteProcessDraftArgs,
+		newDeleteProcessDraftResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingUnary),
+	),
+	"SubmitProcess": kitex.NewMethodInfo(
+		submitProcessHandler,
+		newSubmitProcessArgs,
+		newSubmitProcessResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingUnary),
+	),
+	"GetProcess": kitex.NewMethodInfo(
+		getProcessHandler,
+		newGetProcessArgs,
+		newGetProcessResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingUnary),
+	),
+	"ListProcess": kitex.NewMethodInfo(
+		listProcessHandler,
+		newListProcessArgs,
+		newListProcessResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingUnary),
+	),
 	"AddItemUnit": kitex.NewMethodInfo(
 		addItemUnitHandler,
 		newAddItemUnitArgs,
@@ -99,6 +141,13 @@ var serviceMethods = map[string]kitex.MethodInfo{
 		false,
 		kitex.WithStreamingMode(kitex.StreamingUnary),
 	),
+	"CompleteInventoryFlow": kitex.NewMethodInfo(
+		completeInventoryFlowHandler,
+		newCompleteInventoryFlowArgs,
+		newCompleteInventoryFlowResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingUnary),
+	),
 	"AuditInventoryFlow": kitex.NewMethodInfo(
 		auditInventoryFlowHandler,
 		newAuditInventoryFlowArgs,
@@ -117,6 +166,48 @@ var serviceMethods = map[string]kitex.MethodInfo{
 		listInventoryFlowHandler,
 		newListInventoryFlowArgs,
 		newListInventoryFlowResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingUnary),
+	),
+	"CreateEngineeringOrderDraft": kitex.NewMethodInfo(
+		createEngineeringOrderDraftHandler,
+		newCreateEngineeringOrderDraftArgs,
+		newCreateEngineeringOrderDraftResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingUnary),
+	),
+	"UpdateEngineeringOrderDraft": kitex.NewMethodInfo(
+		updateEngineeringOrderDraftHandler,
+		newUpdateEngineeringOrderDraftArgs,
+		newUpdateEngineeringOrderDraftResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingUnary),
+	),
+	"DeleteEngineeringOrderDraft": kitex.NewMethodInfo(
+		deleteEngineeringOrderDraftHandler,
+		newDeleteEngineeringOrderDraftArgs,
+		newDeleteEngineeringOrderDraftResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingUnary),
+	),
+	"SubmitEngineeringOrder": kitex.NewMethodInfo(
+		submitEngineeringOrderHandler,
+		newSubmitEngineeringOrderArgs,
+		newSubmitEngineeringOrderResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingUnary),
+	),
+	"GetEngineeringOrder": kitex.NewMethodInfo(
+		getEngineeringOrderHandler,
+		newGetEngineeringOrderArgs,
+		newGetEngineeringOrderResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingUnary),
+	),
+	"ListEngineeringOrder": kitex.NewMethodInfo(
+		listEngineeringOrderHandler,
+		newListEngineeringOrderArgs,
+		newListEngineeringOrderResult,
 		false,
 		kitex.WithStreamingMode(kitex.StreamingUnary),
 	),
@@ -795,6 +886,924 @@ func (p *ListItemResult) IsSetSuccess() bool {
 }
 
 func (p *ListItemResult) GetResult() interface{} {
+	return p.Success
+}
+
+func createProcessDraftHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	switch s := arg.(type) {
+	case *streaming.Args:
+		st := s.Stream
+		req := new(inventory.CreateProcessDraftReq)
+		if err := st.RecvMsg(req); err != nil {
+			return err
+		}
+		resp, err := handler.(inventory.InventoryService).CreateProcessDraft(ctx, req)
+		if err != nil {
+			return err
+		}
+		return st.SendMsg(resp)
+	case *CreateProcessDraftArgs:
+		success, err := handler.(inventory.InventoryService).CreateProcessDraft(ctx, s.Req)
+		if err != nil {
+			return err
+		}
+		realResult := result.(*CreateProcessDraftResult)
+		realResult.Success = success
+		return nil
+	default:
+		return errInvalidMessageType
+	}
+}
+func newCreateProcessDraftArgs() interface{} {
+	return &CreateProcessDraftArgs{}
+}
+
+func newCreateProcessDraftResult() interface{} {
+	return &CreateProcessDraftResult{}
+}
+
+type CreateProcessDraftArgs struct {
+	Req *inventory.CreateProcessDraftReq
+}
+
+func (p *CreateProcessDraftArgs) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
+	if !p.IsSetReq() {
+		p.Req = new(inventory.CreateProcessDraftReq)
+	}
+	return p.Req.FastRead(buf, _type, number)
+}
+
+func (p *CreateProcessDraftArgs) FastWrite(buf []byte) (n int) {
+	if !p.IsSetReq() {
+		return 0
+	}
+	return p.Req.FastWrite(buf)
+}
+
+func (p *CreateProcessDraftArgs) Size() (n int) {
+	if !p.IsSetReq() {
+		return 0
+	}
+	return p.Req.Size()
+}
+
+func (p *CreateProcessDraftArgs) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetReq() {
+		return out, nil
+	}
+	return proto.Marshal(p.Req)
+}
+
+func (p *CreateProcessDraftArgs) Unmarshal(in []byte) error {
+	msg := new(inventory.CreateProcessDraftReq)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Req = msg
+	return nil
+}
+
+var CreateProcessDraftArgs_Req_DEFAULT *inventory.CreateProcessDraftReq
+
+func (p *CreateProcessDraftArgs) GetReq() *inventory.CreateProcessDraftReq {
+	if !p.IsSetReq() {
+		return CreateProcessDraftArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+
+func (p *CreateProcessDraftArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *CreateProcessDraftArgs) GetFirstArgument() interface{} {
+	return p.Req
+}
+
+type CreateProcessDraftResult struct {
+	Success *inventory.CreateProcessDraftResp
+}
+
+var CreateProcessDraftResult_Success_DEFAULT *inventory.CreateProcessDraftResp
+
+func (p *CreateProcessDraftResult) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
+	if !p.IsSetSuccess() {
+		p.Success = new(inventory.CreateProcessDraftResp)
+	}
+	return p.Success.FastRead(buf, _type, number)
+}
+
+func (p *CreateProcessDraftResult) FastWrite(buf []byte) (n int) {
+	if !p.IsSetSuccess() {
+		return 0
+	}
+	return p.Success.FastWrite(buf)
+}
+
+func (p *CreateProcessDraftResult) Size() (n int) {
+	if !p.IsSetSuccess() {
+		return 0
+	}
+	return p.Success.Size()
+}
+
+func (p *CreateProcessDraftResult) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetSuccess() {
+		return out, nil
+	}
+	return proto.Marshal(p.Success)
+}
+
+func (p *CreateProcessDraftResult) Unmarshal(in []byte) error {
+	msg := new(inventory.CreateProcessDraftResp)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Success = msg
+	return nil
+}
+
+func (p *CreateProcessDraftResult) GetSuccess() *inventory.CreateProcessDraftResp {
+	if !p.IsSetSuccess() {
+		return CreateProcessDraftResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+func (p *CreateProcessDraftResult) SetSuccess(x interface{}) {
+	p.Success = x.(*inventory.CreateProcessDraftResp)
+}
+
+func (p *CreateProcessDraftResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *CreateProcessDraftResult) GetResult() interface{} {
+	return p.Success
+}
+
+func updateProcessDraftHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	switch s := arg.(type) {
+	case *streaming.Args:
+		st := s.Stream
+		req := new(inventory.UpdateProcessDraftReq)
+		if err := st.RecvMsg(req); err != nil {
+			return err
+		}
+		resp, err := handler.(inventory.InventoryService).UpdateProcessDraft(ctx, req)
+		if err != nil {
+			return err
+		}
+		return st.SendMsg(resp)
+	case *UpdateProcessDraftArgs:
+		success, err := handler.(inventory.InventoryService).UpdateProcessDraft(ctx, s.Req)
+		if err != nil {
+			return err
+		}
+		realResult := result.(*UpdateProcessDraftResult)
+		realResult.Success = success
+		return nil
+	default:
+		return errInvalidMessageType
+	}
+}
+func newUpdateProcessDraftArgs() interface{} {
+	return &UpdateProcessDraftArgs{}
+}
+
+func newUpdateProcessDraftResult() interface{} {
+	return &UpdateProcessDraftResult{}
+}
+
+type UpdateProcessDraftArgs struct {
+	Req *inventory.UpdateProcessDraftReq
+}
+
+func (p *UpdateProcessDraftArgs) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
+	if !p.IsSetReq() {
+		p.Req = new(inventory.UpdateProcessDraftReq)
+	}
+	return p.Req.FastRead(buf, _type, number)
+}
+
+func (p *UpdateProcessDraftArgs) FastWrite(buf []byte) (n int) {
+	if !p.IsSetReq() {
+		return 0
+	}
+	return p.Req.FastWrite(buf)
+}
+
+func (p *UpdateProcessDraftArgs) Size() (n int) {
+	if !p.IsSetReq() {
+		return 0
+	}
+	return p.Req.Size()
+}
+
+func (p *UpdateProcessDraftArgs) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetReq() {
+		return out, nil
+	}
+	return proto.Marshal(p.Req)
+}
+
+func (p *UpdateProcessDraftArgs) Unmarshal(in []byte) error {
+	msg := new(inventory.UpdateProcessDraftReq)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Req = msg
+	return nil
+}
+
+var UpdateProcessDraftArgs_Req_DEFAULT *inventory.UpdateProcessDraftReq
+
+func (p *UpdateProcessDraftArgs) GetReq() *inventory.UpdateProcessDraftReq {
+	if !p.IsSetReq() {
+		return UpdateProcessDraftArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+
+func (p *UpdateProcessDraftArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *UpdateProcessDraftArgs) GetFirstArgument() interface{} {
+	return p.Req
+}
+
+type UpdateProcessDraftResult struct {
+	Success *inventory.UpdateProcessDraftResp
+}
+
+var UpdateProcessDraftResult_Success_DEFAULT *inventory.UpdateProcessDraftResp
+
+func (p *UpdateProcessDraftResult) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
+	if !p.IsSetSuccess() {
+		p.Success = new(inventory.UpdateProcessDraftResp)
+	}
+	return p.Success.FastRead(buf, _type, number)
+}
+
+func (p *UpdateProcessDraftResult) FastWrite(buf []byte) (n int) {
+	if !p.IsSetSuccess() {
+		return 0
+	}
+	return p.Success.FastWrite(buf)
+}
+
+func (p *UpdateProcessDraftResult) Size() (n int) {
+	if !p.IsSetSuccess() {
+		return 0
+	}
+	return p.Success.Size()
+}
+
+func (p *UpdateProcessDraftResult) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetSuccess() {
+		return out, nil
+	}
+	return proto.Marshal(p.Success)
+}
+
+func (p *UpdateProcessDraftResult) Unmarshal(in []byte) error {
+	msg := new(inventory.UpdateProcessDraftResp)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Success = msg
+	return nil
+}
+
+func (p *UpdateProcessDraftResult) GetSuccess() *inventory.UpdateProcessDraftResp {
+	if !p.IsSetSuccess() {
+		return UpdateProcessDraftResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+func (p *UpdateProcessDraftResult) SetSuccess(x interface{}) {
+	p.Success = x.(*inventory.UpdateProcessDraftResp)
+}
+
+func (p *UpdateProcessDraftResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *UpdateProcessDraftResult) GetResult() interface{} {
+	return p.Success
+}
+
+func deleteProcessDraftHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	switch s := arg.(type) {
+	case *streaming.Args:
+		st := s.Stream
+		req := new(inventory.DeleteProcessDraftReq)
+		if err := st.RecvMsg(req); err != nil {
+			return err
+		}
+		resp, err := handler.(inventory.InventoryService).DeleteProcessDraft(ctx, req)
+		if err != nil {
+			return err
+		}
+		return st.SendMsg(resp)
+	case *DeleteProcessDraftArgs:
+		success, err := handler.(inventory.InventoryService).DeleteProcessDraft(ctx, s.Req)
+		if err != nil {
+			return err
+		}
+		realResult := result.(*DeleteProcessDraftResult)
+		realResult.Success = success
+		return nil
+	default:
+		return errInvalidMessageType
+	}
+}
+func newDeleteProcessDraftArgs() interface{} {
+	return &DeleteProcessDraftArgs{}
+}
+
+func newDeleteProcessDraftResult() interface{} {
+	return &DeleteProcessDraftResult{}
+}
+
+type DeleteProcessDraftArgs struct {
+	Req *inventory.DeleteProcessDraftReq
+}
+
+func (p *DeleteProcessDraftArgs) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
+	if !p.IsSetReq() {
+		p.Req = new(inventory.DeleteProcessDraftReq)
+	}
+	return p.Req.FastRead(buf, _type, number)
+}
+
+func (p *DeleteProcessDraftArgs) FastWrite(buf []byte) (n int) {
+	if !p.IsSetReq() {
+		return 0
+	}
+	return p.Req.FastWrite(buf)
+}
+
+func (p *DeleteProcessDraftArgs) Size() (n int) {
+	if !p.IsSetReq() {
+		return 0
+	}
+	return p.Req.Size()
+}
+
+func (p *DeleteProcessDraftArgs) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetReq() {
+		return out, nil
+	}
+	return proto.Marshal(p.Req)
+}
+
+func (p *DeleteProcessDraftArgs) Unmarshal(in []byte) error {
+	msg := new(inventory.DeleteProcessDraftReq)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Req = msg
+	return nil
+}
+
+var DeleteProcessDraftArgs_Req_DEFAULT *inventory.DeleteProcessDraftReq
+
+func (p *DeleteProcessDraftArgs) GetReq() *inventory.DeleteProcessDraftReq {
+	if !p.IsSetReq() {
+		return DeleteProcessDraftArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+
+func (p *DeleteProcessDraftArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *DeleteProcessDraftArgs) GetFirstArgument() interface{} {
+	return p.Req
+}
+
+type DeleteProcessDraftResult struct {
+	Success *inventory.DeleteProcessDraftResp
+}
+
+var DeleteProcessDraftResult_Success_DEFAULT *inventory.DeleteProcessDraftResp
+
+func (p *DeleteProcessDraftResult) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
+	if !p.IsSetSuccess() {
+		p.Success = new(inventory.DeleteProcessDraftResp)
+	}
+	return p.Success.FastRead(buf, _type, number)
+}
+
+func (p *DeleteProcessDraftResult) FastWrite(buf []byte) (n int) {
+	if !p.IsSetSuccess() {
+		return 0
+	}
+	return p.Success.FastWrite(buf)
+}
+
+func (p *DeleteProcessDraftResult) Size() (n int) {
+	if !p.IsSetSuccess() {
+		return 0
+	}
+	return p.Success.Size()
+}
+
+func (p *DeleteProcessDraftResult) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetSuccess() {
+		return out, nil
+	}
+	return proto.Marshal(p.Success)
+}
+
+func (p *DeleteProcessDraftResult) Unmarshal(in []byte) error {
+	msg := new(inventory.DeleteProcessDraftResp)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Success = msg
+	return nil
+}
+
+func (p *DeleteProcessDraftResult) GetSuccess() *inventory.DeleteProcessDraftResp {
+	if !p.IsSetSuccess() {
+		return DeleteProcessDraftResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+func (p *DeleteProcessDraftResult) SetSuccess(x interface{}) {
+	p.Success = x.(*inventory.DeleteProcessDraftResp)
+}
+
+func (p *DeleteProcessDraftResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *DeleteProcessDraftResult) GetResult() interface{} {
+	return p.Success
+}
+
+func submitProcessHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	switch s := arg.(type) {
+	case *streaming.Args:
+		st := s.Stream
+		req := new(inventory.SubmitProcessReq)
+		if err := st.RecvMsg(req); err != nil {
+			return err
+		}
+		resp, err := handler.(inventory.InventoryService).SubmitProcess(ctx, req)
+		if err != nil {
+			return err
+		}
+		return st.SendMsg(resp)
+	case *SubmitProcessArgs:
+		success, err := handler.(inventory.InventoryService).SubmitProcess(ctx, s.Req)
+		if err != nil {
+			return err
+		}
+		realResult := result.(*SubmitProcessResult)
+		realResult.Success = success
+		return nil
+	default:
+		return errInvalidMessageType
+	}
+}
+func newSubmitProcessArgs() interface{} {
+	return &SubmitProcessArgs{}
+}
+
+func newSubmitProcessResult() interface{} {
+	return &SubmitProcessResult{}
+}
+
+type SubmitProcessArgs struct {
+	Req *inventory.SubmitProcessReq
+}
+
+func (p *SubmitProcessArgs) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
+	if !p.IsSetReq() {
+		p.Req = new(inventory.SubmitProcessReq)
+	}
+	return p.Req.FastRead(buf, _type, number)
+}
+
+func (p *SubmitProcessArgs) FastWrite(buf []byte) (n int) {
+	if !p.IsSetReq() {
+		return 0
+	}
+	return p.Req.FastWrite(buf)
+}
+
+func (p *SubmitProcessArgs) Size() (n int) {
+	if !p.IsSetReq() {
+		return 0
+	}
+	return p.Req.Size()
+}
+
+func (p *SubmitProcessArgs) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetReq() {
+		return out, nil
+	}
+	return proto.Marshal(p.Req)
+}
+
+func (p *SubmitProcessArgs) Unmarshal(in []byte) error {
+	msg := new(inventory.SubmitProcessReq)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Req = msg
+	return nil
+}
+
+var SubmitProcessArgs_Req_DEFAULT *inventory.SubmitProcessReq
+
+func (p *SubmitProcessArgs) GetReq() *inventory.SubmitProcessReq {
+	if !p.IsSetReq() {
+		return SubmitProcessArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+
+func (p *SubmitProcessArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *SubmitProcessArgs) GetFirstArgument() interface{} {
+	return p.Req
+}
+
+type SubmitProcessResult struct {
+	Success *inventory.SubmitProcessResp
+}
+
+var SubmitProcessResult_Success_DEFAULT *inventory.SubmitProcessResp
+
+func (p *SubmitProcessResult) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
+	if !p.IsSetSuccess() {
+		p.Success = new(inventory.SubmitProcessResp)
+	}
+	return p.Success.FastRead(buf, _type, number)
+}
+
+func (p *SubmitProcessResult) FastWrite(buf []byte) (n int) {
+	if !p.IsSetSuccess() {
+		return 0
+	}
+	return p.Success.FastWrite(buf)
+}
+
+func (p *SubmitProcessResult) Size() (n int) {
+	if !p.IsSetSuccess() {
+		return 0
+	}
+	return p.Success.Size()
+}
+
+func (p *SubmitProcessResult) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetSuccess() {
+		return out, nil
+	}
+	return proto.Marshal(p.Success)
+}
+
+func (p *SubmitProcessResult) Unmarshal(in []byte) error {
+	msg := new(inventory.SubmitProcessResp)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Success = msg
+	return nil
+}
+
+func (p *SubmitProcessResult) GetSuccess() *inventory.SubmitProcessResp {
+	if !p.IsSetSuccess() {
+		return SubmitProcessResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+func (p *SubmitProcessResult) SetSuccess(x interface{}) {
+	p.Success = x.(*inventory.SubmitProcessResp)
+}
+
+func (p *SubmitProcessResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *SubmitProcessResult) GetResult() interface{} {
+	return p.Success
+}
+
+func getProcessHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	switch s := arg.(type) {
+	case *streaming.Args:
+		st := s.Stream
+		req := new(inventory.GetProcessReq)
+		if err := st.RecvMsg(req); err != nil {
+			return err
+		}
+		resp, err := handler.(inventory.InventoryService).GetProcess(ctx, req)
+		if err != nil {
+			return err
+		}
+		return st.SendMsg(resp)
+	case *GetProcessArgs:
+		success, err := handler.(inventory.InventoryService).GetProcess(ctx, s.Req)
+		if err != nil {
+			return err
+		}
+		realResult := result.(*GetProcessResult)
+		realResult.Success = success
+		return nil
+	default:
+		return errInvalidMessageType
+	}
+}
+func newGetProcessArgs() interface{} {
+	return &GetProcessArgs{}
+}
+
+func newGetProcessResult() interface{} {
+	return &GetProcessResult{}
+}
+
+type GetProcessArgs struct {
+	Req *inventory.GetProcessReq
+}
+
+func (p *GetProcessArgs) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
+	if !p.IsSetReq() {
+		p.Req = new(inventory.GetProcessReq)
+	}
+	return p.Req.FastRead(buf, _type, number)
+}
+
+func (p *GetProcessArgs) FastWrite(buf []byte) (n int) {
+	if !p.IsSetReq() {
+		return 0
+	}
+	return p.Req.FastWrite(buf)
+}
+
+func (p *GetProcessArgs) Size() (n int) {
+	if !p.IsSetReq() {
+		return 0
+	}
+	return p.Req.Size()
+}
+
+func (p *GetProcessArgs) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetReq() {
+		return out, nil
+	}
+	return proto.Marshal(p.Req)
+}
+
+func (p *GetProcessArgs) Unmarshal(in []byte) error {
+	msg := new(inventory.GetProcessReq)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Req = msg
+	return nil
+}
+
+var GetProcessArgs_Req_DEFAULT *inventory.GetProcessReq
+
+func (p *GetProcessArgs) GetReq() *inventory.GetProcessReq {
+	if !p.IsSetReq() {
+		return GetProcessArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+
+func (p *GetProcessArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *GetProcessArgs) GetFirstArgument() interface{} {
+	return p.Req
+}
+
+type GetProcessResult struct {
+	Success *inventory.GetProcessResp
+}
+
+var GetProcessResult_Success_DEFAULT *inventory.GetProcessResp
+
+func (p *GetProcessResult) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
+	if !p.IsSetSuccess() {
+		p.Success = new(inventory.GetProcessResp)
+	}
+	return p.Success.FastRead(buf, _type, number)
+}
+
+func (p *GetProcessResult) FastWrite(buf []byte) (n int) {
+	if !p.IsSetSuccess() {
+		return 0
+	}
+	return p.Success.FastWrite(buf)
+}
+
+func (p *GetProcessResult) Size() (n int) {
+	if !p.IsSetSuccess() {
+		return 0
+	}
+	return p.Success.Size()
+}
+
+func (p *GetProcessResult) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetSuccess() {
+		return out, nil
+	}
+	return proto.Marshal(p.Success)
+}
+
+func (p *GetProcessResult) Unmarshal(in []byte) error {
+	msg := new(inventory.GetProcessResp)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Success = msg
+	return nil
+}
+
+func (p *GetProcessResult) GetSuccess() *inventory.GetProcessResp {
+	if !p.IsSetSuccess() {
+		return GetProcessResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+func (p *GetProcessResult) SetSuccess(x interface{}) {
+	p.Success = x.(*inventory.GetProcessResp)
+}
+
+func (p *GetProcessResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *GetProcessResult) GetResult() interface{} {
+	return p.Success
+}
+
+func listProcessHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	switch s := arg.(type) {
+	case *streaming.Args:
+		st := s.Stream
+		req := new(inventory.ListProcessReq)
+		if err := st.RecvMsg(req); err != nil {
+			return err
+		}
+		resp, err := handler.(inventory.InventoryService).ListProcess(ctx, req)
+		if err != nil {
+			return err
+		}
+		return st.SendMsg(resp)
+	case *ListProcessArgs:
+		success, err := handler.(inventory.InventoryService).ListProcess(ctx, s.Req)
+		if err != nil {
+			return err
+		}
+		realResult := result.(*ListProcessResult)
+		realResult.Success = success
+		return nil
+	default:
+		return errInvalidMessageType
+	}
+}
+func newListProcessArgs() interface{} {
+	return &ListProcessArgs{}
+}
+
+func newListProcessResult() interface{} {
+	return &ListProcessResult{}
+}
+
+type ListProcessArgs struct {
+	Req *inventory.ListProcessReq
+}
+
+func (p *ListProcessArgs) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
+	if !p.IsSetReq() {
+		p.Req = new(inventory.ListProcessReq)
+	}
+	return p.Req.FastRead(buf, _type, number)
+}
+
+func (p *ListProcessArgs) FastWrite(buf []byte) (n int) {
+	if !p.IsSetReq() {
+		return 0
+	}
+	return p.Req.FastWrite(buf)
+}
+
+func (p *ListProcessArgs) Size() (n int) {
+	if !p.IsSetReq() {
+		return 0
+	}
+	return p.Req.Size()
+}
+
+func (p *ListProcessArgs) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetReq() {
+		return out, nil
+	}
+	return proto.Marshal(p.Req)
+}
+
+func (p *ListProcessArgs) Unmarshal(in []byte) error {
+	msg := new(inventory.ListProcessReq)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Req = msg
+	return nil
+}
+
+var ListProcessArgs_Req_DEFAULT *inventory.ListProcessReq
+
+func (p *ListProcessArgs) GetReq() *inventory.ListProcessReq {
+	if !p.IsSetReq() {
+		return ListProcessArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+
+func (p *ListProcessArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *ListProcessArgs) GetFirstArgument() interface{} {
+	return p.Req
+}
+
+type ListProcessResult struct {
+	Success *inventory.ListProcessResp
+}
+
+var ListProcessResult_Success_DEFAULT *inventory.ListProcessResp
+
+func (p *ListProcessResult) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
+	if !p.IsSetSuccess() {
+		p.Success = new(inventory.ListProcessResp)
+	}
+	return p.Success.FastRead(buf, _type, number)
+}
+
+func (p *ListProcessResult) FastWrite(buf []byte) (n int) {
+	if !p.IsSetSuccess() {
+		return 0
+	}
+	return p.Success.FastWrite(buf)
+}
+
+func (p *ListProcessResult) Size() (n int) {
+	if !p.IsSetSuccess() {
+		return 0
+	}
+	return p.Success.Size()
+}
+
+func (p *ListProcessResult) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetSuccess() {
+		return out, nil
+	}
+	return proto.Marshal(p.Success)
+}
+
+func (p *ListProcessResult) Unmarshal(in []byte) error {
+	msg := new(inventory.ListProcessResp)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Success = msg
+	return nil
+}
+
+func (p *ListProcessResult) GetSuccess() *inventory.ListProcessResp {
+	if !p.IsSetSuccess() {
+		return ListProcessResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+func (p *ListProcessResult) SetSuccess(x interface{}) {
+	p.Success = x.(*inventory.ListProcessResp)
+}
+
+func (p *ListProcessResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *ListProcessResult) GetResult() interface{} {
 	return p.Success
 }
 
@@ -2022,6 +3031,159 @@ func (p *SubmitInventoryFlowResult) GetResult() interface{} {
 	return p.Success
 }
 
+func completeInventoryFlowHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	switch s := arg.(type) {
+	case *streaming.Args:
+		st := s.Stream
+		req := new(inventory.CompleteInventoryFlowReq)
+		if err := st.RecvMsg(req); err != nil {
+			return err
+		}
+		resp, err := handler.(inventory.InventoryService).CompleteInventoryFlow(ctx, req)
+		if err != nil {
+			return err
+		}
+		return st.SendMsg(resp)
+	case *CompleteInventoryFlowArgs:
+		success, err := handler.(inventory.InventoryService).CompleteInventoryFlow(ctx, s.Req)
+		if err != nil {
+			return err
+		}
+		realResult := result.(*CompleteInventoryFlowResult)
+		realResult.Success = success
+		return nil
+	default:
+		return errInvalidMessageType
+	}
+}
+func newCompleteInventoryFlowArgs() interface{} {
+	return &CompleteInventoryFlowArgs{}
+}
+
+func newCompleteInventoryFlowResult() interface{} {
+	return &CompleteInventoryFlowResult{}
+}
+
+type CompleteInventoryFlowArgs struct {
+	Req *inventory.CompleteInventoryFlowReq
+}
+
+func (p *CompleteInventoryFlowArgs) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
+	if !p.IsSetReq() {
+		p.Req = new(inventory.CompleteInventoryFlowReq)
+	}
+	return p.Req.FastRead(buf, _type, number)
+}
+
+func (p *CompleteInventoryFlowArgs) FastWrite(buf []byte) (n int) {
+	if !p.IsSetReq() {
+		return 0
+	}
+	return p.Req.FastWrite(buf)
+}
+
+func (p *CompleteInventoryFlowArgs) Size() (n int) {
+	if !p.IsSetReq() {
+		return 0
+	}
+	return p.Req.Size()
+}
+
+func (p *CompleteInventoryFlowArgs) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetReq() {
+		return out, nil
+	}
+	return proto.Marshal(p.Req)
+}
+
+func (p *CompleteInventoryFlowArgs) Unmarshal(in []byte) error {
+	msg := new(inventory.CompleteInventoryFlowReq)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Req = msg
+	return nil
+}
+
+var CompleteInventoryFlowArgs_Req_DEFAULT *inventory.CompleteInventoryFlowReq
+
+func (p *CompleteInventoryFlowArgs) GetReq() *inventory.CompleteInventoryFlowReq {
+	if !p.IsSetReq() {
+		return CompleteInventoryFlowArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+
+func (p *CompleteInventoryFlowArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *CompleteInventoryFlowArgs) GetFirstArgument() interface{} {
+	return p.Req
+}
+
+type CompleteInventoryFlowResult struct {
+	Success *inventory.CompleteInventoryFlowResp
+}
+
+var CompleteInventoryFlowResult_Success_DEFAULT *inventory.CompleteInventoryFlowResp
+
+func (p *CompleteInventoryFlowResult) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
+	if !p.IsSetSuccess() {
+		p.Success = new(inventory.CompleteInventoryFlowResp)
+	}
+	return p.Success.FastRead(buf, _type, number)
+}
+
+func (p *CompleteInventoryFlowResult) FastWrite(buf []byte) (n int) {
+	if !p.IsSetSuccess() {
+		return 0
+	}
+	return p.Success.FastWrite(buf)
+}
+
+func (p *CompleteInventoryFlowResult) Size() (n int) {
+	if !p.IsSetSuccess() {
+		return 0
+	}
+	return p.Success.Size()
+}
+
+func (p *CompleteInventoryFlowResult) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetSuccess() {
+		return out, nil
+	}
+	return proto.Marshal(p.Success)
+}
+
+func (p *CompleteInventoryFlowResult) Unmarshal(in []byte) error {
+	msg := new(inventory.CompleteInventoryFlowResp)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Success = msg
+	return nil
+}
+
+func (p *CompleteInventoryFlowResult) GetSuccess() *inventory.CompleteInventoryFlowResp {
+	if !p.IsSetSuccess() {
+		return CompleteInventoryFlowResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+func (p *CompleteInventoryFlowResult) SetSuccess(x interface{}) {
+	p.Success = x.(*inventory.CompleteInventoryFlowResp)
+}
+
+func (p *CompleteInventoryFlowResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *CompleteInventoryFlowResult) GetResult() interface{} {
+	return p.Success
+}
+
 func auditInventoryFlowHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
 	switch s := arg.(type) {
 	case *streaming.Args:
@@ -2481,6 +3643,924 @@ func (p *ListInventoryFlowResult) GetResult() interface{} {
 	return p.Success
 }
 
+func createEngineeringOrderDraftHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	switch s := arg.(type) {
+	case *streaming.Args:
+		st := s.Stream
+		req := new(inventory.CreateEngineeringOrderDraftReq)
+		if err := st.RecvMsg(req); err != nil {
+			return err
+		}
+		resp, err := handler.(inventory.InventoryService).CreateEngineeringOrderDraft(ctx, req)
+		if err != nil {
+			return err
+		}
+		return st.SendMsg(resp)
+	case *CreateEngineeringOrderDraftArgs:
+		success, err := handler.(inventory.InventoryService).CreateEngineeringOrderDraft(ctx, s.Req)
+		if err != nil {
+			return err
+		}
+		realResult := result.(*CreateEngineeringOrderDraftResult)
+		realResult.Success = success
+		return nil
+	default:
+		return errInvalidMessageType
+	}
+}
+func newCreateEngineeringOrderDraftArgs() interface{} {
+	return &CreateEngineeringOrderDraftArgs{}
+}
+
+func newCreateEngineeringOrderDraftResult() interface{} {
+	return &CreateEngineeringOrderDraftResult{}
+}
+
+type CreateEngineeringOrderDraftArgs struct {
+	Req *inventory.CreateEngineeringOrderDraftReq
+}
+
+func (p *CreateEngineeringOrderDraftArgs) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
+	if !p.IsSetReq() {
+		p.Req = new(inventory.CreateEngineeringOrderDraftReq)
+	}
+	return p.Req.FastRead(buf, _type, number)
+}
+
+func (p *CreateEngineeringOrderDraftArgs) FastWrite(buf []byte) (n int) {
+	if !p.IsSetReq() {
+		return 0
+	}
+	return p.Req.FastWrite(buf)
+}
+
+func (p *CreateEngineeringOrderDraftArgs) Size() (n int) {
+	if !p.IsSetReq() {
+		return 0
+	}
+	return p.Req.Size()
+}
+
+func (p *CreateEngineeringOrderDraftArgs) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetReq() {
+		return out, nil
+	}
+	return proto.Marshal(p.Req)
+}
+
+func (p *CreateEngineeringOrderDraftArgs) Unmarshal(in []byte) error {
+	msg := new(inventory.CreateEngineeringOrderDraftReq)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Req = msg
+	return nil
+}
+
+var CreateEngineeringOrderDraftArgs_Req_DEFAULT *inventory.CreateEngineeringOrderDraftReq
+
+func (p *CreateEngineeringOrderDraftArgs) GetReq() *inventory.CreateEngineeringOrderDraftReq {
+	if !p.IsSetReq() {
+		return CreateEngineeringOrderDraftArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+
+func (p *CreateEngineeringOrderDraftArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *CreateEngineeringOrderDraftArgs) GetFirstArgument() interface{} {
+	return p.Req
+}
+
+type CreateEngineeringOrderDraftResult struct {
+	Success *inventory.CreateEngineeringOrderDraftResp
+}
+
+var CreateEngineeringOrderDraftResult_Success_DEFAULT *inventory.CreateEngineeringOrderDraftResp
+
+func (p *CreateEngineeringOrderDraftResult) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
+	if !p.IsSetSuccess() {
+		p.Success = new(inventory.CreateEngineeringOrderDraftResp)
+	}
+	return p.Success.FastRead(buf, _type, number)
+}
+
+func (p *CreateEngineeringOrderDraftResult) FastWrite(buf []byte) (n int) {
+	if !p.IsSetSuccess() {
+		return 0
+	}
+	return p.Success.FastWrite(buf)
+}
+
+func (p *CreateEngineeringOrderDraftResult) Size() (n int) {
+	if !p.IsSetSuccess() {
+		return 0
+	}
+	return p.Success.Size()
+}
+
+func (p *CreateEngineeringOrderDraftResult) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetSuccess() {
+		return out, nil
+	}
+	return proto.Marshal(p.Success)
+}
+
+func (p *CreateEngineeringOrderDraftResult) Unmarshal(in []byte) error {
+	msg := new(inventory.CreateEngineeringOrderDraftResp)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Success = msg
+	return nil
+}
+
+func (p *CreateEngineeringOrderDraftResult) GetSuccess() *inventory.CreateEngineeringOrderDraftResp {
+	if !p.IsSetSuccess() {
+		return CreateEngineeringOrderDraftResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+func (p *CreateEngineeringOrderDraftResult) SetSuccess(x interface{}) {
+	p.Success = x.(*inventory.CreateEngineeringOrderDraftResp)
+}
+
+func (p *CreateEngineeringOrderDraftResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *CreateEngineeringOrderDraftResult) GetResult() interface{} {
+	return p.Success
+}
+
+func updateEngineeringOrderDraftHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	switch s := arg.(type) {
+	case *streaming.Args:
+		st := s.Stream
+		req := new(inventory.UpdateEngineeringOrderDraftReq)
+		if err := st.RecvMsg(req); err != nil {
+			return err
+		}
+		resp, err := handler.(inventory.InventoryService).UpdateEngineeringOrderDraft(ctx, req)
+		if err != nil {
+			return err
+		}
+		return st.SendMsg(resp)
+	case *UpdateEngineeringOrderDraftArgs:
+		success, err := handler.(inventory.InventoryService).UpdateEngineeringOrderDraft(ctx, s.Req)
+		if err != nil {
+			return err
+		}
+		realResult := result.(*UpdateEngineeringOrderDraftResult)
+		realResult.Success = success
+		return nil
+	default:
+		return errInvalidMessageType
+	}
+}
+func newUpdateEngineeringOrderDraftArgs() interface{} {
+	return &UpdateEngineeringOrderDraftArgs{}
+}
+
+func newUpdateEngineeringOrderDraftResult() interface{} {
+	return &UpdateEngineeringOrderDraftResult{}
+}
+
+type UpdateEngineeringOrderDraftArgs struct {
+	Req *inventory.UpdateEngineeringOrderDraftReq
+}
+
+func (p *UpdateEngineeringOrderDraftArgs) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
+	if !p.IsSetReq() {
+		p.Req = new(inventory.UpdateEngineeringOrderDraftReq)
+	}
+	return p.Req.FastRead(buf, _type, number)
+}
+
+func (p *UpdateEngineeringOrderDraftArgs) FastWrite(buf []byte) (n int) {
+	if !p.IsSetReq() {
+		return 0
+	}
+	return p.Req.FastWrite(buf)
+}
+
+func (p *UpdateEngineeringOrderDraftArgs) Size() (n int) {
+	if !p.IsSetReq() {
+		return 0
+	}
+	return p.Req.Size()
+}
+
+func (p *UpdateEngineeringOrderDraftArgs) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetReq() {
+		return out, nil
+	}
+	return proto.Marshal(p.Req)
+}
+
+func (p *UpdateEngineeringOrderDraftArgs) Unmarshal(in []byte) error {
+	msg := new(inventory.UpdateEngineeringOrderDraftReq)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Req = msg
+	return nil
+}
+
+var UpdateEngineeringOrderDraftArgs_Req_DEFAULT *inventory.UpdateEngineeringOrderDraftReq
+
+func (p *UpdateEngineeringOrderDraftArgs) GetReq() *inventory.UpdateEngineeringOrderDraftReq {
+	if !p.IsSetReq() {
+		return UpdateEngineeringOrderDraftArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+
+func (p *UpdateEngineeringOrderDraftArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *UpdateEngineeringOrderDraftArgs) GetFirstArgument() interface{} {
+	return p.Req
+}
+
+type UpdateEngineeringOrderDraftResult struct {
+	Success *inventory.UpdateEngineeringOrderDraftResp
+}
+
+var UpdateEngineeringOrderDraftResult_Success_DEFAULT *inventory.UpdateEngineeringOrderDraftResp
+
+func (p *UpdateEngineeringOrderDraftResult) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
+	if !p.IsSetSuccess() {
+		p.Success = new(inventory.UpdateEngineeringOrderDraftResp)
+	}
+	return p.Success.FastRead(buf, _type, number)
+}
+
+func (p *UpdateEngineeringOrderDraftResult) FastWrite(buf []byte) (n int) {
+	if !p.IsSetSuccess() {
+		return 0
+	}
+	return p.Success.FastWrite(buf)
+}
+
+func (p *UpdateEngineeringOrderDraftResult) Size() (n int) {
+	if !p.IsSetSuccess() {
+		return 0
+	}
+	return p.Success.Size()
+}
+
+func (p *UpdateEngineeringOrderDraftResult) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetSuccess() {
+		return out, nil
+	}
+	return proto.Marshal(p.Success)
+}
+
+func (p *UpdateEngineeringOrderDraftResult) Unmarshal(in []byte) error {
+	msg := new(inventory.UpdateEngineeringOrderDraftResp)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Success = msg
+	return nil
+}
+
+func (p *UpdateEngineeringOrderDraftResult) GetSuccess() *inventory.UpdateEngineeringOrderDraftResp {
+	if !p.IsSetSuccess() {
+		return UpdateEngineeringOrderDraftResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+func (p *UpdateEngineeringOrderDraftResult) SetSuccess(x interface{}) {
+	p.Success = x.(*inventory.UpdateEngineeringOrderDraftResp)
+}
+
+func (p *UpdateEngineeringOrderDraftResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *UpdateEngineeringOrderDraftResult) GetResult() interface{} {
+	return p.Success
+}
+
+func deleteEngineeringOrderDraftHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	switch s := arg.(type) {
+	case *streaming.Args:
+		st := s.Stream
+		req := new(inventory.DeleteEngineeringOrderDraftReq)
+		if err := st.RecvMsg(req); err != nil {
+			return err
+		}
+		resp, err := handler.(inventory.InventoryService).DeleteEngineeringOrderDraft(ctx, req)
+		if err != nil {
+			return err
+		}
+		return st.SendMsg(resp)
+	case *DeleteEngineeringOrderDraftArgs:
+		success, err := handler.(inventory.InventoryService).DeleteEngineeringOrderDraft(ctx, s.Req)
+		if err != nil {
+			return err
+		}
+		realResult := result.(*DeleteEngineeringOrderDraftResult)
+		realResult.Success = success
+		return nil
+	default:
+		return errInvalidMessageType
+	}
+}
+func newDeleteEngineeringOrderDraftArgs() interface{} {
+	return &DeleteEngineeringOrderDraftArgs{}
+}
+
+func newDeleteEngineeringOrderDraftResult() interface{} {
+	return &DeleteEngineeringOrderDraftResult{}
+}
+
+type DeleteEngineeringOrderDraftArgs struct {
+	Req *inventory.DeleteEngineeringOrderDraftReq
+}
+
+func (p *DeleteEngineeringOrderDraftArgs) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
+	if !p.IsSetReq() {
+		p.Req = new(inventory.DeleteEngineeringOrderDraftReq)
+	}
+	return p.Req.FastRead(buf, _type, number)
+}
+
+func (p *DeleteEngineeringOrderDraftArgs) FastWrite(buf []byte) (n int) {
+	if !p.IsSetReq() {
+		return 0
+	}
+	return p.Req.FastWrite(buf)
+}
+
+func (p *DeleteEngineeringOrderDraftArgs) Size() (n int) {
+	if !p.IsSetReq() {
+		return 0
+	}
+	return p.Req.Size()
+}
+
+func (p *DeleteEngineeringOrderDraftArgs) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetReq() {
+		return out, nil
+	}
+	return proto.Marshal(p.Req)
+}
+
+func (p *DeleteEngineeringOrderDraftArgs) Unmarshal(in []byte) error {
+	msg := new(inventory.DeleteEngineeringOrderDraftReq)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Req = msg
+	return nil
+}
+
+var DeleteEngineeringOrderDraftArgs_Req_DEFAULT *inventory.DeleteEngineeringOrderDraftReq
+
+func (p *DeleteEngineeringOrderDraftArgs) GetReq() *inventory.DeleteEngineeringOrderDraftReq {
+	if !p.IsSetReq() {
+		return DeleteEngineeringOrderDraftArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+
+func (p *DeleteEngineeringOrderDraftArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *DeleteEngineeringOrderDraftArgs) GetFirstArgument() interface{} {
+	return p.Req
+}
+
+type DeleteEngineeringOrderDraftResult struct {
+	Success *inventory.DeleteEngineeringOrderDraftResp
+}
+
+var DeleteEngineeringOrderDraftResult_Success_DEFAULT *inventory.DeleteEngineeringOrderDraftResp
+
+func (p *DeleteEngineeringOrderDraftResult) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
+	if !p.IsSetSuccess() {
+		p.Success = new(inventory.DeleteEngineeringOrderDraftResp)
+	}
+	return p.Success.FastRead(buf, _type, number)
+}
+
+func (p *DeleteEngineeringOrderDraftResult) FastWrite(buf []byte) (n int) {
+	if !p.IsSetSuccess() {
+		return 0
+	}
+	return p.Success.FastWrite(buf)
+}
+
+func (p *DeleteEngineeringOrderDraftResult) Size() (n int) {
+	if !p.IsSetSuccess() {
+		return 0
+	}
+	return p.Success.Size()
+}
+
+func (p *DeleteEngineeringOrderDraftResult) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetSuccess() {
+		return out, nil
+	}
+	return proto.Marshal(p.Success)
+}
+
+func (p *DeleteEngineeringOrderDraftResult) Unmarshal(in []byte) error {
+	msg := new(inventory.DeleteEngineeringOrderDraftResp)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Success = msg
+	return nil
+}
+
+func (p *DeleteEngineeringOrderDraftResult) GetSuccess() *inventory.DeleteEngineeringOrderDraftResp {
+	if !p.IsSetSuccess() {
+		return DeleteEngineeringOrderDraftResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+func (p *DeleteEngineeringOrderDraftResult) SetSuccess(x interface{}) {
+	p.Success = x.(*inventory.DeleteEngineeringOrderDraftResp)
+}
+
+func (p *DeleteEngineeringOrderDraftResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *DeleteEngineeringOrderDraftResult) GetResult() interface{} {
+	return p.Success
+}
+
+func submitEngineeringOrderHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	switch s := arg.(type) {
+	case *streaming.Args:
+		st := s.Stream
+		req := new(inventory.SubmitEngineeringOrderReq)
+		if err := st.RecvMsg(req); err != nil {
+			return err
+		}
+		resp, err := handler.(inventory.InventoryService).SubmitEngineeringOrder(ctx, req)
+		if err != nil {
+			return err
+		}
+		return st.SendMsg(resp)
+	case *SubmitEngineeringOrderArgs:
+		success, err := handler.(inventory.InventoryService).SubmitEngineeringOrder(ctx, s.Req)
+		if err != nil {
+			return err
+		}
+		realResult := result.(*SubmitEngineeringOrderResult)
+		realResult.Success = success
+		return nil
+	default:
+		return errInvalidMessageType
+	}
+}
+func newSubmitEngineeringOrderArgs() interface{} {
+	return &SubmitEngineeringOrderArgs{}
+}
+
+func newSubmitEngineeringOrderResult() interface{} {
+	return &SubmitEngineeringOrderResult{}
+}
+
+type SubmitEngineeringOrderArgs struct {
+	Req *inventory.SubmitEngineeringOrderReq
+}
+
+func (p *SubmitEngineeringOrderArgs) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
+	if !p.IsSetReq() {
+		p.Req = new(inventory.SubmitEngineeringOrderReq)
+	}
+	return p.Req.FastRead(buf, _type, number)
+}
+
+func (p *SubmitEngineeringOrderArgs) FastWrite(buf []byte) (n int) {
+	if !p.IsSetReq() {
+		return 0
+	}
+	return p.Req.FastWrite(buf)
+}
+
+func (p *SubmitEngineeringOrderArgs) Size() (n int) {
+	if !p.IsSetReq() {
+		return 0
+	}
+	return p.Req.Size()
+}
+
+func (p *SubmitEngineeringOrderArgs) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetReq() {
+		return out, nil
+	}
+	return proto.Marshal(p.Req)
+}
+
+func (p *SubmitEngineeringOrderArgs) Unmarshal(in []byte) error {
+	msg := new(inventory.SubmitEngineeringOrderReq)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Req = msg
+	return nil
+}
+
+var SubmitEngineeringOrderArgs_Req_DEFAULT *inventory.SubmitEngineeringOrderReq
+
+func (p *SubmitEngineeringOrderArgs) GetReq() *inventory.SubmitEngineeringOrderReq {
+	if !p.IsSetReq() {
+		return SubmitEngineeringOrderArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+
+func (p *SubmitEngineeringOrderArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *SubmitEngineeringOrderArgs) GetFirstArgument() interface{} {
+	return p.Req
+}
+
+type SubmitEngineeringOrderResult struct {
+	Success *inventory.SubmitEngineeringOrderResp
+}
+
+var SubmitEngineeringOrderResult_Success_DEFAULT *inventory.SubmitEngineeringOrderResp
+
+func (p *SubmitEngineeringOrderResult) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
+	if !p.IsSetSuccess() {
+		p.Success = new(inventory.SubmitEngineeringOrderResp)
+	}
+	return p.Success.FastRead(buf, _type, number)
+}
+
+func (p *SubmitEngineeringOrderResult) FastWrite(buf []byte) (n int) {
+	if !p.IsSetSuccess() {
+		return 0
+	}
+	return p.Success.FastWrite(buf)
+}
+
+func (p *SubmitEngineeringOrderResult) Size() (n int) {
+	if !p.IsSetSuccess() {
+		return 0
+	}
+	return p.Success.Size()
+}
+
+func (p *SubmitEngineeringOrderResult) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetSuccess() {
+		return out, nil
+	}
+	return proto.Marshal(p.Success)
+}
+
+func (p *SubmitEngineeringOrderResult) Unmarshal(in []byte) error {
+	msg := new(inventory.SubmitEngineeringOrderResp)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Success = msg
+	return nil
+}
+
+func (p *SubmitEngineeringOrderResult) GetSuccess() *inventory.SubmitEngineeringOrderResp {
+	if !p.IsSetSuccess() {
+		return SubmitEngineeringOrderResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+func (p *SubmitEngineeringOrderResult) SetSuccess(x interface{}) {
+	p.Success = x.(*inventory.SubmitEngineeringOrderResp)
+}
+
+func (p *SubmitEngineeringOrderResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *SubmitEngineeringOrderResult) GetResult() interface{} {
+	return p.Success
+}
+
+func getEngineeringOrderHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	switch s := arg.(type) {
+	case *streaming.Args:
+		st := s.Stream
+		req := new(inventory.GetEngineeringOrderReq)
+		if err := st.RecvMsg(req); err != nil {
+			return err
+		}
+		resp, err := handler.(inventory.InventoryService).GetEngineeringOrder(ctx, req)
+		if err != nil {
+			return err
+		}
+		return st.SendMsg(resp)
+	case *GetEngineeringOrderArgs:
+		success, err := handler.(inventory.InventoryService).GetEngineeringOrder(ctx, s.Req)
+		if err != nil {
+			return err
+		}
+		realResult := result.(*GetEngineeringOrderResult)
+		realResult.Success = success
+		return nil
+	default:
+		return errInvalidMessageType
+	}
+}
+func newGetEngineeringOrderArgs() interface{} {
+	return &GetEngineeringOrderArgs{}
+}
+
+func newGetEngineeringOrderResult() interface{} {
+	return &GetEngineeringOrderResult{}
+}
+
+type GetEngineeringOrderArgs struct {
+	Req *inventory.GetEngineeringOrderReq
+}
+
+func (p *GetEngineeringOrderArgs) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
+	if !p.IsSetReq() {
+		p.Req = new(inventory.GetEngineeringOrderReq)
+	}
+	return p.Req.FastRead(buf, _type, number)
+}
+
+func (p *GetEngineeringOrderArgs) FastWrite(buf []byte) (n int) {
+	if !p.IsSetReq() {
+		return 0
+	}
+	return p.Req.FastWrite(buf)
+}
+
+func (p *GetEngineeringOrderArgs) Size() (n int) {
+	if !p.IsSetReq() {
+		return 0
+	}
+	return p.Req.Size()
+}
+
+func (p *GetEngineeringOrderArgs) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetReq() {
+		return out, nil
+	}
+	return proto.Marshal(p.Req)
+}
+
+func (p *GetEngineeringOrderArgs) Unmarshal(in []byte) error {
+	msg := new(inventory.GetEngineeringOrderReq)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Req = msg
+	return nil
+}
+
+var GetEngineeringOrderArgs_Req_DEFAULT *inventory.GetEngineeringOrderReq
+
+func (p *GetEngineeringOrderArgs) GetReq() *inventory.GetEngineeringOrderReq {
+	if !p.IsSetReq() {
+		return GetEngineeringOrderArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+
+func (p *GetEngineeringOrderArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *GetEngineeringOrderArgs) GetFirstArgument() interface{} {
+	return p.Req
+}
+
+type GetEngineeringOrderResult struct {
+	Success *inventory.GetEngineeringOrderResp
+}
+
+var GetEngineeringOrderResult_Success_DEFAULT *inventory.GetEngineeringOrderResp
+
+func (p *GetEngineeringOrderResult) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
+	if !p.IsSetSuccess() {
+		p.Success = new(inventory.GetEngineeringOrderResp)
+	}
+	return p.Success.FastRead(buf, _type, number)
+}
+
+func (p *GetEngineeringOrderResult) FastWrite(buf []byte) (n int) {
+	if !p.IsSetSuccess() {
+		return 0
+	}
+	return p.Success.FastWrite(buf)
+}
+
+func (p *GetEngineeringOrderResult) Size() (n int) {
+	if !p.IsSetSuccess() {
+		return 0
+	}
+	return p.Success.Size()
+}
+
+func (p *GetEngineeringOrderResult) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetSuccess() {
+		return out, nil
+	}
+	return proto.Marshal(p.Success)
+}
+
+func (p *GetEngineeringOrderResult) Unmarshal(in []byte) error {
+	msg := new(inventory.GetEngineeringOrderResp)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Success = msg
+	return nil
+}
+
+func (p *GetEngineeringOrderResult) GetSuccess() *inventory.GetEngineeringOrderResp {
+	if !p.IsSetSuccess() {
+		return GetEngineeringOrderResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+func (p *GetEngineeringOrderResult) SetSuccess(x interface{}) {
+	p.Success = x.(*inventory.GetEngineeringOrderResp)
+}
+
+func (p *GetEngineeringOrderResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *GetEngineeringOrderResult) GetResult() interface{} {
+	return p.Success
+}
+
+func listEngineeringOrderHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	switch s := arg.(type) {
+	case *streaming.Args:
+		st := s.Stream
+		req := new(inventory.ListEngineeringOrderReq)
+		if err := st.RecvMsg(req); err != nil {
+			return err
+		}
+		resp, err := handler.(inventory.InventoryService).ListEngineeringOrder(ctx, req)
+		if err != nil {
+			return err
+		}
+		return st.SendMsg(resp)
+	case *ListEngineeringOrderArgs:
+		success, err := handler.(inventory.InventoryService).ListEngineeringOrder(ctx, s.Req)
+		if err != nil {
+			return err
+		}
+		realResult := result.(*ListEngineeringOrderResult)
+		realResult.Success = success
+		return nil
+	default:
+		return errInvalidMessageType
+	}
+}
+func newListEngineeringOrderArgs() interface{} {
+	return &ListEngineeringOrderArgs{}
+}
+
+func newListEngineeringOrderResult() interface{} {
+	return &ListEngineeringOrderResult{}
+}
+
+type ListEngineeringOrderArgs struct {
+	Req *inventory.ListEngineeringOrderReq
+}
+
+func (p *ListEngineeringOrderArgs) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
+	if !p.IsSetReq() {
+		p.Req = new(inventory.ListEngineeringOrderReq)
+	}
+	return p.Req.FastRead(buf, _type, number)
+}
+
+func (p *ListEngineeringOrderArgs) FastWrite(buf []byte) (n int) {
+	if !p.IsSetReq() {
+		return 0
+	}
+	return p.Req.FastWrite(buf)
+}
+
+func (p *ListEngineeringOrderArgs) Size() (n int) {
+	if !p.IsSetReq() {
+		return 0
+	}
+	return p.Req.Size()
+}
+
+func (p *ListEngineeringOrderArgs) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetReq() {
+		return out, nil
+	}
+	return proto.Marshal(p.Req)
+}
+
+func (p *ListEngineeringOrderArgs) Unmarshal(in []byte) error {
+	msg := new(inventory.ListEngineeringOrderReq)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Req = msg
+	return nil
+}
+
+var ListEngineeringOrderArgs_Req_DEFAULT *inventory.ListEngineeringOrderReq
+
+func (p *ListEngineeringOrderArgs) GetReq() *inventory.ListEngineeringOrderReq {
+	if !p.IsSetReq() {
+		return ListEngineeringOrderArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+
+func (p *ListEngineeringOrderArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *ListEngineeringOrderArgs) GetFirstArgument() interface{} {
+	return p.Req
+}
+
+type ListEngineeringOrderResult struct {
+	Success *inventory.ListEngineeringOrderResp
+}
+
+var ListEngineeringOrderResult_Success_DEFAULT *inventory.ListEngineeringOrderResp
+
+func (p *ListEngineeringOrderResult) FastRead(buf []byte, _type int8, number int32) (n int, err error) {
+	if !p.IsSetSuccess() {
+		p.Success = new(inventory.ListEngineeringOrderResp)
+	}
+	return p.Success.FastRead(buf, _type, number)
+}
+
+func (p *ListEngineeringOrderResult) FastWrite(buf []byte) (n int) {
+	if !p.IsSetSuccess() {
+		return 0
+	}
+	return p.Success.FastWrite(buf)
+}
+
+func (p *ListEngineeringOrderResult) Size() (n int) {
+	if !p.IsSetSuccess() {
+		return 0
+	}
+	return p.Success.Size()
+}
+
+func (p *ListEngineeringOrderResult) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetSuccess() {
+		return out, nil
+	}
+	return proto.Marshal(p.Success)
+}
+
+func (p *ListEngineeringOrderResult) Unmarshal(in []byte) error {
+	msg := new(inventory.ListEngineeringOrderResp)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Success = msg
+	return nil
+}
+
+func (p *ListEngineeringOrderResult) GetSuccess() *inventory.ListEngineeringOrderResp {
+	if !p.IsSetSuccess() {
+		return ListEngineeringOrderResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+func (p *ListEngineeringOrderResult) SetSuccess(x interface{}) {
+	p.Success = x.(*inventory.ListEngineeringOrderResp)
+}
+
+func (p *ListEngineeringOrderResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *ListEngineeringOrderResult) GetResult() interface{} {
+	return p.Success
+}
+
 type kClient struct {
 	c client.Client
 }
@@ -2526,6 +4606,66 @@ func (p *kClient) ListItem(ctx context.Context, Req *inventory.ListItemReq) (r *
 	_args.Req = Req
 	var _result ListItemResult
 	if err = p.c.Call(ctx, "ListItem", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) CreateProcessDraft(ctx context.Context, Req *inventory.CreateProcessDraftReq) (r *inventory.CreateProcessDraftResp, err error) {
+	var _args CreateProcessDraftArgs
+	_args.Req = Req
+	var _result CreateProcessDraftResult
+	if err = p.c.Call(ctx, "CreateProcessDraft", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) UpdateProcessDraft(ctx context.Context, Req *inventory.UpdateProcessDraftReq) (r *inventory.UpdateProcessDraftResp, err error) {
+	var _args UpdateProcessDraftArgs
+	_args.Req = Req
+	var _result UpdateProcessDraftResult
+	if err = p.c.Call(ctx, "UpdateProcessDraft", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) DeleteProcessDraft(ctx context.Context, Req *inventory.DeleteProcessDraftReq) (r *inventory.DeleteProcessDraftResp, err error) {
+	var _args DeleteProcessDraftArgs
+	_args.Req = Req
+	var _result DeleteProcessDraftResult
+	if err = p.c.Call(ctx, "DeleteProcessDraft", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) SubmitProcess(ctx context.Context, Req *inventory.SubmitProcessReq) (r *inventory.SubmitProcessResp, err error) {
+	var _args SubmitProcessArgs
+	_args.Req = Req
+	var _result SubmitProcessResult
+	if err = p.c.Call(ctx, "SubmitProcess", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) GetProcess(ctx context.Context, Req *inventory.GetProcessReq) (r *inventory.GetProcessResp, err error) {
+	var _args GetProcessArgs
+	_args.Req = Req
+	var _result GetProcessResult
+	if err = p.c.Call(ctx, "GetProcess", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) ListProcess(ctx context.Context, Req *inventory.ListProcessReq) (r *inventory.ListProcessResp, err error) {
+	var _args ListProcessArgs
+	_args.Req = Req
+	var _result ListProcessResult
+	if err = p.c.Call(ctx, "ListProcess", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil
@@ -2611,6 +4751,16 @@ func (p *kClient) SubmitInventoryFlow(ctx context.Context, Req *inventory.Submit
 	return _result.GetSuccess(), nil
 }
 
+func (p *kClient) CompleteInventoryFlow(ctx context.Context, Req *inventory.CompleteInventoryFlowReq) (r *inventory.CompleteInventoryFlowResp, err error) {
+	var _args CompleteInventoryFlowArgs
+	_args.Req = Req
+	var _result CompleteInventoryFlowResult
+	if err = p.c.Call(ctx, "CompleteInventoryFlow", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
 func (p *kClient) AuditInventoryFlow(ctx context.Context, Req *inventory.AuditInventoryFlowReq) (r *inventory.AuditInventoryFlowResp, err error) {
 	var _args AuditInventoryFlowArgs
 	_args.Req = Req
@@ -2636,6 +4786,66 @@ func (p *kClient) ListInventoryFlow(ctx context.Context, Req *inventory.ListInve
 	_args.Req = Req
 	var _result ListInventoryFlowResult
 	if err = p.c.Call(ctx, "ListInventoryFlow", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) CreateEngineeringOrderDraft(ctx context.Context, Req *inventory.CreateEngineeringOrderDraftReq) (r *inventory.CreateEngineeringOrderDraftResp, err error) {
+	var _args CreateEngineeringOrderDraftArgs
+	_args.Req = Req
+	var _result CreateEngineeringOrderDraftResult
+	if err = p.c.Call(ctx, "CreateEngineeringOrderDraft", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) UpdateEngineeringOrderDraft(ctx context.Context, Req *inventory.UpdateEngineeringOrderDraftReq) (r *inventory.UpdateEngineeringOrderDraftResp, err error) {
+	var _args UpdateEngineeringOrderDraftArgs
+	_args.Req = Req
+	var _result UpdateEngineeringOrderDraftResult
+	if err = p.c.Call(ctx, "UpdateEngineeringOrderDraft", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) DeleteEngineeringOrderDraft(ctx context.Context, Req *inventory.DeleteEngineeringOrderDraftReq) (r *inventory.DeleteEngineeringOrderDraftResp, err error) {
+	var _args DeleteEngineeringOrderDraftArgs
+	_args.Req = Req
+	var _result DeleteEngineeringOrderDraftResult
+	if err = p.c.Call(ctx, "DeleteEngineeringOrderDraft", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) SubmitEngineeringOrder(ctx context.Context, Req *inventory.SubmitEngineeringOrderReq) (r *inventory.SubmitEngineeringOrderResp, err error) {
+	var _args SubmitEngineeringOrderArgs
+	_args.Req = Req
+	var _result SubmitEngineeringOrderResult
+	if err = p.c.Call(ctx, "SubmitEngineeringOrder", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) GetEngineeringOrder(ctx context.Context, Req *inventory.GetEngineeringOrderReq) (r *inventory.GetEngineeringOrderResp, err error) {
+	var _args GetEngineeringOrderArgs
+	_args.Req = Req
+	var _result GetEngineeringOrderResult
+	if err = p.c.Call(ctx, "GetEngineeringOrder", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) ListEngineeringOrder(ctx context.Context, Req *inventory.ListEngineeringOrderReq) (r *inventory.ListEngineeringOrderResp, err error) {
+	var _args ListEngineeringOrderArgs
+	_args.Req = Req
+	var _result ListEngineeringOrderResult
+	if err = p.c.Call(ctx, "ListEngineeringOrder", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil

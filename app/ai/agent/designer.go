@@ -15,10 +15,11 @@ import (
 	"github.com/cloudwego/eino/schema"
 )
 
-const designerInstructionPath = "prompt/designer/instruction.prompt"
+// Keep the legacy prompt path to avoid moving deployed config/assets during the assistant rename.
+const assistantInstructionPath = "prompt/designer/instruction.prompt"
 
 type AskUserInput struct {
-	Questions []AskUserQuestion `json:"questions" jsonschema:"description=Questions that must be answered by the user before design can continue."`
+	Questions []AskUserQuestion `json:"questions" jsonschema:"description=Questions that must be answered by the user before the assistant can continue."`
 	Context   string            `json:"context,omitempty" jsonschema:"description=Short context explaining why these questions are needed."`
 }
 
@@ -27,12 +28,12 @@ type AskUserQuestion struct {
 	Options  []string `json:"options,omitempty" jsonschema:"description=Suggested answer options. The user may choose one or provide custom text."`
 }
 
-type DesignerInterruptState struct {
+type AssistantInterruptState struct {
 	Questions []AskUserQuestion `json:"questions"`
 	Context   string            `json:"context,omitempty"`
 }
 
-type DesignerAnswer struct {
+type AssistantAnswer struct {
 	Content string         `json:"content,omitempty"`
 	Payload map[string]any `json:"payload,omitempty"`
 }
@@ -40,11 +41,11 @@ type DesignerAnswer struct {
 func init() {
 	schema.RegisterName[AskUserInput]("ai_ask_user_input_v1")
 	schema.RegisterName[AskUserQuestion]("ai_ask_user_question_v1")
-	schema.RegisterName[DesignerInterruptState]("ai_designer_interrupt_state_v1")
-	schema.RegisterName[DesignerAnswer]("ai_designer_answer_v1")
+	schema.RegisterName[AssistantInterruptState]("ai_designer_interrupt_state_v1")
+	schema.RegisterName[AssistantAnswer]("ai_designer_answer_v1")
 }
 
-func NewDesigner(ctx context.Context) (*adk.ChatModelAgent, error) {
+func NewAssistant(ctx context.Context) (*adk.ChatModelAgent, error) {
 	cm, err := llm.NewChatModel(ctx)
 	if err != nil {
 		return nil, err
@@ -58,40 +59,44 @@ func NewDesigner(ctx context.Context) (*adk.ChatModelAgent, error) {
 	if err != nil {
 		return nil, err
 	}
-	searchTool, err := aitools.NewSearchProjectFileTool()
+	searchFileTool, err := aitools.NewSearchProjectFileTool()
+	if err != nil {
+		return nil, err
+	}
+	mesTools, err := aitools.NewMESTools(ctx, askTool, searchFileTool)
 	if err != nil {
 		return nil, err
 	}
 
-	instruction, err := os.ReadFile(designerInstructionPath)
+	instruction, err := os.ReadFile(assistantInstructionPath)
 	if err != nil {
 		return nil, err
 	}
 
 	return adk.NewChatModelAgent(ctx, &adk.ChatModelAgentConfig{
-		Name:             "designer",
-		Description:      "Clarifies requirements and produces a design plan before coding.",
+		Name:             "assistant",
+		Description:      "MES assistant that helps users query and operate work orders, engineering orders, inventory flows, and inventory records within role permissions.",
 		Instruction:      string(instruction),
 		Model:            cm,
 		ModelRetryConfig: modelRetryConfig(),
 		ToolsConfig: adk.ToolsConfig{
 			ToolsNodeConfig: compose.ToolsNodeConfig{
-				Tools: []tool.BaseTool{askTool, searchTool},
+				Tools: mesTools,
 			},
 		},
 	})
 }
 
 func runAskUser(ctx context.Context, input AskUserInput) (string, error) {
-	wasInterrupted, _, stored := tool.GetInterruptState[DesignerInterruptState](ctx)
+	wasInterrupted, _, stored := tool.GetInterruptState[AssistantInterruptState](ctx)
 	if !wasInterrupted {
-		return "", tool.StatefulInterrupt(ctx, input, DesignerInterruptState{
+		return "", tool.StatefulInterrupt(ctx, input, AssistantInterruptState{
 			Questions: input.Questions,
 			Context:   input.Context,
 		})
 	}
 
-	isTarget, hasData, data := tool.GetResumeContext[DesignerAnswer](ctx)
+	isTarget, hasData, data := tool.GetResumeContext[AssistantAnswer](ctx)
 	if !isTarget {
 		return "", tool.StatefulInterrupt(ctx, AskUserInput{
 			Questions: stored.Questions,

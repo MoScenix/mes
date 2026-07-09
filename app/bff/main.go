@@ -63,7 +63,7 @@ func main() {
 }
 
 func registerMiddleware(h *server.Hertz, traceCfg *hertztracing.Config) {
-	store, err := redis.NewStore(100, "tcp", conf.GetConf().Redis.Address, conf.GetConf().Redis.Password, []byte(os.Getenv("SESSION_SECRET")))
+	store, err := redis.NewStore(100, "tcp", conf.GetConf().Redis.Address, conf.GetConf().Redis.Password, []byte(sessionSecret()))
 	if err != nil {
 		panic(err)
 	}
@@ -112,4 +112,12 @@ func registerMiddleware(h *server.Hertz, traceCfg *hertztracing.Config) {
 	h.Use(cors.Default())
 
 	middleware.Register(h)
+}
+
+func sessionSecret() string {
+	secret := os.Getenv("SESSION_SECRET")
+	if secret == "" {
+		return "mes-local-session-secret"
+	}
+	return secret
 }

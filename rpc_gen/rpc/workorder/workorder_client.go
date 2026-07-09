@@ -18,6 +18,7 @@ type RPCClient interface {
 	SubmitWorkOrder(ctx context.Context, Req *workorder.SubmitWorkOrderReq, callOptions ...callopt.Option) (r *workorder.SubmitWorkOrderResp, err error)
 	GetWorkOrder(ctx context.Context, Req *workorder.GetWorkOrderReq, callOptions ...callopt.Option) (r *workorder.GetWorkOrderResp, err error)
 	ListWorkOrder(ctx context.Context, Req *workorder.ListWorkOrderReq, callOptions ...callopt.Option) (r *workorder.ListWorkOrderResp, err error)
+	MarkWorkOrderRead(ctx context.Context, Req *workorder.MarkWorkOrderReadReq, callOptions ...callopt.Option) (r *workorder.MarkWorkOrderReadResp, err error)
 }
 
 func NewRPCClient(dstService string, opts ...client.Option) (RPCClient, error) {
@@ -68,4 +69,8 @@ func (c *clientImpl) GetWorkOrder(ctx context.Context, Req *workorder.GetWorkOrd
 
 func (c *clientImpl) ListWorkOrder(ctx context.Context, Req *workorder.ListWorkOrderReq, callOptions ...callopt.Option) (r *workorder.ListWorkOrderResp, err error) {
 	return c.kitexClient.ListWorkOrder(ctx, Req, callOptions...)
+}
+
+func (c *clientImpl) MarkWorkOrderRead(ctx context.Context, Req *workorder.MarkWorkOrderReadReq, callOptions ...callopt.Option) (r *workorder.MarkWorkOrderReadResp, err error) {
+	return c.kitexClient.MarkWorkOrderRead(ctx, Req, callOptions...)
 }

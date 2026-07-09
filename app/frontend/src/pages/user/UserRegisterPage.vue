@@ -6,10 +6,10 @@
         
         <div class="mb-10 text-center">
           <h2 class="text-2xl font-bold text-gray-800 mb-2 tracking-tight">
-            AI 应用生成 - 用户注册
+            MES 用户注册
           </h2>
           <div class="text-sm text-gray-400 font-medium">
-            开启你的智能应用创作之旅
+            加入高效生产管理
           </div>
         </div>
 

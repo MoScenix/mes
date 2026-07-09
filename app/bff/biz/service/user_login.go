@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/MoScenix/mes/app/bff/biz/utils"
 	user "github.com/MoScenix/mes/app/bff/hertz_gen/bff/user"
@@ -26,18 +28,39 @@ func (h *UserLoginService) Run(req *user.UserLoginRequest) (resp *user.BaseRespo
 		UserPassword: req.UserPassword,
 	})
 	if err != nil {
+		message := err.Error()
+		if strings.Contains(message, "record not found") || strings.Contains(message, "bcrypt") {
+			message = "账号或密码错误"
+		}
 		return &user.BaseResponseLoginUserVO{
 			Code:    1,
-			Message: err.Error(),
+			Message: message,
 		}, nil
 	}
 	session := sessions.Default(h.RequestContext)
 	session.Set(utils.UserIdKey, res1.UserId)
 	session.Set(utils.UserRoleKey, res1.UserRole)
-	session.Save()
+	if err := session.Save(); err != nil {
+		return &user.BaseResponseLoginUserVO{
+			Code:    1,
+			Message: fmt.Sprintf("save session failed: %v", err),
+		}, nil
+	}
 	res, err := rpc.UserClient.GetUser(h.Context, &rpcuser.GetUserReq{
 		Id: int64(res1.UserId),
 	})
+	if err != nil {
+		return &user.BaseResponseLoginUserVO{
+			Code:    1,
+			Message: err.Error(),
+		}, nil
+	}
+	if res == nil {
+		return &user.BaseResponseLoginUserVO{
+			Code:    1,
+			Message: "user service returned empty user",
+		}, nil
+	}
 	return &user.BaseResponseLoginUserVO{
 		Code:    0,
 		Message: "success",

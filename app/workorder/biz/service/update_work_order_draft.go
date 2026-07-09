@@ -2,6 +2,9 @@ package service
 
 import (
 	"context"
+	"errors"
+	"strings"
+
 	workorder "github.com/MoScenix/mes/rpc_gen/kitex_gen/workorder"
 )
 
@@ -19,7 +22,12 @@ func (s *UpdateWorkOrderDraftService) Run(req *workorder.UpdateWorkOrderDraftReq
 		return nil, err
 	}
 
-	if err := q.UpdateDraft(req.GetId(), req.GetFromUserId(), req.GetToUserId(), req.GetDescription()); err != nil {
+	name := strings.TrimSpace(req.GetName())
+	if name == "" {
+		return nil, errors.New("work order name is required")
+	}
+
+	if err := q.UpdateDraft(req.GetId(), req.GetFromUserId(), req.GetToUserId(), name, req.GetDescription()); err != nil {
 		return nil, err
 	}
 

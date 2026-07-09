@@ -5,7 +5,6 @@ package bff.app;
 option go_package = "bff/app";
 
 import "api.proto";
-import "bff/common.proto";
 
 service AppService {
 
@@ -33,20 +32,8 @@ service AppService {
     option (api.post) = "/app/good/list/page/vo";
   }
 
-  rpc DeployApp(AppDeployRequest) returns (BaseResponseString) {
-    option (api.post) = "/app/deploy";
-  }
-
-  rpc DownloadAppCode(DownloadAppCodeRequest) returns (BaseResponseBytes) {
-    option (api.get) = "/app/download/:appId";
-  }
-
   rpc AddFile(AddFileRequest) returns (BaseResponseString) {
     option (api.post) = "/app/file/add";
-  }
-
-  rpc ChatToGenCode(ChatToGenCodeRequest) returns (stream ServerSentEventString) {
-    option (api.get) = "/app/chat/gen/code";
   }
 
   rpc SubmitAI(AISubmitRequest) returns (BaseResponseBoolean) {
@@ -148,18 +135,6 @@ message BaseResponseAIEvents {
   string message = 3;
 }
 
-message BaseResponseBytes {
-  int32 code = 1;
-  bytes data = 2;
-  string message = 3;
-}
-
-message ServerSentEventString {
-  string d = 1;
-  string message = 2;
-}
-
-
 message DeleteRequest {
   int64 id = 1;
 }
@@ -176,12 +151,6 @@ message AppUpdateRequest {
 message AppAdminUpdateRequest {
   int64 id = 1;
   string appName = 2;
-  string cover = 3;
-  int64 priority = 4;
-}
-
-message AppDeployRequest {
-  int64 appId = 1;
 }
 
 message GetAppVOByIdRequest {
@@ -190,11 +159,6 @@ message GetAppVOByIdRequest {
 
 message GetAppVOByIdByAdminRequest {
   int64 id = 1 [(api.query) = "id"];
-}
-
-message ChatToGenCodeRequest {
-  int64 appId = 1 [(api.query) = "appId"];
-  string message = 2 [(api.query) = "message"];
 }
 
 message AISubmitRequest {
@@ -220,10 +184,6 @@ message AIEventsRequest {
   int64 count = 4 [(api.query) = "count"];
 }
 
-message DownloadAppCodeRequest {
-  int64 appId = 1 [(api.path) = "appId"];
-}
-
 message AppQueryRequest {
   int64 pageNum = 1;
   int64 pageSize = 2;
@@ -231,11 +191,6 @@ message AppQueryRequest {
   string sortOrder = 4;
   int64 id = 5;
   string appName = 6;
-  string cover = 7;
-  string initPrompt = 8;
-  string codeGenType = 9;
-  string deployKey = 10;
-  int64 priority = 11;
   int64 userId = 12;
 }
 
@@ -261,12 +216,6 @@ message ListAppChatHistoryRequest {
 message AppVO {
   int64 id = 1;
   string appName = 2;
-  string cover = 3;
-  string initPrompt = 4;
-  string codeGenType = 5;
-  string deployKey = 6;
-  string deployedTime = 7;
-  int64 priority = 8;
   int64 userId = 9;
   string createTime = 10;
   string updateTime = 11;

@@ -5,6 +5,7 @@ default: help
 
 PROTOBUF21_BIN := $(shell brew --prefix protobuf@21 2>/dev/null)/bin
 PROTOBUF21_PATH := $(if $(wildcard $(PROTOBUF21_BIN)/protoc),$(PROTOBUF21_BIN):,)
+COMPOSE_PROJECT_NAME ?= mes
 
 .PHONY: help
 help: ## Display this help.
@@ -32,9 +33,10 @@ gen-server: ## gen service code of {svc}. example: make gen-server svc=product
 .PHONY: gen-frontend
 gen-bff:
 	@cd app/bff && cwgo server -I ../../idl --type HTTP --service bff --module github.com/MoScenix/mes/app/bff --idl ../../idl/bff/app_bff.proto
-	@perl -0pi -e 's/json:"code,omitempty"/json:"code"/g' app/bff/hertz_gen/bff/app/app_bff.pb.go app/bff/hertz_gen/bff/user/user_bff.pb.go
+	@cd app/bff && cwgo server -I ../../idl --type HTTP --service bff --module github.com/MoScenix/mes/app/bff --idl ../../idl/bff/mes_bff.proto
+	@perl -0pi -e 's/json:"code,omitempty"/json:"code"/g' app/bff/hertz_gen/bff/app/app_bff.pb.go app/bff/hertz_gen/bff/user/user_bff.pb.go app/bff/hertz_gen/bff/mes/mes_bff.pb.go
 	@perl -0pi -e 's/var req app\.(AISubmitRequest|AIControlRequest|AIStateRequest|AIEventsRequest|AddFileRequest)/var req lapp.$$1/g' app/bff/biz/handler/app/app_service.go
-	@gofmt -w app/bff/hertz_gen/bff/app/app_bff.pb.go app/bff/hertz_gen/bff/user/user_bff.pb.go app/bff/biz/handler/app/app_service.go
+	@gofmt -w app/bff/hertz_gen/bff/app/app_bff.pb.go app/bff/hertz_gen/bff/user/user_bff.pb.go app/bff/hertz_gen/bff/mes/mes_bff.pb.go app/bff/biz/handler/app/app_service.go
 
 ##@ Build
 
@@ -67,11 +69,11 @@ run: ## run {svc} server. example: make run svc=product
 
 .PHONY: env-start
 env-start:  ## launch all middleware software as the docker
-	@docker-compose up -d
+	@docker-compose -p $(COMPOSE_PROJECT_NAME) up -d
 
 .PHONY: env-stop
 env-stop: ## stop all docker
-	@docker-compose down
+	@docker-compose -p $(COMPOSE_PROJECT_NAME) down
 
 .PHONY: clean
 clean: ## clern up all the tmp files

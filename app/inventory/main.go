@@ -1,21 +1,29 @@
 package main
 
 import (
+	"context"
 	"net"
 	"time"
 
 	"github.com/MoScenix/mes/app/inventory/biz/dal"
 	"github.com/MoScenix/mes/app/inventory/conf"
+	"github.com/MoScenix/mes/common/mtl"
+	"github.com/MoScenix/mes/common/serversuit"
 	"github.com/MoScenix/mes/rpc_gen/kitex_gen/inventory/inventoryservice"
 	"github.com/cloudwego/kitex/pkg/klog"
 	"github.com/cloudwego/kitex/pkg/rpcinfo"
 	"github.com/cloudwego/kitex/server"
+	"github.com/joho/godotenv"
 	kitexlogrus "github.com/kitex-contrib/obs-opentelemetry/logging/logrus"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 func main() {
+	godotenv.Load()
+	tp := mtl.TraceInit(conf.GetConf().Kitex.Service)
+	defer tp.Shutdown(context.Background())
+	mtl.InitMetric(conf.GetConf().Kitex.Service, conf.GetConf().Kitex.MetricsPort, conf.GetConf().Registry.RegistryAddress[0])
 	dal.Init()
 	opts := kitexInit()
 
@@ -34,6 +42,10 @@ func kitexInit() (opts []server.Option) {
 		panic(err)
 	}
 	opts = append(opts, server.WithServiceAddr(addr))
+	opts = append(opts, server.WithSuite(&serversuit.CommonServerSuilt{
+		ServerName:   conf.GetConf().Kitex.Service,
+		RegistryAddr: conf.GetConf().Registry.RegistryAddress[0],
+	}))
 
 	// service info
 	opts = append(opts, server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{

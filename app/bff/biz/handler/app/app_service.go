@@ -137,44 +137,6 @@ func ListGoodAppVOByPage(ctx context.Context, c *app.RequestContext) {
 	utils.SendSuccessResponse(ctx, c, consts.StatusOK, resp)
 }
 
-// DeployApp .
-// @router /app/deploy [POST]
-func DeployApp(ctx context.Context, c *app.RequestContext) {
-	var err error
-	var req lapp.AppDeployRequest
-	err = c.BindAndValidate(&req)
-	if err != nil {
-		utils.SendErrResponse(ctx, c, consts.StatusOK, err)
-		return
-	}
-
-	resp := &lapp.BaseResponseString{}
-	resp, err = service.NewDeployAppService(ctx, c).Run(&req)
-	if err != nil {
-		utils.SendErrResponse(ctx, c, consts.StatusOK, err)
-		return
-	}
-
-	utils.SendSuccessResponse(ctx, c, consts.StatusOK, resp)
-}
-
-// DownloadAppCode .
-// @router /app/download/:appId [GET]
-func DownloadAppCode(ctx context.Context, c *app.RequestContext) {
-	var err error
-	var req lapp.DownloadAppCodeRequest
-	err = c.BindAndValidate(&req)
-	if err != nil {
-		utils.SendErrResponse(ctx, c, consts.StatusOK, err)
-		return
-	}
-	_, err = service.NewDownloadAppCodeService(ctx, c).Run(&req)
-	if err != nil {
-		utils.SendErrResponse(ctx, c, consts.StatusOK, err)
-		return
-	}
-}
-
 // DeleteAppByAdmin .
 // @router /app/admin/delete [POST]
 func DeleteAppByAdmin(ctx context.Context, c *app.RequestContext) {
@@ -256,26 +218,6 @@ func ListAppVOByPageByAdmin(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	utils.SendSuccessResponse(ctx, c, consts.StatusOK, resp)
-}
-
-// ChatToGenCode .
-// @router /app/chat/gen/code [GET]
-func ChatToGenCode(ctx context.Context, c *app.RequestContext) {
-	var err error
-	var req lapp.ChatToGenCodeRequest
-	err = c.BindAndValidate(&req)
-	if err != nil {
-		utils.SendErrResponse(ctx, c, consts.StatusOK, err)
-		return
-	}
-
-	resp, err := service.NewChatToGenCodeService(ctx, c).Run(&req)
-
-	if err != nil {
-		utils.SendErrResponse(ctx, c, consts.StatusOK, err)
-		return
-	}
 	utils.SendSuccessResponse(ctx, c, consts.StatusOK, resp)
 }
 

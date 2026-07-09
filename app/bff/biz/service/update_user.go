@@ -9,6 +9,7 @@ import (
 	"github.com/MoScenix/mes/app/bff/conf"
 	user "github.com/MoScenix/mes/app/bff/hertz_gen/bff/user"
 	"github.com/MoScenix/mes/app/bff/infra/rpc"
+	"github.com/MoScenix/mes/common/rpcmeta"
 	rpcuser "github.com/MoScenix/mes/rpc_gen/kitex_gen/user"
 	"github.com/cloudwego/hertz/pkg/app"
 )
@@ -23,8 +24,17 @@ func NewUpdateUserService(Context context.Context, RequestContext *app.RequestCo
 }
 
 func (h *UpdateUserService) Run(req *user.UserUpdateRequest) (resp *user.BaseResponseBoolean, err error) {
+	currentUserID, ok := utils.UserIDFromContext(h.Context)
+	if !ok {
+		return &user.BaseResponseBoolean{
+			Code:    2,
+			Message: "用户未登录",
+			Data:    false,
+		}, nil
+	}
+	currentRole, _ := h.Context.Value(utils.UserRoleKey).(string)
 	if req.Id != 0 {
-		if int64(h.Context.Value(utils.UserIdKey).(float64)) != req.Id {
+		if currentUserID != req.Id && !rpcmeta.IsAdmin(currentRole) {
 			return &user.BaseResponseBoolean{
 				Code:    2,
 				Message: "用户id不一致",
@@ -32,7 +42,7 @@ func (h *UpdateUserService) Run(req *user.UserUpdateRequest) (resp *user.BaseRes
 			}, nil
 		}
 	} else {
-		req.Id = int64(h.Context.Value(utils.UserIdKey).(float64))
+		req.Id = currentUserID
 	}
 	avatar, err := h.RequestContext.FormFile("avatar")
 	if avatar != nil && err == nil {

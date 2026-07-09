@@ -196,17 +196,17 @@ func publishTaskEvent(ctx context.Context, store redisstream.Store, event aieven
 	return id, nil
 }
 
-func publishTerminalEvent(ctx context.Context, streamStore redisstream.Store, stateStore *redisstate.Store, projectID string, eventType aievent.EventType, status string, message string) {
+func publishTerminalEvent(ctx context.Context, streamStore redisstream.Store, stateStore *redisstate.Store, projectID string, agent string, eventType aievent.EventType, status string, message string) {
 	_, _ = publishTaskEvent(ctx, streamStore, aievent.TaskEvent{
 		ProjectID: projectID,
 		Type:      eventType,
-		Agent:     agentName,
+		Agent:     agent,
 		Content:   terminalContent(eventType, message),
 		CreatedAt: time.Now().UnixMilli(),
 	})
 	_ = setProjectState(ctx, stateStore, projectID, aievent.ProjectState{
 		Status:      status,
-		Agent:       agentName,
+		Agent:       agent,
 		LastEventID: projectLastEventID(ctx, stateStore, projectID),
 		Message:     message,
 		UpdatedAt:   time.Now().UnixMilli(),

@@ -19,7 +19,7 @@ type User struct {
 
 	UserAvatar  string `gorm:"type:varchar(100);not null;default:''"`
 	UserProfile string `gorm:"type:varchar(100);default:''"`
-	UserRole    string `gorm:"type:varchar(10);not null;default:'user'"`
+	UserRole    string `gorm:"type:varchar(32);not null;default:'worker'"`
 }
 
 func (User) TableName() string {

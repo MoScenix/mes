@@ -21,18 +21,15 @@ func NewListMyAppVOByPageService(Context context.Context, RequestContext *app.Re
 }
 
 func (h *ListMyAppVOByPageService) Run(req *lapp.AppQueryRequest) (resp *lapp.BaseResponsePageAppVO, err error) {
-	if req.UserId == 0 {
-		userID, ok := utils.UserIDFromContext(h.Context)
-		if !ok || userID <= 0 {
-			err = utils.ErrUnauthorizedUserID
-			return &lapp.BaseResponsePageAppVO{
-				Code:    1,
-				Message: err.Error(),
-			}, err
-		}
-		req.UserId = userID
+	userID, err := scopedUserID(h.Context, req.GetUserId())
+	if err != nil {
+		return &lapp.BaseResponsePageAppVO{
+			Code:    1,
+			Message: err.Error(),
+		}, nil
 	}
-	res, err := rpc.AppClient.ListApp(h.Context, &rpcapp.ListAppReq{
+	req.UserId = userID
+	res, err := rpc.AppClient.ListApp(utils.WithIdentityMeta(h.Context), &rpcapp.ListAppReq{
 		PageNum:  req.PageNum,
 		PageSize: req.PageSize,
 		UserId:   req.UserId,
@@ -66,16 +63,11 @@ func (h *ListMyAppVOByPageService) Run(req *lapp.AppQueryRequest) (resp *lapp.Ba
 			}, err
 		}
 		resp.Data.Records = append(resp.Data.Records, &lapp.AppVO{
-			Id:           app.Id,
-			AppName:      app.AppName,
-			CreateTime:   app.CreateTime,
-			UpdateTime:   app.UpdateTime,
-			UserId:       app.UserId,
-			DeployKey:    app.DeployKey,
-			DeployedTime: app.DeployedTime,
-			Priority:     app.Priority,
-			Cover:        app.Cover,
-			InitPrompt:   app.InitPrompt,
+			Id:         app.Id,
+			AppName:    app.AppName,
+			CreateTime: app.CreateTime,
+			UpdateTime: app.UpdateTime,
+			UserId:     app.UserId,
 			User: &lapp.UserVO{
 				Id:          r.Id,
 				UserName:    r.UserName,

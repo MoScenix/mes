@@ -21,7 +21,6 @@ func Register(r *server.Hertz) {
 		_app := root.Group("/app", _appMw()...)
 		_app.POST("/add", append(_addappMw(), app.AddApp)...)
 		_app.POST("/delete", append(_deleteappMw(), app.DeleteApp)...)
-		_app.POST("/deploy", append(_deployappMw(), app.DeployApp)...)
 		_app.POST("/update", append(_updateappMw(), app.UpdateApp)...)
 		{
 			_admin := _app.Group("/admin", _adminMw()...)
@@ -47,17 +46,6 @@ func Register(r *server.Hertz) {
 			_ai.POST("/push", append(_pushaiMw(), app.PushAI)...)
 			_ai.GET("/state", append(_getaistateMw(), app.GetAIState)...)
 			_ai.POST("/submit", append(_submitaiMw(), app.SubmitAI)...)
-		}
-		{
-			_chat := _app.Group("/chat", _chatMw()...)
-			{
-				_gen := _chat.Group("/gen", _genMw()...)
-				_gen.GET("/code", append(_chattogencodeMw(), app.ChatToGenCode)...)
-			}
-		}
-		{
-			_download := _app.Group("/download", _downloadMw()...)
-			_download.GET("/:appId", append(_downloadappcodeMw(), app.DownloadAppCode)...)
 		}
 		{
 			_file := _app.Group("/file", _fileMw()...)

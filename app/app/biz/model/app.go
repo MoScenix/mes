@@ -12,14 +12,9 @@ import (
 
 type App struct {
 	gorm.Model
-	Name         string    `gorm:"type:varchar(100);Index" json:"name"`
-	Cover        string    `gorm:"type:varchar(255)" json:"cover"`
-	InitPrompt   string    `gorm:"type:text" json:"initPrompt"`
-	Deploykey    string    `gorm:"type:varchar(100)" json:"deploykey"`
-	UserId       uint      `gorm:"type:int;Index" json:"userId"`
-	Priority     int       `gorm:"type:int" json:"priority"`
-	DeployedTime string    `gorm:"type:varchar(50)" json:"deployedTime"`
-	Messages     []Message `gorm:"foreignKey:AppId" json:"messages"`
+	Name     string    `gorm:"type:varchar(100);Index" json:"name"`
+	UserId   uint      `gorm:"type:int;Index" json:"userId"`
+	Messages []Message `gorm:"foreignKey:AppId" json:"messages"`
 }
 type AppQuery struct {
 	ctx context.Context
@@ -47,7 +42,7 @@ func (q *AppQuery) GetAppsByUserId(userId uint) ([]App, error) {
 	err := q.db.WithContext(q.ctx).
 		Model(&App{}).
 		Where("user_id = ?", userId).
-		Order("priority desc, id desc").
+		Order("updated_at desc, id desc").
 		Find(&apps).Error
 	return apps, err
 }
@@ -85,7 +80,7 @@ func (q *AppQuery) ListApp(page uint32, userId uint, name string, pageSize uint3
 		tx = tx.Where("name LIKE ?", name+"%")
 	}
 
-	err := tx.Order("priority desc, id desc").
+	err := tx.Order("updated_at desc, id desc").
 		Limit(int(pageSize)).
 		Offset(int(pageSize * (page - 1))).
 		Find(&apps).Error

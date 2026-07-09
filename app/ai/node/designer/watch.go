@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	taskrunner "github.com/MoScenix/mes/app/ai/node/coder"
 	"github.com/MoScenix/mes/app/ai/node/control"
 	"github.com/MoScenix/mes/app/ai/utils"
 	"github.com/MoScenix/mes/common/aievent"
@@ -15,21 +16,11 @@ import (
 	"github.com/cloudwego/kitex/pkg/klog"
 )
 
-func watchPushes(ctx context.Context, stateStore *redisstate.Store, store redisstream.Store, projectID string, buffer *utils.StringBuffer, answers chan<- answerEvent, loop *adk.TurnLoop[[]*schema.Message, *schema.Message]) {
+func watchPushes(ctx context.Context, stateStore *redisstate.Store, store redisstream.Store, projectID string, answers chan<- answerEvent, loop *adk.TurnLoop[[]*schema.Message, *schema.Message], lastEventID *string, assistantOutput *utils.StringBuffer) {
 	control.Watch(ctx, store, projectID, controlCursor(ctx, projectID), control.Handler{
 		OnPush: func(ctx context.Context, msg redisstream.Message, event aievent.TaskEvent) {
 			utils.SetControlCursor(ctx, msg.ID)
-			content := strings.TrimSpace(event.Content)
-			if content != "" && buffer != nil {
-				buffer.WriteString(content)
-				buffer.WriteString("\n")
-			}
-			if content != "" && loop != nil {
-				_, done := loop.Push([]*schema.Message{schema.UserMessage(content)})
-				if done != nil {
-					go func() { <-done }()
-				}
-			}
+			taskrunner.HandlePush(ctx, stateStore, store, projectID, agentName, event.Content, loop, lastEventID, assistantOutput)
 		},
 		OnCancel: func(ctx context.Context, msg redisstream.Message, event aievent.TaskEvent) {
 			utils.SetControlCursor(ctx, msg.ID)
@@ -56,7 +47,7 @@ func watchPushes(ctx context.Context, stateStore *redisstate.Store, store rediss
 				return
 			}
 			if err := markAnswerAccepted(ctx, projectID, strings.TrimSpace(event.TargetID), msg.ID); err != nil {
-				klog.CtxErrorf(ctx, "accept designer answer failed: project_id=%s target_id=%s err=%v", projectID, strings.TrimSpace(event.TargetID), err)
+				klog.CtxErrorf(ctx, "accept assistant answer failed: project_id=%s target_id=%s err=%v", projectID, strings.TrimSpace(event.TargetID), err)
 			}
 		},
 	})

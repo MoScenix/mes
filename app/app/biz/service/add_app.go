@@ -40,10 +40,8 @@ func (s *AddAppService) Run(req *app.AddAppReq) (resp *app.AddAppResp, err error
 	}
 	rs := []rune(req.InitPrompt)
 	res, err := model.NewAppProQuery(s.ctx, mysql.DB, redis.RedisClient).CreateApp(model.App{
-		Name:       string(rs[:min(len(rs), 12)]),
-		InitPrompt: req.InitPrompt,
-		UserId:     uint(req.UserId),
-		Priority:   1,
+		Name:   string(rs[:min(len(rs), 12)]),
+		UserId: uint(req.UserId),
 	})
 	if err != nil {
 		klog.CtxErrorf(s.ctx, "create app db failed: user_id=%d err=%v", req.UserId, err)

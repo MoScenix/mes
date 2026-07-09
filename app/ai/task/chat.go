@@ -10,7 +10,6 @@ import (
 	"github.com/MoScenix/mes/app/ai/graph"
 	"github.com/MoScenix/mes/app/ai/utils"
 	"github.com/MoScenix/mes/common/aievent"
-	"github.com/MoScenix/mes/common/filestore/project"
 	"github.com/MoScenix/mes/common/rpcmeta"
 )
 
@@ -51,16 +50,9 @@ func (t *ChatTask) Init(ctx context.Context) (context.Context, error) {
 	runCtx, cancel := context.WithCancel(ctx)
 	runtime := utils.NewRuntimeState(cancel)
 
-	store, err := project.NewDefaultStore(t.ProjectID)
-	if err != nil {
-		cancel()
-		return nil, err
-	}
-
 	runCtx = utils.WithRuntimeState(runCtx, runtime)
 	runCtx = utils.WithStringBuffer(runCtx, runtime.Buffer)
 	runCtx = utils.WithCancelFunc(runCtx, cancel)
-	runCtx = utils.WithProjectStore(runCtx, store)
 
 	t.ctx = runCtx
 	t.runtime = runtime

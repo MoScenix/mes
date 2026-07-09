@@ -24,6 +24,9 @@ func submitAITask(ctx context.Context, appID int64, message string) (bool, error
 	if appID <= 0 {
 		return false, fmt.Errorf("appId is required")
 	}
+	if err := requireAppOwnerOrAdmin(ctx, appID); err != nil {
+		return false, err
+	}
 	ctx = utils.WithIdentityMeta(ctx)
 	if strings.TrimSpace(message) != "" {
 		if err := addUserMessage(ctx, appID, message); err != nil {
@@ -36,6 +39,9 @@ func submitAITask(ctx context.Context, appID int64, message string) (bool, error
 func pushAIEvent(ctx context.Context, appID int64, content string) (string, error) {
 	if appID <= 0 {
 		return "", fmt.Errorf("appId is required")
+	}
+	if err := requireAppOwnerOrAdmin(ctx, appID); err != nil {
+		return "", err
 	}
 	content = strings.TrimSpace(content)
 	if content == "" {
@@ -51,6 +57,9 @@ func pushAIEvent(ctx context.Context, appID int64, content string) (string, erro
 func answerAIQuestion(ctx context.Context, appID int64, content string, targetID string) (bool, error) {
 	if appID <= 0 {
 		return false, fmt.Errorf("appId is required")
+	}
+	if err := requireAppOwnerOrAdmin(ctx, appID); err != nil {
+		return false, err
 	}
 	ctx = utils.WithIdentityMeta(ctx)
 	content = strings.TrimSpace(content)
@@ -106,6 +115,9 @@ func cancelAIEvent(ctx context.Context, appID int64, reason string) (string, err
 	if appID <= 0 {
 		return "", fmt.Errorf("appId is required")
 	}
+	if err := requireAppOwnerOrAdmin(ctx, appID); err != nil {
+		return "", err
+	}
 	reason = strings.TrimSpace(reason)
 	if reason == "" {
 		reason = "cancelled"
@@ -118,6 +130,9 @@ func cancelAIEvent(ctx context.Context, appID int64, reason string) (string, err
 }
 
 func loadAIState(ctx context.Context, appID int64) (aievent.ProjectState, bool, error) {
+	if err := requireAppOwnerOrAdmin(ctx, appID); err != nil {
+		return aievent.ProjectState{}, false, err
+	}
 	stateStore, err := stateStore()
 	if err != nil {
 		return aievent.ProjectState{}, false, err
@@ -130,6 +145,9 @@ func loadAIState(ctx context.Context, appID int64) (aievent.ProjectState, bool, 
 func listAIEvents(ctx context.Context, appID int64, lastID string, blockMS int64, count int64) (*lapp.AIEvents, error) {
 	if appID <= 0 {
 		return nil, fmt.Errorf("appId is required")
+	}
+	if err := requireAppOwnerOrAdmin(ctx, appID); err != nil {
+		return nil, err
 	}
 	lastID = strings.TrimSpace(lastID)
 	if lastID == "" {

@@ -55,16 +55,11 @@ func (h *ListAppVOByPageByAdminService) Run(req *lapp.AppQueryRequest) (resp *la
 			}, err
 		}
 		resp.Data.Records = append(resp.Data.Records, &lapp.AppVO{
-			Id:           app.Id,
-			AppName:      app.AppName,
-			CreateTime:   app.CreateTime,
-			UpdateTime:   app.UpdateTime,
-			UserId:       app.UserId,
-			DeployKey:    app.DeployKey,
-			DeployedTime: app.DeployedTime,
-			Priority:     app.Priority,
-			Cover:        app.Cover,
-			InitPrompt:   app.InitPrompt,
+			Id:         app.Id,
+			AppName:    app.AppName,
+			CreateTime: app.CreateTime,
+			UpdateTime: app.UpdateTime,
+			UserId:     app.UserId,
 			User: &lapp.UserVO{
 				Id:          r.Id,
 				UserName:    r.UserName,

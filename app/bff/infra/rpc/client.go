@@ -11,21 +11,27 @@ import (
 	"github.com/MoScenix/mes/rpc_gen/kitex_gen/ai/aiservice"
 	"github.com/MoScenix/mes/rpc_gen/kitex_gen/app/appservice"
 	"github.com/MoScenix/mes/rpc_gen/kitex_gen/document/documentservice"
+	"github.com/MoScenix/mes/rpc_gen/kitex_gen/inventory/inventoryservice"
 	"github.com/MoScenix/mes/rpc_gen/kitex_gen/user/userservice"
+	"github.com/MoScenix/mes/rpc_gen/kitex_gen/workorder/workorderservice"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/cloudwego/kitex/client"
 	"github.com/cloudwego/kitex/pkg/endpoint"
 )
 
 var (
-	UserClient     userservice.Client
-	AppClient      appservice.Client
-	AiClient       aiservice.Client
-	DocumentClient documentservice.Client
-	once           sync.Once
-	once1          sync.Once
-	once2          sync.Once
-	once3          sync.Once
+	UserClient      userservice.Client
+	AppClient       appservice.Client
+	AiClient        aiservice.Client
+	DocumentClient  documentservice.Client
+	WorkOrderClient workorderservice.Client
+	InventoryClient inventoryservice.Client
+	once            sync.Once
+	once1           sync.Once
+	once2           sync.Once
+	once3           sync.Once
+	once4           sync.Once
+	once5           sync.Once
 )
 
 func Init() {
@@ -33,6 +39,8 @@ func Init() {
 	once1.Do(initAppClient)
 	once2.Do(initAiClient)
 	once3.Do(initDocumentClient)
+	once4.Do(initWorkOrderClient)
+	once5.Do(initInventoryClient)
 }
 func initUserClient() {
 	opts := newCommonClientOptions(false)
@@ -72,6 +80,28 @@ func initDocumentClient() {
 	var err error
 	DocumentClient, err = documentservice.NewClient(
 		"document",
+		opts...,
+	)
+	if err != nil {
+		hlog.Fatal(err)
+	}
+}
+func initWorkOrderClient() {
+	opts := newCommonClientOptions(false)
+	var err error
+	WorkOrderClient, err = workorderservice.NewClient(
+		"workorder",
+		opts...,
+	)
+	if err != nil {
+		hlog.Fatal(err)
+	}
+}
+func initInventoryClient() {
+	opts := newCommonClientOptions(false)
+	var err error
+	InventoryClient, err = inventoryservice.NewClient(
+		"inventory",
 		opts...,
 	)
 	if err != nil {

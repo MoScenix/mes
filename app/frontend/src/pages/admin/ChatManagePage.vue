@@ -20,7 +20,11 @@
         <a-input v-model:value="searchParams.appId" placeholder="输入应用ID" />
       </a-form-item>
       <a-form-item label="用户ID">
-        <a-input v-model:value="searchParams.userId" placeholder="输入用户ID" />
+        <MesUserPicker
+          v-model="searchParams.userId"
+          class="user-filter"
+          placeholder="选择用户"
+        />
       </a-form-item>
       <a-form-item>
         <a-button type="primary" html-type="submit">搜索</a-button>
@@ -71,6 +75,7 @@ import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { listAllChatHistoryByPageForAdmin } from '@/api/chatHistoryController'
 import { formatTime } from '@/utils/time'
+import MesUserPicker from '@/components/mes/MesUserPicker.vue'
 
 const router = useRouter()
 
@@ -208,6 +213,10 @@ const deleteMessage = async (id: number | undefined) => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.user-filter {
+  width: 220px;
 }
 
 :deep(.ant-table-tbody > tr > td) {

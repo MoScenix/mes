@@ -79,14 +79,14 @@ func Resume(ctx context.Context) error {
 	return handleGraphResult(ctx, err)
 }
 
-func loadResumeAnswer(ctx context.Context, state aievent.ProjectState, targetID string) (agent.DesignerAnswer, error) {
+func loadResumeAnswer(ctx context.Context, state aievent.ProjectState, targetID string) (agent.AssistantAnswer, error) {
 	streamStore, ok := utils.StreamStoreFromContext(ctx)
 	if !ok || streamStore == nil {
-		return agent.DesignerAnswer{}, fmt.Errorf("graph resume requires stream store")
+		return agent.AssistantAnswer{}, fmt.Errorf("graph resume requires stream store")
 	}
 	projectID, ok := utils.ProjectIDFromContext(ctx)
 	if !ok || projectID == "" {
-		return agent.DesignerAnswer{}, fmt.Errorf("graph resume requires project id")
+		return agent.AssistantAnswer{}, fmt.Errorf("graph resume requires project id")
 	}
 	lastID := resumeEventCursor(state)
 	if strings.TrimSpace(lastID) == "" {
@@ -98,7 +98,7 @@ func loadResumeAnswer(ctx context.Context, state aievent.ProjectState, targetID 
 		Count: 32,
 	})
 	if err != nil {
-		return agent.DesignerAnswer{}, err
+		return agent.AssistantAnswer{}, err
 	}
 	targetIDs := resumeTargetIDs(state, targetID)
 	for _, msg := range messages {
@@ -109,12 +109,12 @@ func loadResumeAnswer(ctx context.Context, state aievent.ProjectState, targetID 
 		if len(targetIDs) > 0 && !targetIDs[strings.TrimSpace(event.TargetID)] {
 			continue
 		}
-		return agent.DesignerAnswer{
+		return agent.AssistantAnswer{
 			Content: event.Content,
 			Payload: event.Payload,
 		}, nil
 	}
-	return agent.DesignerAnswer{}, ErrResumeAnswerNotFound
+	return agent.AssistantAnswer{}, ErrResumeAnswerNotFound
 }
 
 func resumeTargetIDs(state aievent.ProjectState, targetID string) map[string]bool {
@@ -164,8 +164,8 @@ func persistGraphInterrupted(ctx context.Context, info *compose.InterruptInfo) e
 			"is_root_cause":     interruptCtx.IsRootCause,
 		}
 		infoPayload, _ := interruptCtx.Info.(map[string]any)
-		if designerLastID := aievent.DesignerLastID(infoPayload); designerLastID != "" {
-			payload[aievent.PayloadLastEventID] = designerLastID
+		if assistantLastID := aievent.DesignerLastID(infoPayload); assistantLastID != "" {
+			payload[aievent.PayloadLastEventID] = assistantLastID
 		}
 		if adkInterruptID := aievent.ADKInterruptID(infoPayload); adkInterruptID != "" {
 			payload[aievent.PayloadADKInterruptID] = adkInterruptID
@@ -175,7 +175,7 @@ func persistGraphInterrupted(ctx context.Context, info *compose.InterruptInfo) e
 		}
 		interrupts = append(interrupts, aievent.PendingInterrupt{
 			ID:      interruptCtx.ID,
-			Agent:   designerNode,
+			Agent:   assistantNode,
 			Content: fmt.Sprint(interruptCtx.Info),
 			Payload: payload,
 		})

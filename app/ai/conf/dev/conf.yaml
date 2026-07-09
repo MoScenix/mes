@@ -1,20 +1,21 @@
 kitex:
   service: "ai"
-  address: ":8888"
+  address: ":8895"
   log_level: warn
   log_file_name: "log/kitex.log"
   log_max_size: 10
   log_max_age: 3
   log_max_backups: 50
+  metrics_port:  ":9092"
 
 registry:
   registry_address:
-    - 127.0.0.1:2379
+    - 127.0.0.1:8500
   username: ""
   password: ""
 
 mysql:
-  dsn: "gorm:gorm@tcp(127.0.0.1:3306)/gorm?charset=utf8mb4&parseTime=True&loc=Local"
+  dsn: "%s:%s@tcp(%s:3306)/%s?charset=utf8mb4&parseTime=True&loc=Local"
 
 redis:
   address: "127.0.0.1:6379"
@@ -41,3 +42,37 @@ workpool:
   scale_up_threshold: 4
   scale_down_threshold: 0
   idle_timeout_seconds: 30
+
+ai_tools:
+  tool_groups:
+    common: [ask_user, SearchProjectFile, search_users]
+    workorder: [list_work_orders, mark_work_order_read, create_work_order_draft, update_work_order_draft]
+    engineering_order: [create_engineering_order_draft, update_engineering_order_draft, list_engineering_orders, get_engineering_order]
+    inventory_flow: [create_inventory_flow_draft, list_inventory_flows, get_inventory_flow]
+    inventory_flow_read: [list_inventory_flows, get_inventory_flow]
+    item: [search_items, get_item, list_item_units]
+    warehouse_admin: [list_pending_inventory_flows, inventory_check]
+  role_groups:
+    leader: [common, workorder, engineering_order, inventory_flow]
+    purchase: [common, workorder, inventory_flow]
+    worker: [common, workorder, inventory_flow_read]
+    process_engineer: [common, item, engineering_order]
+    warehouse_admin: [common, workorder, item, inventory_flow_read, warehouse_admin]
+    sales: [common, workorder, inventory_flow]
+    admin: [common, workorder, engineering_order, inventory_flow, item, warehouse_admin]
+  role_aliases:
+    组长: leader
+    leader: leader
+    采购专员: purchase
+    purchase: purchase
+    普通工人: worker
+    worker: worker
+    工艺工程师: process_engineer
+    process_engineer: process_engineer
+    仓库管理员: warehouse_admin
+    warehouse: warehouse_admin
+    warehouse_admin: warehouse_admin
+    销售: sales
+    sales: sales
+    admin: admin
+    管理员: admin

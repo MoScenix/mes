@@ -23,6 +23,7 @@ func (s *UpdateService) Run(req *user.UpdateReq) (resp *user.UpdateResp, err err
 		UserAvatar:  req.UserAvatar,
 		Name:        req.UserName,
 		UserProfile: req.UserProfile,
+		UserRole:    req.UserRole,
 	})
 	if err != nil {
 		return nil, err

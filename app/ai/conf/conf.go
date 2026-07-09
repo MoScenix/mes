@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"sync"
 
+	"github.com/MoScenix/mes/common/rpcmeta"
 	"github.com/cloudwego/kitex/pkg/klog"
 	"github.com/kr/pretty"
 	"gopkg.in/validator.v2"
@@ -26,6 +27,7 @@ type Config struct {
 	LLM      LLM      `yaml:"llm"`
 	ShareDir ShareDir `yaml:"ShareDir"`
 	WorkPool WorkPool `yaml:"workpool"`
+	AITools  AITools  `yaml:"ai_tools"`
 }
 
 type MySQL struct {
@@ -79,6 +81,12 @@ type WorkPool struct {
 	IdleTimeoutSeconds int `yaml:"idle_timeout_seconds"`
 }
 
+type AITools struct {
+	ToolGroups  map[string][]string `yaml:"tool_groups"`
+	RoleGroups  map[string][]string `yaml:"role_groups"`
+	RoleAliases map[string]string   `yaml:"role_aliases"`
+}
+
 // GetConf gets configuration instance
 func GetConf() *Config {
 	once.Do(initConf)
@@ -106,6 +114,7 @@ func initConf() {
 	}
 	conf.Env = GetEnv()
 	normalizeLLMConfig(&conf.LLM)
+	normalizeAIToolsConfig(&conf.AITools)
 	pretty.Printf("%+v\n", conf)
 }
 
@@ -130,6 +139,68 @@ func normalizeLLMConfig(llm *LLM) {
 	}
 	if llm.TopP <= 0 {
 		llm.TopP = 0.7
+	}
+}
+
+func normalizeAIToolsConfig(aiTools *AITools) {
+	defaultGroups := map[string][]string{
+		"common":              {"ask_user", "SearchProjectFile", "search_users"},
+		"workorder":           {"list_work_orders", "mark_work_order_read", "create_work_order_draft", "update_work_order_draft"},
+		"engineering_order":   {"create_engineering_order_draft", "update_engineering_order_draft", "list_engineering_orders", "get_engineering_order"},
+		"inventory_flow":      {"create_inventory_flow_draft", "list_inventory_flows", "get_inventory_flow"},
+		"item":                {"search_items", "get_item", "list_item_units"},
+		"warehouse_admin":     {"list_pending_inventory_flows", "inventory_check"},
+		"inventory_flow_read": {"list_inventory_flows", "get_inventory_flow"},
+	}
+	defaultRoleGroups := map[string][]string{
+		rpcmeta.RoleLeader:          {"common", "workorder", "engineering_order", "inventory_flow"},
+		rpcmeta.RolePurchase:        {"common", "workorder", "inventory_flow"},
+		rpcmeta.RoleWorker:          {"common", "workorder", "inventory_flow_read"},
+		rpcmeta.RoleProcessEngineer: {"common", "item", "engineering_order"},
+		rpcmeta.RoleWarehouseAdmin:  {"common", "workorder", "item", "inventory_flow_read", "warehouse_admin"},
+		rpcmeta.RoleSales:           {"common", "workorder", "inventory_flow"},
+		rpcmeta.RoleAdmin:           {"common", "workorder", "engineering_order", "inventory_flow", "item", "warehouse_admin"},
+	}
+	defaultAliases := map[string]string{
+		"组长":               rpcmeta.RoleLeader,
+		"leader":           rpcmeta.RoleLeader,
+		"采购专员":             rpcmeta.RolePurchase,
+		"purchase":         rpcmeta.RolePurchase,
+		"普通工人":             rpcmeta.RoleWorker,
+		"worker":           rpcmeta.RoleWorker,
+		"工艺工程师":            rpcmeta.RoleProcessEngineer,
+		"process_engineer": rpcmeta.RoleProcessEngineer,
+		"仓库管理员":            rpcmeta.RoleWarehouseAdmin,
+		"warehouse":        rpcmeta.RoleWarehouseAdmin,
+		"warehouse_admin":  rpcmeta.RoleWarehouseAdmin,
+		"销售":               rpcmeta.RoleSales,
+		"sales":            rpcmeta.RoleSales,
+		"admin":            rpcmeta.RoleAdmin,
+		"管理员":              rpcmeta.RoleAdmin,
+	}
+	if aiTools.ToolGroups == nil {
+		aiTools.ToolGroups = map[string][]string{}
+	}
+	for group, tools := range defaultGroups {
+		if len(aiTools.ToolGroups[group]) == 0 {
+			aiTools.ToolGroups[group] = tools
+		}
+	}
+	if aiTools.RoleGroups == nil {
+		aiTools.RoleGroups = map[string][]string{}
+	}
+	for role, groups := range defaultRoleGroups {
+		if len(aiTools.RoleGroups[role]) == 0 {
+			aiTools.RoleGroups[role] = groups
+		}
+	}
+	if aiTools.RoleAliases == nil {
+		aiTools.RoleAliases = map[string]string{}
+	}
+	for alias, role := range defaultAliases {
+		if aiTools.RoleAliases[alias] == "" {
+			aiTools.RoleAliases[alias] = role
+		}
 	}
 }
 

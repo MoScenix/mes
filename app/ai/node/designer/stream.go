@@ -12,12 +12,12 @@ const answerWait = 60 * time.Second
 
 type answerEvent struct {
 	TargetID string
-	Answer   agent.DesignerAnswer
+	Answer   agent.AssistantAnswer
 }
 
-func waitAnswer(ctx context.Context, answers <-chan answerEvent, targetID string) (agent.DesignerAnswer, bool, error) {
+func waitAnswer(ctx context.Context, answers <-chan answerEvent, targetID string) (agent.AssistantAnswer, bool, error) {
 	if answers == nil || targetID == "" {
-		return agent.DesignerAnswer{}, false, nil
+		return agent.AssistantAnswer{}, false, nil
 	}
 
 	timer := time.NewTimer(answerWait)
@@ -25,9 +25,9 @@ func waitAnswer(ctx context.Context, answers <-chan answerEvent, targetID string
 	for {
 		select {
 		case <-ctx.Done():
-			return agent.DesignerAnswer{}, false, ctx.Err()
+			return agent.AssistantAnswer{}, false, ctx.Err()
 		case <-timer.C:
-			return agent.DesignerAnswer{}, false, nil
+			return agent.AssistantAnswer{}, false, nil
 		case event := <-answers:
 			if event.TargetID != "" && event.TargetID != targetID {
 				continue
@@ -37,8 +37,8 @@ func waitAnswer(ctx context.Context, answers <-chan answerEvent, targetID string
 	}
 }
 
-func agentAnswer(event aievent.TaskEvent) agent.DesignerAnswer {
-	return agent.DesignerAnswer{
+func agentAnswer(event aievent.TaskEvent) agent.AssistantAnswer {
+	return agent.AssistantAnswer{
 		Content: event.Content,
 		Payload: event.Payload,
 	}

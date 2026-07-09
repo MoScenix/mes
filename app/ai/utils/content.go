@@ -3,7 +3,6 @@ package utils
 import (
 	"context"
 
-	"github.com/MoScenix/mes/common/filestore/project"
 	"github.com/MoScenix/mes/common/redisstate"
 	"github.com/MoScenix/mes/common/redisstream"
 	"github.com/cloudwego/eino/schema"
@@ -20,8 +19,7 @@ const (
 )
 
 var (
-	ProjectRootPath  = "project_root"
-	ProjectFileStore = "project_file_store"
+	ProjectRootPath = "project_root"
 )
 
 func WithHistoryMessages(ctx context.Context, messages []*schema.Message) context.Context {
@@ -40,15 +38,6 @@ func WithProjectID(ctx context.Context, projectID string) context.Context {
 func ProjectIDFromContext(ctx context.Context) (string, bool) {
 	projectID, ok := ctx.Value(projectIDKey).(string)
 	return projectID, ok
-}
-
-func WithProjectStore(ctx context.Context, store project.Store) context.Context {
-	return context.WithValue(ctx, ProjectFileStore, store)
-}
-
-func ProjectStoreFromContext(ctx context.Context) (project.Store, bool) {
-	store, ok := ctx.Value(ProjectFileStore).(project.Store)
-	return store, ok
 }
 
 func WithStreamStore(ctx context.Context, store redisstream.Store) context.Context {

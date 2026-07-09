@@ -15,6 +15,12 @@ type Client interface {
 	UpdateItem(ctx context.Context, Req *inventory.UpdateItemReq, callOptions ...callopt.Option) (r *inventory.UpdateItemResp, err error)
 	GetItem(ctx context.Context, Req *inventory.GetItemReq, callOptions ...callopt.Option) (r *inventory.GetItemResp, err error)
 	ListItem(ctx context.Context, Req *inventory.ListItemReq, callOptions ...callopt.Option) (r *inventory.ListItemResp, err error)
+	CreateProcessDraft(ctx context.Context, Req *inventory.CreateProcessDraftReq, callOptions ...callopt.Option) (r *inventory.CreateProcessDraftResp, err error)
+	UpdateProcessDraft(ctx context.Context, Req *inventory.UpdateProcessDraftReq, callOptions ...callopt.Option) (r *inventory.UpdateProcessDraftResp, err error)
+	DeleteProcessDraft(ctx context.Context, Req *inventory.DeleteProcessDraftReq, callOptions ...callopt.Option) (r *inventory.DeleteProcessDraftResp, err error)
+	SubmitProcess(ctx context.Context, Req *inventory.SubmitProcessReq, callOptions ...callopt.Option) (r *inventory.SubmitProcessResp, err error)
+	GetProcess(ctx context.Context, Req *inventory.GetProcessReq, callOptions ...callopt.Option) (r *inventory.GetProcessResp, err error)
+	ListProcess(ctx context.Context, Req *inventory.ListProcessReq, callOptions ...callopt.Option) (r *inventory.ListProcessResp, err error)
 	AddItemUnit(ctx context.Context, Req *inventory.AddItemUnitReq, callOptions ...callopt.Option) (r *inventory.AddItemUnitResp, err error)
 	UpdateItemUnitStatus(ctx context.Context, Req *inventory.UpdateItemUnitStatusReq, callOptions ...callopt.Option) (r *inventory.UpdateItemUnitStatusResp, err error)
 	GetItemUnit(ctx context.Context, Req *inventory.GetItemUnitReq, callOptions ...callopt.Option) (r *inventory.GetItemUnitResp, err error)
@@ -23,9 +29,16 @@ type Client interface {
 	UpdateInventoryFlowDraft(ctx context.Context, Req *inventory.UpdateInventoryFlowDraftReq, callOptions ...callopt.Option) (r *inventory.UpdateInventoryFlowDraftResp, err error)
 	DeleteInventoryFlowDraft(ctx context.Context, Req *inventory.DeleteInventoryFlowDraftReq, callOptions ...callopt.Option) (r *inventory.DeleteInventoryFlowDraftResp, err error)
 	SubmitInventoryFlow(ctx context.Context, Req *inventory.SubmitInventoryFlowReq, callOptions ...callopt.Option) (r *inventory.SubmitInventoryFlowResp, err error)
+	CompleteInventoryFlow(ctx context.Context, Req *inventory.CompleteInventoryFlowReq, callOptions ...callopt.Option) (r *inventory.CompleteInventoryFlowResp, err error)
 	AuditInventoryFlow(ctx context.Context, Req *inventory.AuditInventoryFlowReq, callOptions ...callopt.Option) (r *inventory.AuditInventoryFlowResp, err error)
 	GetInventoryFlow(ctx context.Context, Req *inventory.GetInventoryFlowReq, callOptions ...callopt.Option) (r *inventory.GetInventoryFlowResp, err error)
 	ListInventoryFlow(ctx context.Context, Req *inventory.ListInventoryFlowReq, callOptions ...callopt.Option) (r *inventory.ListInventoryFlowResp, err error)
+	CreateEngineeringOrderDraft(ctx context.Context, Req *inventory.CreateEngineeringOrderDraftReq, callOptions ...callopt.Option) (r *inventory.CreateEngineeringOrderDraftResp, err error)
+	UpdateEngineeringOrderDraft(ctx context.Context, Req *inventory.UpdateEngineeringOrderDraftReq, callOptions ...callopt.Option) (r *inventory.UpdateEngineeringOrderDraftResp, err error)
+	DeleteEngineeringOrderDraft(ctx context.Context, Req *inventory.DeleteEngineeringOrderDraftReq, callOptions ...callopt.Option) (r *inventory.DeleteEngineeringOrderDraftResp, err error)
+	SubmitEngineeringOrder(ctx context.Context, Req *inventory.SubmitEngineeringOrderReq, callOptions ...callopt.Option) (r *inventory.SubmitEngineeringOrderResp, err error)
+	GetEngineeringOrder(ctx context.Context, Req *inventory.GetEngineeringOrderReq, callOptions ...callopt.Option) (r *inventory.GetEngineeringOrderResp, err error)
+	ListEngineeringOrder(ctx context.Context, Req *inventory.ListEngineeringOrderReq, callOptions ...callopt.Option) (r *inventory.ListEngineeringOrderResp, err error)
 }
 
 // NewClient creates a client for the service defined in IDL.
@@ -77,6 +90,36 @@ func (p *kInventoryServiceClient) ListItem(ctx context.Context, Req *inventory.L
 	return p.kClient.ListItem(ctx, Req)
 }
 
+func (p *kInventoryServiceClient) CreateProcessDraft(ctx context.Context, Req *inventory.CreateProcessDraftReq, callOptions ...callopt.Option) (r *inventory.CreateProcessDraftResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.CreateProcessDraft(ctx, Req)
+}
+
+func (p *kInventoryServiceClient) UpdateProcessDraft(ctx context.Context, Req *inventory.UpdateProcessDraftReq, callOptions ...callopt.Option) (r *inventory.UpdateProcessDraftResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.UpdateProcessDraft(ctx, Req)
+}
+
+func (p *kInventoryServiceClient) DeleteProcessDraft(ctx context.Context, Req *inventory.DeleteProcessDraftReq, callOptions ...callopt.Option) (r *inventory.DeleteProcessDraftResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.DeleteProcessDraft(ctx, Req)
+}
+
+func (p *kInventoryServiceClient) SubmitProcess(ctx context.Context, Req *inventory.SubmitProcessReq, callOptions ...callopt.Option) (r *inventory.SubmitProcessResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.SubmitProcess(ctx, Req)
+}
+
+func (p *kInventoryServiceClient) GetProcess(ctx context.Context, Req *inventory.GetProcessReq, callOptions ...callopt.Option) (r *inventory.GetProcessResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.GetProcess(ctx, Req)
+}
+
+func (p *kInventoryServiceClient) ListProcess(ctx context.Context, Req *inventory.ListProcessReq, callOptions ...callopt.Option) (r *inventory.ListProcessResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.ListProcess(ctx, Req)
+}
+
 func (p *kInventoryServiceClient) AddItemUnit(ctx context.Context, Req *inventory.AddItemUnitReq, callOptions ...callopt.Option) (r *inventory.AddItemUnitResp, err error) {
 	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
 	return p.kClient.AddItemUnit(ctx, Req)
@@ -117,6 +160,11 @@ func (p *kInventoryServiceClient) SubmitInventoryFlow(ctx context.Context, Req *
 	return p.kClient.SubmitInventoryFlow(ctx, Req)
 }
 
+func (p *kInventoryServiceClient) CompleteInventoryFlow(ctx context.Context, Req *inventory.CompleteInventoryFlowReq, callOptions ...callopt.Option) (r *inventory.CompleteInventoryFlowResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.CompleteInventoryFlow(ctx, Req)
+}
+
 func (p *kInventoryServiceClient) AuditInventoryFlow(ctx context.Context, Req *inventory.AuditInventoryFlowReq, callOptions ...callopt.Option) (r *inventory.AuditInventoryFlowResp, err error) {
 	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
 	return p.kClient.AuditInventoryFlow(ctx, Req)
@@ -130,4 +178,34 @@ func (p *kInventoryServiceClient) GetInventoryFlow(ctx context.Context, Req *inv
 func (p *kInventoryServiceClient) ListInventoryFlow(ctx context.Context, Req *inventory.ListInventoryFlowReq, callOptions ...callopt.Option) (r *inventory.ListInventoryFlowResp, err error) {
 	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
 	return p.kClient.ListInventoryFlow(ctx, Req)
+}
+
+func (p *kInventoryServiceClient) CreateEngineeringOrderDraft(ctx context.Context, Req *inventory.CreateEngineeringOrderDraftReq, callOptions ...callopt.Option) (r *inventory.CreateEngineeringOrderDraftResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.CreateEngineeringOrderDraft(ctx, Req)
+}
+
+func (p *kInventoryServiceClient) UpdateEngineeringOrderDraft(ctx context.Context, Req *inventory.UpdateEngineeringOrderDraftReq, callOptions ...callopt.Option) (r *inventory.UpdateEngineeringOrderDraftResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.UpdateEngineeringOrderDraft(ctx, Req)
+}
+
+func (p *kInventoryServiceClient) DeleteEngineeringOrderDraft(ctx context.Context, Req *inventory.DeleteEngineeringOrderDraftReq, callOptions ...callopt.Option) (r *inventory.DeleteEngineeringOrderDraftResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.DeleteEngineeringOrderDraft(ctx, Req)
+}
+
+func (p *kInventoryServiceClient) SubmitEngineeringOrder(ctx context.Context, Req *inventory.SubmitEngineeringOrderReq, callOptions ...callopt.Option) (r *inventory.SubmitEngineeringOrderResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.SubmitEngineeringOrder(ctx, Req)
+}
+
+func (p *kInventoryServiceClient) GetEngineeringOrder(ctx context.Context, Req *inventory.GetEngineeringOrderReq, callOptions ...callopt.Option) (r *inventory.GetEngineeringOrderResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.GetEngineeringOrder(ctx, Req)
+}
+
+func (p *kInventoryServiceClient) ListEngineeringOrder(ctx context.Context, Req *inventory.ListEngineeringOrderReq, callOptions ...callopt.Option) (r *inventory.ListEngineeringOrderResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.ListEngineeringOrder(ctx, Req)
 }

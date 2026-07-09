@@ -1,0 +1,382 @@
+/* =========================================
+   Ant Design Vue — shadcn 极简风格覆盖
+   ========================================= */
+
+/* --- 布局 --- */
+body {
+  font-family: var(--font-family);
+  color: var(--foreground);
+  background: #fafafa;
+}
+
+/* --- 表格 --- */
+.ant-table-wrapper {
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  background: var(--background);
+}
+
+.ant-table {
+  background: transparent;
+  font-size: 13px;
+}
+
+.ant-table-thead > tr > th {
+  background: transparent !important;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 14px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.ant-table-thead > tr > th::before {
+  display: none !important;
+}
+
+.ant-table-tbody > tr > td {
+  border-bottom: 1px solid var(--border);
+  padding: 10px 14px;
+  transition: background 0.15s ease;
+}
+
+.ant-table-tbody > tr:hover > td {
+  background: var(--muted) !important;
+}
+
+.ant-table-tbody > tr:last-child > td {
+  border-bottom: none;
+}
+
+.ant-table-placeholder {
+  display: none;
+}
+
+.ant-table-pagination {
+  margin: 12px 14px !important;
+}
+
+/* --- 按钮 --- */
+.ant-btn {
+  border-radius: var(--radius);
+  font-size: 13px;
+  height: 34px;
+  padding: 4px 14px;
+  border: 1px solid var(--border);
+  background: var(--background);
+  color: var(--foreground);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.15s ease;
+}
+
+.ant-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.ant-btn:active {
+  transform: scale(0.97);
+}
+
+.ant-btn-primary {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-foreground);
+  box-shadow: none;
+}
+
+.ant-btn-primary:hover {
+  background: #0055aa;
+  border-color: #0055aa;
+  color: white;
+}
+
+.ant-btn-default {
+  background: var(--background);
+  border-color: var(--border);
+}
+
+.ant-btn-text {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+.ant-btn-text:hover {
+  background: var(--muted);
+}
+
+.ant-btn-dangerous {
+  color: var(--destructive);
+  border-color: var(--destructive);
+}
+
+.ant-btn-sm {
+  height: 28px;
+  padding: 2px 10px;
+  font-size: 12px;
+}
+
+.ant-btn-lg {
+  height: 40px;
+  padding: 6px 20px;
+  font-size: 14px;
+}
+
+/* --- 输入框 --- */
+.ant-input,
+.ant-input-affix-wrapper {
+  border-radius: var(--radius);
+  border-color: var(--input);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.15s ease;
+  font-size: 13px;
+}
+
+.ant-input:hover,
+.ant-input-affix-wrapper:hover {
+  border-color: var(--primary);
+}
+
+.ant-input:focus,
+.ant-input-focused,
+.ant-input-affix-wrapper-focused {
+  border-color: var(--ring);
+  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+}
+
+.ant-input-search .ant-input-search-button {
+  border-radius: 0 var(--radius) var(--radius) 0;
+  height: 34px;
+}
+
+/* --- 选择器 --- */
+.ant-select-selector {
+  border-radius: var(--radius) !important;
+  border-color: var(--input) !important;
+  box-shadow: var(--shadow-sm) !important;
+  font-size: 13px;
+}
+
+.ant-select-focused .ant-select-selector {
+  border-color: var(--ring) !important;
+  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1) !important;
+}
+
+.ant-select-selection-item {
+  font-size: 13px;
+}
+
+/* --- 输入框数字 --- */
+.ant-input-number {
+  border-radius: var(--radius);
+  border-color: var(--input);
+  box-shadow: var(--shadow-sm);
+  font-size: 13px;
+}
+
+.ant-input-number:hover {
+  border-color: var(--primary);
+}
+
+.ant-input-number-focused {
+  border-color: var(--ring);
+  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+}
+
+/* --- 表单 --- */
+.ant-form-item {
+  margin-bottom: 14px;
+}
+
+.ant-form-item-label > label {
+  font-size: 13px;
+  color: var(--muted-foreground);
+  font-weight: 500;
+}
+
+/* --- 模态框 --- */
+.ant-modal-content {
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  padding: 20px;
+}
+
+.ant-modal-header {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 14px;
+  margin-bottom: 16px;
+  border-radius: 0;
+}
+
+.ant-modal-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.ant-modal-footer {
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+  margin-top: 16px;
+}
+
+/* --- Tag --- */
+.ant-tag {
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  font-size: 12px;
+  padding: 1px 7px;
+  line-height: 20px;
+}
+
+/* --- Badge --- */
+.ant-badge-count {
+  box-shadow: none !important;
+  font-size: 11px;
+  height: 18px;
+  line-height: 18px;
+  padding: 0 6px;
+  min-width: 18px;
+}
+
+/* --- Dropdown --- */
+.ant-dropdown-menu {
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+  padding: 4px;
+}
+
+.ant-dropdown-menu-item {
+  border-radius: calc(var(--radius) - 2px);
+  font-size: 13px;
+  padding: 6px 12px;
+}
+
+/* --- 消息提示 --- */
+.ant-message-notice-content {
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  font-size: 13px;
+}
+
+/* --- 弹窗确认 --- */
+.ant-popconfirm {
+  font-size: 13px;
+}
+
+/* --- 卡片 --- */
+.ant-card {
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+.ant-card-head {
+  border-bottom: 1px solid var(--border);
+  padding: 0 16px;
+  min-height: 46px;
+}
+
+.ant-card-head-title {
+  font-size: 14px;
+  font-weight: 600;
+  padding: 12px 0;
+}
+
+.ant-card-body {
+  padding: 16px;
+}
+
+/* --- Menu --- */
+.ant-menu-horizontal {
+  border-bottom: none !important;
+}
+
+.ant-menu-item {
+  font-size: 13px !important;
+}
+
+.ant-menu-item-selected {
+  color: var(--primary) !important;
+}
+
+.ant-menu-item::after {
+  bottom: 0 !important;
+}
+
+/* --- Tabs --- */
+.ant-tabs-tab {
+  font-size: 13px;
+  padding: 8px 0;
+}
+
+/* --- Segmented --- */
+.ant-segmented {
+  border-radius: var(--radius);
+  font-size: 13px;
+}
+
+.ant-segmented-item {
+  border-radius: calc(var(--radius) - 2px);
+}
+
+/* --- Collapse --- */
+.ant-collapse {
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+.ant-collapse-header {
+  font-size: 13px;
+  padding: 10px 14px !important;
+}
+
+.ant-collapse-content-box {
+  padding: 12px 14px !important;
+}
+
+/* --- Tooltip --- */
+.ant-tooltip-inner {
+  border-radius: var(--radius);
+  font-size: 12px;
+  padding: 6px 10px;
+}
+
+/* --- Spin --- */
+.ant-spin-dot {
+  color: var(--primary);
+}
+
+/* --- Divider --- */
+.ant-divider {
+  border-color: var(--border);
+  margin: 14px 0;
+}
+
+/* --- Empty --- */
+.ant-empty-description {
+  font-size: 13px;
+  color: var(--muted-foreground);
+}
+
+/* --- Input Search --- */
+.ant-input-search > .ant-input-wrapper > .ant-input-affix-wrapper {
+  border-radius: var(--radius) 0 0 var(--radius);
+}
+
+/* --- Textarea --- */
+.ant-input-textarea textarea {
+  border-radius: var(--radius);
+  border-color: var(--input);
+  box-shadow: var(--shadow-sm);
+}
+
+.ant-input-textarea textarea:focus {
+  border-color: var(--ring);
+  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+}

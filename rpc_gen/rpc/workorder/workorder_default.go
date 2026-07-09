@@ -60,3 +60,12 @@ func ListWorkOrder(ctx context.Context, req *workorder.ListWorkOrderReq, callOpt
 	}
 	return resp, nil
 }
+
+func MarkWorkOrderRead(ctx context.Context, req *workorder.MarkWorkOrderReadReq, callOptions ...callopt.Option) (resp *workorder.MarkWorkOrderReadResp, err error) {
+	resp, err = defaultClient.MarkWorkOrderRead(ctx, req, callOptions...)
+	if err != nil {
+		klog.CtxErrorf(ctx, "MarkWorkOrderRead call failed,err =%+v", err)
+		return nil, err
+	}
+	return resp, nil
+}

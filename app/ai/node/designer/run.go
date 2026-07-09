@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/MoScenix/mes/app/ai/agent"
+	taskrunner "github.com/MoScenix/mes/app/ai/node/coder"
 	"github.com/MoScenix/mes/app/ai/utils"
 	"github.com/MoScenix/mes/common/aievent"
 	"github.com/MoScenix/mes/common/redisstate"
@@ -17,12 +18,12 @@ import (
 	"github.com/cloudwego/eino/schema"
 )
 
-const agentName = "Designer"
+const agentName = "Assistant"
 
-var ErrInterrupted = errors.New("designer interrupted waiting for user answer")
-var ErrNoInterruptedDesigner = errors.New("designer has no interrupted checkpoint")
+var ErrInterrupted = errors.New("assistant interrupted waiting for user answer")
+var ErrNoInterruptedAssistant = errors.New("assistant has no interrupted checkpoint")
 
-type InterruptedState struct {
+type AssistantInterruptedState struct {
 	CheckpointID      string
 	Checkpoint        []byte
 	PendingInterrupts []aievent.PendingInterrupt
@@ -31,7 +32,9 @@ type InterruptedState struct {
 	ControlCursor     string
 }
 
-type designerSession struct {
+type InterruptedState = AssistantInterruptedState
+
+type assistantSession struct {
 	ctx          context.Context
 	loopCtx      context.Context
 	cancel       context.CancelFunc
@@ -44,11 +47,12 @@ type designerSession struct {
 	checkpoints  *memoryCheckpointStore
 	lastEventID  string
 	answers      chan answerEvent
-	design       strings.Builder
+	output       *utils.StringBuffer
+	cancelCause  string
 }
 
 func init() {
-	schema.RegisterName[InterruptedState]("ai_designer_interrupted_state_v1")
+	schema.RegisterName[AssistantInterruptedState]("ai_designer_interrupted_state_v1")
 }
 
 func Run(ctx context.Context) (map[string]any, error) {
@@ -56,11 +60,11 @@ func Run(ctx context.Context) (map[string]any, error) {
 		return map[string]any{}, nil
 	}
 
-	if wasInterrupted, hasState, interrupted := compose.GetInterruptState[InterruptedState](ctx); wasInterrupted {
+	if wasInterrupted, hasState, interrupted := compose.GetInterruptState[AssistantInterruptedState](ctx); wasInterrupted {
 		if !hasState {
-			return nil, ErrNoInterruptedDesigner
+			return nil, ErrNoInterruptedAssistant
 		}
-		isResume, hasData, answer := compose.GetResumeContext[agent.DesignerAnswer](ctx)
+		isResume, hasData, answer := compose.GetResumeContext[agent.AssistantAnswer](ctx)
 		if !isResume || !hasData {
 			return nil, compose.StatefulInterrupt(ctx, graphInterruptInfo(interrupted), interrupted)
 		}
@@ -73,8 +77,8 @@ func Run(ctx context.Context) (map[string]any, error) {
 	}
 
 	projectID, _ := utils.ProjectIDFromContext(ctx)
-	checkpointID := designerCheckpointID(projectID)
-	session, err := newDesignerSession(ctx, checkpointID, newMemoryCheckpointStore())
+	checkpointID := assistantCheckpointID(projectID)
+	session, err := newAssistantSession(ctx, checkpointID, newMemoryCheckpointStore())
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +99,7 @@ func Run(ctx context.Context) (map[string]any, error) {
 	return session.run(initialMessages, nil)
 }
 
-func runResumed(ctx context.Context, interrupted InterruptedState, answer agent.DesignerAnswer) (map[string]any, error) {
+func runResumed(ctx context.Context, interrupted AssistantInterruptedState, answer agent.AssistantAnswer) (map[string]any, error) {
 	if utils.IsCancelled(ctx) {
 		return map[string]any{}, nil
 	}
@@ -111,13 +115,13 @@ func runResumed(ctx context.Context, interrupted InterruptedState, answer agent.
 	checkpointID := interrupted.CheckpointID
 	checkpoints := newMemoryCheckpointStore()
 	if checkpointID == "" || len(interrupted.Checkpoint) == 0 {
-		return nil, ErrNoInterruptedDesigner
+		return nil, ErrNoInterruptedAssistant
 	}
 	if err := checkpoints.Set(ctx, checkpointID, interrupted.Checkpoint); err != nil {
 		return nil, err
 	}
 
-	session, err := newDesignerSession(ctx, checkpointID, checkpoints)
+	session, err := newAssistantSession(ctx, checkpointID, checkpoints)
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +131,7 @@ func runResumed(ctx context.Context, interrupted InterruptedState, answer agent.
 		ProjectID: session.projectID,
 		Type:      aievent.EventAccepted,
 		Agent:     agentName,
-		Content:   "designer resume accepted",
+		Content:   "assistant resume accepted",
 		CreatedAt: time.Now().UnixMilli(),
 	})
 	_ = setProjectState(ctx, session.stateStore, session.projectID, aievent.ProjectState{
@@ -144,13 +148,13 @@ func runResumed(ctx context.Context, interrupted InterruptedState, answer agent.
 	})
 }
 
-func newDesignerSession(ctx context.Context, checkpointID string, checkpoints *memoryCheckpointStore) (*designerSession, error) {
-	designerAgent, err := agent.NewDesigner(ctx)
+func newAssistantSession(ctx context.Context, checkpointID string, checkpoints *memoryCheckpointStore) (*assistantSession, error) {
+	assistantAgent, err := agent.NewAssistant(ctx)
 	if err != nil {
 		return nil, err
 	}
 	loopCtx, cancel := context.WithCancel(ctx)
-	return &designerSession{
+	return &assistantSession{
 		ctx:          ctx,
 		loopCtx:      loopCtx,
 		cancel:       cancel,
@@ -161,24 +165,25 @@ func newDesignerSession(ctx context.Context, checkpointID string, checkpoints *m
 		checkpointID: checkpointID,
 		checkpoints:  checkpoints,
 		answers:      make(chan answerEvent, 8),
-		agent:        designerAgent,
+		agent:        assistantAgent,
+		output:       &utils.StringBuffer{},
 	}, nil
 }
 
-func (s *designerSession) close() {
+func (s *assistantSession) close() {
 	if s.cancel != nil {
 		s.cancel()
 	}
 }
 
-func (s *designerSession) run(initialMessages []*schema.Message, resumeParams *adk.ResumeParams) (map[string]any, error) {
+func (s *assistantSession) run(initialMessages []*schema.Message, resumeParams *adk.ResumeParams) (map[string]any, error) {
 	for {
 		interrupt, cleanup, err := s.runTurn(initialMessages, resumeParams)
 		initialMessages = nil
 		resumeParams = nil
 		if err != nil {
 			cleanup()
-			return nil, err
+			return nil, taskrunner.FinishError(s.ctx, s.streamStore, s.stateStore, s.projectID, agentName, err)
 		}
 		if interrupt == nil {
 			cleanup()
@@ -188,12 +193,12 @@ func (s *designerSession) run(initialMessages []*schema.Message, resumeParams *a
 		answer, ok, err := waitAnswer(s.ctx, s.answers, interrupt.ID)
 		cleanup()
 		if err != nil {
-			return nil, err
+			return nil, taskrunner.FinishError(s.ctx, s.streamStore, s.stateStore, s.projectID, agentName, err)
 		}
 		if !ok {
 			interrupted, err := buildInterruptedState(s.ctx, s.checkpoints, s.checkpointID, s.lastEventID, interrupt, s.buffer)
 			if err != nil {
-				return nil, err
+				return nil, taskrunner.FinishError(s.ctx, s.streamStore, s.stateStore, s.projectID, agentName, err)
 			}
 			return nil, compose.StatefulInterrupt(s.ctx, graphInterruptInfo(interrupted), interrupted)
 		}
@@ -214,6 +219,11 @@ func (s *designerSession) run(initialMessages []*schema.Message, resumeParams *a
 		}
 	}
 
+	if strings.TrimSpace(s.cancelCause) != "" {
+		taskrunner.FinishCancelled(s.ctx, s.streamStore, s.stateStore, s.projectID, agentName, s.cancelCause)
+		return map[string]any{}, nil
+	}
+
 	_ = setProjectState(s.ctx, s.stateStore, s.projectID, aievent.ProjectState{
 		Status:      "running",
 		Agent:       agentName,
@@ -226,17 +236,20 @@ func (s *designerSession) run(initialMessages []*schema.Message, resumeParams *a
 	}
 
 	if s.buffer != nil {
-		s.buffer.WriteString(s.design.String())
+		s.buffer.WriteString(s.output.String())
+	}
+	if err := taskrunner.FinishDone(s.ctx, s.streamStore, s.stateStore, s.projectID, agentName, s.output.String(), s.lastEventID, nil); err != nil {
+		return nil, err
 	}
 	return map[string]any{}, nil
 }
 
-func (s *designerSession) runTurn(initialMessages []*schema.Message, resumeParams *adk.ResumeParams) (*interruptEvent, func(), error) {
+func (s *assistantSession) runTurn(initialMessages []*schema.Message, resumeParams *adk.ResumeParams) (*interruptEvent, func(), error) {
 	var interrupt *interruptEvent
 	loop := adk.NewTurnLoop[[]*schema.Message, *schema.Message](adk.TurnLoopConfig[[]*schema.Message, *schema.Message]{
 		Store:        s.checkpoints,
 		CheckpointID: s.checkpointID,
-		GenInput:     genDesignerInput,
+		GenInput:     genAssistantInput,
 		GenResume: func(_ context.Context, _ *adk.TurnLoop[[]*schema.Message, *schema.Message], interruptedItems, unhandledItems, newItems [][]*schema.Message) (*adk.GenResumeResult[[]*schema.Message, *schema.Message], error) {
 			items := append(append(interruptedItems, unhandledItems...), newItems...)
 			return &adk.GenResumeResult[[]*schema.Message, *schema.Message]{
@@ -250,7 +263,7 @@ func (s *designerSession) runTurn(initialMessages []*schema.Message, resumeParam
 		OnAgentEvents: func(ctx context.Context, _ *adk.TurnContext[[]*schema.Message, *schema.Message], events *adk.AsyncIterator[*adk.TypedAgentEvent[*schema.Message]]) error {
 			nextInterrupt, content, err := publishAgentEvents(ctx, s.streamStore, s.projectID, events, &s.lastEventID)
 			if content != "" {
-				s.design.WriteString(content)
+				s.output.WriteString(content)
 			}
 			if nextInterrupt != nil {
 				interrupt = nextInterrupt
@@ -263,7 +276,7 @@ func (s *designerSession) runTurn(initialMessages []*schema.Message, resumeParam
 	watchDone := make(chan struct{})
 	go func() {
 		defer close(watchDone)
-		watchPushes(watchCtx, s.stateStore, s.streamStore, s.projectID, s.buffer, s.answers, loop)
+		watchPushes(watchCtx, s.stateStore, s.streamStore, s.projectID, s.answers, loop, &s.lastEventID, s.output)
 	}()
 
 	cleanup := func() {
@@ -280,6 +293,7 @@ func (s *designerSession) runTurn(initialMessages []*schema.Message, resumeParam
 	state := loop.Wait()
 	if state != nil && state.ExitReason != nil && interrupt == nil {
 		if state.StopCause != "" {
+			s.cancelCause = state.StopCause
 			utils.CancelRuntime(s.ctx)
 			return nil, cleanup, nil
 		}
@@ -288,13 +302,13 @@ func (s *designerSession) runTurn(initialMessages []*schema.Message, resumeParam
 	return interrupt, cleanup, nil
 }
 
-func genDesignerInput(_ context.Context, _ *adk.TurnLoop[[]*schema.Message, *schema.Message], items [][]*schema.Message) (*adk.GenInputResult[[]*schema.Message, *schema.Message], error) {
+func genAssistantInput(_ context.Context, _ *adk.TurnLoop[[]*schema.Message, *schema.Message], items [][]*schema.Message) (*adk.GenInputResult[[]*schema.Message, *schema.Message], error) {
 	messages := make([]*schema.Message, 0)
 	for _, item := range items {
 		messages = append(messages, item...)
 	}
 	if len(messages) == 0 {
-		return nil, fmt.Errorf("designer node received empty input")
+		return nil, fmt.Errorf("assistant node received empty input")
 	}
 	return &adk.GenInputResult[[]*schema.Message, *schema.Message]{
 		Input: &adk.TypedAgentInput[*schema.Message]{
@@ -324,15 +338,15 @@ func stringBuffer(ctx context.Context) *utils.StringBuffer {
 	return buffer
 }
 
-func buildInterruptedState(ctx context.Context, checkpoints *memoryCheckpointStore, checkpointID string, lastEventID string, interrupt *interruptEvent, buffer *utils.StringBuffer) (InterruptedState, error) {
+func buildInterruptedState(ctx context.Context, checkpoints *memoryCheckpointStore, checkpointID string, lastEventID string, interrupt *interruptEvent, buffer *utils.StringBuffer) (AssistantInterruptedState, error) {
 	data, existed, err := checkpoints.Get(ctx, checkpointID)
 	if err != nil {
-		return InterruptedState{}, err
+		return AssistantInterruptedState{}, err
 	}
 	if !existed {
-		return InterruptedState{}, fmt.Errorf("designer checkpoint %q not found", checkpointID)
+		return AssistantInterruptedState{}, fmt.Errorf("assistant checkpoint %q not found", checkpointID)
 	}
-	return InterruptedState{
+	return AssistantInterruptedState{
 		CheckpointID:  checkpointID,
 		Checkpoint:    data,
 		LastEventID:   lastEventID,
@@ -349,11 +363,11 @@ func buildInterruptedState(ctx context.Context, checkpoints *memoryCheckpointSto
 	}, nil
 }
 
-func designerCheckpointID(projectID string) string {
+func assistantCheckpointID(projectID string) string {
 	if projectID == "" {
-		return "designer"
+		return "assistant"
 	}
-	return "project:" + projectID + ":designer"
+	return "project:" + projectID + ":assistant"
 }
 
 func historyMessages(ctx context.Context) []*schema.Message {
@@ -366,7 +380,7 @@ func historyMessages(ctx context.Context) []*schema.Message {
 	}
 	if buffer, ok := utils.StringBufferFromContext(ctx); ok {
 		if extra := strings.TrimSpace(buffer.String()); extra != "" {
-			messages = append(messages, schema.SystemMessage("Pending designer input:\n"+extra))
+			messages = append(messages, schema.SystemMessage("Pending assistant input:\n"+extra))
 		}
 	}
 	return messages
@@ -379,7 +393,7 @@ func bufferValue(buffer *utils.StringBuffer) string {
 	return buffer.String()
 }
 
-func resumeTargets(interrupts []aievent.PendingInterrupt, answer agent.DesignerAnswer) map[string]any {
+func resumeTargets(interrupts []aievent.PendingInterrupt, answer agent.AssistantAnswer) map[string]any {
 	targets := make(map[string]any, len(interrupts))
 	for _, interrupt := range interrupts {
 		if interrupt.ID != "" {
@@ -389,7 +403,7 @@ func resumeTargets(interrupts []aievent.PendingInterrupt, answer agent.DesignerA
 	return targets
 }
 
-func graphInterruptInfo(interrupted InterruptedState) any {
+func graphInterruptInfo(interrupted AssistantInterruptedState) any {
 	if len(interrupted.PendingInterrupts) == 0 {
 		return map[string]any{
 			"agent": agentName,
@@ -402,8 +416,11 @@ func graphInterruptInfo(interrupted InterruptedState) any {
 		"payload":                     pending.Payload,
 		aievent.PayloadADKInterruptID: pending.ID,
 		"adk_checkpoint_id":           interrupted.CheckpointID,
+		// Keep the legacy key so already persisted graph interrupts can resume.
 		aievent.PayloadDesignerLastID: interrupted.LastEventID,
 		aievent.PayloadControlCursor:  interrupted.ControlCursor,
-		"designer_has_state":          len(interrupted.Checkpoint) > 0,
+		"assistant_has_state":         len(interrupted.Checkpoint) > 0,
+		// Keep the legacy flag for older frontend/control consumers.
+		"designer_has_state": len(interrupted.Checkpoint) > 0,
 	}
 }

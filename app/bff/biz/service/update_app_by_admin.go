@@ -22,10 +22,8 @@ func NewUpdateAppByAdminService(Context context.Context, RequestContext *app.Req
 func (h *UpdateAppByAdminService) Run(req *lapp.AppAdminUpdateRequest) (resp *lapp.BaseResponseBoolean, err error) {
 	ctx := utils.WithIdentityMeta(h.Context)
 	res, err := rpc.AppClient.UpdateApp(ctx, &rpcapp.UpdateAppReq{
-		Id:       req.Id,
-		AppName:  req.AppName,
-		Cover:    req.Cover,
-		Priority: req.Priority,
+		Id:      req.Id,
+		AppName: req.AppName,
 	})
 	if err != nil {
 		return &lapp.BaseResponseBoolean{

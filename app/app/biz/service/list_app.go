@@ -35,16 +35,11 @@ func (s *ListAppService) Run(req *app.ListAppReq) (resp *app.ListAppResp, err er
 	}
 	for _, item := range res {
 		resp.AppList = append(resp.AppList, &app.AppInfo{
-			Id:           int64(item.ID),
-			AppName:      item.Name,
-			InitPrompt:   item.InitPrompt,
-			Cover:        item.Cover,
-			DeployKey:    item.Deploykey,
-			DeployedTime: item.DeployedTime,
-			Priority:     int64(item.Priority),
-			UserId:       int64(item.UserId),
-			UpdateTime:   item.UpdatedAt.Format("2006-01-02 15:04:05"),
-			CreateTime:   item.CreatedAt.Format("2006-01-02 15:04:05"),
+			Id:         int64(item.ID),
+			AppName:    item.Name,
+			UserId:     int64(item.UserId),
+			UpdateTime: item.UpdatedAt.Format("2006-01-02 15:04:05"),
+			CreateTime: item.CreatedAt.Format("2006-01-02 15:04:05"),
 		})
 	}
 	return resp, nil

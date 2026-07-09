@@ -6,7 +6,11 @@
         <a-input v-model:value="searchParams.appName" placeholder="输入应用名称" />
       </a-form-item>
       <a-form-item label="创建者">
-        <a-input v-model:value="searchParams.userId" placeholder="输入用户ID" />
+        <MesUserPicker
+          v-model="searchParams.userId"
+          class="user-filter"
+          placeholder="选择创建者"
+        />
       </a-form-item>
       <a-form-item>
         <a-button type="primary" html-type="submit">搜索</a-button>
@@ -76,6 +80,7 @@ import { message } from 'ant-design-vue'
 import { listAppVoByPageByAdmin, deleteAppByAdmin, updateAppByAdmin } from '@/api/appController'
 import { formatTime } from '@/utils/time'
 import UserInfo from '@/components/UserInfo.vue'
+import MesUserPicker from '@/components/mes/MesUserPicker.vue'
 
 const router = useRouter()
 
@@ -276,6 +281,10 @@ const deleteApp = async (id: number | undefined) => {
 .featured-btn:hover {
   background: #d48806;
   border-color: #d48806;
+}
+
+.user-filter {
+  width: 220px;
 }
 
 :deep(.ant-table-tbody > tr > td) {

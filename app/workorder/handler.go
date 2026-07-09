@@ -50,3 +50,10 @@ func (s *WorkOrderServiceImpl) ListWorkOrder(ctx context.Context, req *workorder
 
 	return resp, err
 }
+
+// MarkWorkOrderRead implements the WorkOrderServiceImpl interface.
+func (s *WorkOrderServiceImpl) MarkWorkOrderRead(ctx context.Context, req *workorder.MarkWorkOrderReadReq) (resp *workorder.MarkWorkOrderReadResp, err error) {
+	resp, err = service.NewMarkWorkOrderReadService(ctx).Run(req)
+
+	return resp, err
+}

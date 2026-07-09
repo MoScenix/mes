@@ -27,16 +27,11 @@ func (s *GetAppService) Run(req *app.GetAppReq) (resp *app.GetAppResp, err error
 	}
 	return &app.GetAppResp{
 		App: &app.AppInfo{
-			Id:           int64(res.ID),
-			AppName:      res.Name,
-			InitPrompt:   res.InitPrompt,
-			Cover:        res.Cover,
-			DeployKey:    res.Deploykey,
-			DeployedTime: res.DeployedTime,
-			Priority:     int64(res.Priority),
-			UserId:       int64(res.UserId),
-			UpdateTime:   res.UpdatedAt.Format("2006-01-02 15:04:05"),
-			CreateTime:   res.CreatedAt.Format("2006-01-02 15:04:05"),
+			Id:         int64(res.ID),
+			AppName:    res.Name,
+			UserId:     int64(res.UserId),
+			UpdateTime: res.UpdatedAt.Format("2006-01-02 15:04:05"),
+			CreateTime: res.CreatedAt.Format("2006-01-02 15:04:05"),
 		},
 	}, nil
 }

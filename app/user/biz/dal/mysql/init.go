@@ -19,7 +19,7 @@ var (
 )
 
 func Init() {
-	dsn := fmt.Sprintf(conf.GetConf().MySQL.DSN, os.Getenv("MYSQL_USER"), os.Getenv("MYSQL_PASSWORD"), os.Getenv("MYSQL_HOST"), os.Getenv("MYSQL_DATABASE"))
+	dsn := fmt.Sprintf(conf.GetConf().MySQL.DSN, envOrDefault("MYSQL_USER", "root"), envOrDefault("MYSQL_PASSWORD", "YOUR_PASSWORD"), envOrDefault("MYSQL_HOST", "127.0.0.1"), envOrDefault("MYSQL_DATABASE", "YOU_DB"))
 	DB, err = gorm.Open(mysql.Open(dsn),
 		&gorm.Config{
 			PrepareStmt:            true,
@@ -38,12 +38,28 @@ func Init() {
 	}
 }
 
+func envOrDefault(key, fallback string) string {
+	value := os.Getenv(key)
+	if value == "" {
+		return fallback
+	}
+	return value
+}
+
 func ensureDefaultAdmin() error {
 	ctx := context.Background()
 	q := model.NewUserQuery(ctx, DB)
-	_, err := q.GetUserByAccount("root")
+	root, err := q.GetUserByAccount("root")
 	if err == nil {
-		return nil
+		hashed, err := bcrypt.GenerateFromPassword([]byte("rootroot"), bcrypt.DefaultCost)
+		if err != nil {
+			return err
+		}
+		return q.UpdateUser(root.ID, model.User{
+			Name:         "root",
+			UserRole:     "admin",
+			PasswordHash: string(hashed),
+		})
 	}
 	if !errors.Is(err, gorm.ErrRecordNotFound) {
 		return err

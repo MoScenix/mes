@@ -10,7 +10,7 @@ import (
 const (
 	OperatorIDKey   = "X_USER_ID"
 	OperatorRoleKey = "X_USER_ROLE"
-	AdminRole       = "admin"
+	AdminRole       = RoleAdmin
 )
 
 type Identity struct {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/MoScenix/mes/app/bff/biz/utils"
 	lapp "github.com/MoScenix/mes/app/bff/hertz_gen/bff/app"
 	"github.com/MoScenix/mes/app/bff/infra/rpc"
 	rpcapp "github.com/MoScenix/mes/rpc_gen/kitex_gen/app"
@@ -20,8 +21,14 @@ func NewListAppChatHistoryService(Context context.Context, RequestContext *app.R
 }
 
 func (h *ListAppChatHistoryService) Run(req *lapp.ListAppChatHistoryRequest) (resp *lapp.BaseResponsePageChatHistory, err error) {
+	if err = requireAppOwnerOrAdmin(h.Context, req.GetAppId()); err != nil {
+		return &lapp.BaseResponsePageChatHistory{
+			Code:    1,
+			Message: err.Error(),
+		}, nil
+	}
 	q := rpc.AppClient
-	res, err := q.ListAppMessage(h.Context, &rpcapp.ListAppMessageReq{
+	res, err := q.ListAppMessage(utils.WithIdentityMeta(h.Context), &rpcapp.ListAppMessageReq{
 		AppId:          req.AppId,
 		PageSize:       20,
 		LastCreateTime: time.Now().Format("2006-01-02 15:04:05"),

@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"time"
 
 	"github.com/MoScenix/mes/app/app/biz/dal/mysql"
 	"github.com/MoScenix/mes/app/app/biz/dal/redis"
@@ -22,19 +21,14 @@ func (s *UpdateAppService) Run(req *app.UpdateAppReq) (resp *app.UpdateAppResp, 
 	if mysql.DB == nil {
 		return nil, errDBNotReady
 	}
-	_, _, err = requireAppOwnerOrAdmin(s.ctx, uint(req.Id))
+	_, current, err := requireAppOwnerOrAdmin(s.ctx, uint(req.Id))
 	if err != nil {
 		return nil, err
 	}
 	q := model.NewAppProQuery(s.ctx, mysql.DB, redis.RedisClient)
 	up := model.App{
-		Name:     req.AppName,
-		Cover:    req.Cover,
-		Priority: int(req.Priority),
-	}
-	if req.DeployKey != "" {
-		up.Deploykey = req.DeployKey
-		up.DeployedTime = time.Now().Format("2006-01-02 15:04:05")
+		Name:   req.AppName,
+		UserId: current.UserId,
 	}
 	err = q.UpdateApp(uint(req.Id), up)
 	if err != nil {

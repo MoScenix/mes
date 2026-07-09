@@ -53,7 +53,7 @@ export interface AIQuestionItem {
   options: string[]
 }
 
-export function useAIEvents(appId: Ref<any>) {
+export function useAIEvents(appId: Ref<any>, options?: { onDone?: () => void }) {
   const messages = ref<AIMessage[]>([])
   const aiState = ref<API.AIState | null>(null)
   const isGenerating = ref(false)
@@ -194,8 +194,6 @@ export function useAIEvents(appId: Ref<any>) {
       case 'agent_start':
         setLocalState('running', { agent: event.agent, lastEventId: event.id })
         isGenerating.value = true
-        ensureAIMessage(event)
-        appendSystem(`${event.agent || 'AI'} 开始处理`)
         break
       case 'message': {
         const msg = ensureAIMessage(event)
@@ -276,12 +274,14 @@ export function useAIEvents(appId: Ref<any>) {
         finishAIMessage()
         isGenerating.value = false
         polling = false
+        options?.onDone?.()
         break
       case 'cancelled':
         setLocalState('cancelled', { lastEventId: event.id, message: event.content })
         finishAIMessage()
         isGenerating.value = false
         polling = false
+        options?.onDone?.()
         break
       case 'error': {
         setLocalState('error', { lastEventId: event.id, message: event.content })
@@ -294,6 +294,7 @@ export function useAIEvents(appId: Ref<any>) {
         }
         isGenerating.value = false
         polling = false
+        options?.onDone?.()
         break
       }
     }

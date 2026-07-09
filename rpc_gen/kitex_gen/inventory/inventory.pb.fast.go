@@ -167,6 +167,206 @@ func (x *ItemInfo) fastReadField14(buf []byte, _type int8) (offset int, err erro
 	return offset, err
 }
 
+func (x *ProcessItemInfo) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 2:
+		offset, err = x.fastReadField2(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 3:
+		offset, err = x.fastReadField3(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 4:
+		offset, err = x.fastReadField4(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 5:
+		offset, err = x.fastReadField5(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_ProcessItemInfo[number], err)
+}
+
+func (x *ProcessItemInfo) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.Id, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *ProcessItemInfo) fastReadField2(buf []byte, _type int8) (offset int, err error) {
+	x.ProcessId, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *ProcessItemInfo) fastReadField3(buf []byte, _type int8) (offset int, err error) {
+	x.ConsumeItemId, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *ProcessItemInfo) fastReadField4(buf []byte, _type int8) (offset int, err error) {
+	x.Quantity, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *ProcessItemInfo) fastReadField5(buf []byte, _type int8) (offset int, err error) {
+	var v ItemInfo
+	offset, err = fastpb.ReadMessage(buf, _type, &v)
+	if err != nil {
+		return offset, err
+	}
+	x.ConsumeItem = &v
+	return offset, nil
+}
+
+func (x *ProcessInfo) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 2:
+		offset, err = x.fastReadField2(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 3:
+		offset, err = x.fastReadField3(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 4:
+		offset, err = x.fastReadField4(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 5:
+		offset, err = x.fastReadField5(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 6:
+		offset, err = x.fastReadField6(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 7:
+		offset, err = x.fastReadField7(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 8:
+		offset, err = x.fastReadField8(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 9:
+		offset, err = x.fastReadField9(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 10:
+		offset, err = x.fastReadField10(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_ProcessInfo[number], err)
+}
+
+func (x *ProcessInfo) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.Id, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *ProcessInfo) fastReadField2(buf []byte, _type int8) (offset int, err error) {
+	x.ItemId, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *ProcessInfo) fastReadField3(buf []byte, _type int8) (offset int, err error) {
+	x.OwnerUserId, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *ProcessInfo) fastReadField4(buf []byte, _type int8) (offset int, err error) {
+	x.Name, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *ProcessInfo) fastReadField5(buf []byte, _type int8) (offset int, err error) {
+	x.Description, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *ProcessInfo) fastReadField6(buf []byte, _type int8) (offset int, err error) {
+	var v int32
+	v, offset, err = fastpb.ReadInt32(buf, _type)
+	if err != nil {
+		return offset, err
+	}
+	x.Status = DraftStatus(v)
+	return offset, nil
+}
+
+func (x *ProcessInfo) fastReadField7(buf []byte, _type int8) (offset int, err error) {
+	var v ItemInfo
+	offset, err = fastpb.ReadMessage(buf, _type, &v)
+	if err != nil {
+		return offset, err
+	}
+	x.Item = &v
+	return offset, nil
+}
+
+func (x *ProcessInfo) fastReadField8(buf []byte, _type int8) (offset int, err error) {
+	var v ProcessItemInfo
+	offset, err = fastpb.ReadMessage(buf, _type, &v)
+	if err != nil {
+		return offset, err
+	}
+	x.Items = append(x.Items, &v)
+	return offset, nil
+}
+
+func (x *ProcessInfo) fastReadField9(buf []byte, _type int8) (offset int, err error) {
+	x.CreateTime, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *ProcessInfo) fastReadField10(buf []byte, _type int8) (offset int, err error) {
+	x.UpdateTime, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
 func (x *ItemUnitInfo) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
 	switch number {
 	case 1:
@@ -201,6 +401,11 @@ func (x *ItemUnitInfo) FastRead(buf []byte, _type int8, number int32) (offset in
 		}
 	case 7:
 		offset, err = x.fastReadField7(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 8:
+		offset, err = x.fastReadField8(buf, _type)
 		if err != nil {
 			goto ReadFieldError
 		}
@@ -259,6 +464,206 @@ func (x *ItemUnitInfo) fastReadField6(buf []byte, _type int8) (offset int, err e
 
 func (x *ItemUnitInfo) fastReadField7(buf []byte, _type int8) (offset int, err error) {
 	x.UpdateTime, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *ItemUnitInfo) fastReadField8(buf []byte, _type int8) (offset int, err error) {
+	x.EngineeringOrderId, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *EngineeringOrderInfo) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 2:
+		offset, err = x.fastReadField2(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 3:
+		offset, err = x.fastReadField3(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 4:
+		offset, err = x.fastReadField4(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 5:
+		offset, err = x.fastReadField5(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 6:
+		offset, err = x.fastReadField6(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 7:
+		offset, err = x.fastReadField7(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 8:
+		offset, err = x.fastReadField8(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 9:
+		offset, err = x.fastReadField9(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 10:
+		offset, err = x.fastReadField10(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 11:
+		offset, err = x.fastReadField11(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 12:
+		offset, err = x.fastReadField12(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 13:
+		offset, err = x.fastReadField13(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 14:
+		offset, err = x.fastReadField14(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 15:
+		offset, err = x.fastReadField15(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 16:
+		offset, err = x.fastReadField16(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_EngineeringOrderInfo[number], err)
+}
+
+func (x *EngineeringOrderInfo) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.Id, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *EngineeringOrderInfo) fastReadField2(buf []byte, _type int8) (offset int, err error) {
+	x.LeaderUserId, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *EngineeringOrderInfo) fastReadField3(buf []byte, _type int8) (offset int, err error) {
+	x.ItemId, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *EngineeringOrderInfo) fastReadField4(buf []byte, _type int8) (offset int, err error) {
+	var v ItemInfo
+	offset, err = fastpb.ReadMessage(buf, _type, &v)
+	if err != nil {
+		return offset, err
+	}
+	x.Item = &v
+	return offset, nil
+}
+
+func (x *EngineeringOrderInfo) fastReadField5(buf []byte, _type int8) (offset int, err error) {
+	x.ExpectedQuantity, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *EngineeringOrderInfo) fastReadField6(buf []byte, _type int8) (offset int, err error) {
+	x.QualifiedQuantity, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *EngineeringOrderInfo) fastReadField7(buf []byte, _type int8) (offset int, err error) {
+	x.ProducedQuantity, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *EngineeringOrderInfo) fastReadField8(buf []byte, _type int8) (offset int, err error) {
+	x.Description, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *EngineeringOrderInfo) fastReadField9(buf []byte, _type int8) (offset int, err error) {
+	var v ItemUnitInfo
+	offset, err = fastpb.ReadMessage(buf, _type, &v)
+	if err != nil {
+		return offset, err
+	}
+	x.ItemUnits = append(x.ItemUnits, &v)
+	return offset, nil
+}
+
+func (x *EngineeringOrderInfo) fastReadField10(buf []byte, _type int8) (offset int, err error) {
+	x.CreateTime, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *EngineeringOrderInfo) fastReadField11(buf []byte, _type int8) (offset int, err error) {
+	x.UpdateTime, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *EngineeringOrderInfo) fastReadField12(buf []byte, _type int8) (offset int, err error) {
+	x.ProcessId, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *EngineeringOrderInfo) fastReadField13(buf []byte, _type int8) (offset int, err error) {
+	var v ProcessInfo
+	offset, err = fastpb.ReadMessage(buf, _type, &v)
+	if err != nil {
+		return offset, err
+	}
+	x.Process = &v
+	return offset, nil
+}
+
+func (x *EngineeringOrderInfo) fastReadField14(buf []byte, _type int8) (offset int, err error) {
+	var v int32
+	v, offset, err = fastpb.ReadInt32(buf, _type)
+	if err != nil {
+		return offset, err
+	}
+	x.Status = DraftStatus(v)
+	return offset, nil
+}
+
+func (x *EngineeringOrderInfo) fastReadField15(buf []byte, _type int8) (offset int, err error) {
+	x.UnqualifiedQuantity, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *EngineeringOrderInfo) fastReadField16(buf []byte, _type int8) (offset int, err error) {
+	x.Name, offset, err = fastpb.ReadString(buf, _type)
 	return offset, err
 }
 
@@ -404,6 +809,11 @@ func (x *InventoryFlowInfo) FastRead(buf []byte, _type int8, number int32) (offs
 		if err != nil {
 			goto ReadFieldError
 		}
+	case 13:
+		offset, err = x.fastReadField13(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
 	default:
 		offset, err = fastpb.Skip(buf, _type, number)
 		if err != nil {
@@ -494,6 +904,11 @@ func (x *InventoryFlowInfo) fastReadField11(buf []byte, _type int8) (offset int,
 
 func (x *InventoryFlowInfo) fastReadField12(buf []byte, _type int8) (offset int, err error) {
 	x.UpdateTime, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *InventoryFlowInfo) fastReadField13(buf []byte, _type int8) (offset int, err error) {
+	x.Name, offset, err = fastpb.ReadString(buf, _type)
 	return offset, err
 }
 
@@ -719,6 +1134,16 @@ func (x *ListItemReq) FastRead(buf []byte, _type int8, number int32) (offset int
 		if err != nil {
 			goto ReadFieldError
 		}
+	case 4:
+		offset, err = x.fastReadField4(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 5:
+		offset, err = x.fastReadField5(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
 	default:
 		offset, err = fastpb.Skip(buf, _type, number)
 		if err != nil {
@@ -747,6 +1172,16 @@ func (x *ListItemReq) fastReadField3(buf []byte, _type int8) (offset int, err er
 	return offset, err
 }
 
+func (x *ListItemReq) fastReadField4(buf []byte, _type int8) (offset int, err error) {
+	x.CursorName, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *ListItemReq) fastReadField5(buf []byte, _type int8) (offset int, err error) {
+	x.CursorId, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
 func (x *ListItemResp) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
 	switch number {
 	case 1:
@@ -756,6 +1191,21 @@ func (x *ListItemResp) FastRead(buf []byte, _type int8, number int32) (offset in
 		}
 	case 2:
 		offset, err = x.fastReadField2(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 3:
+		offset, err = x.fastReadField3(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 4:
+		offset, err = x.fastReadField4(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 5:
+		offset, err = x.fastReadField5(buf, _type)
 		if err != nil {
 			goto ReadFieldError
 		}
@@ -787,6 +1237,611 @@ func (x *ListItemResp) fastReadField2(buf []byte, _type int8) (offset int, err e
 	return offset, err
 }
 
+func (x *ListItemResp) fastReadField3(buf []byte, _type int8) (offset int, err error) {
+	x.HasMore, offset, err = fastpb.ReadBool(buf, _type)
+	return offset, err
+}
+
+func (x *ListItemResp) fastReadField4(buf []byte, _type int8) (offset int, err error) {
+	x.NextCursorName, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *ListItemResp) fastReadField5(buf []byte, _type int8) (offset int, err error) {
+	x.NextCursorId, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *ProcessItemReq) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 2:
+		offset, err = x.fastReadField2(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_ProcessItemReq[number], err)
+}
+
+func (x *ProcessItemReq) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.ConsumeItemId, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *ProcessItemReq) fastReadField2(buf []byte, _type int8) (offset int, err error) {
+	x.Quantity, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *CreateProcessDraftReq) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 2:
+		offset, err = x.fastReadField2(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 3:
+		offset, err = x.fastReadField3(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 4:
+		offset, err = x.fastReadField4(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 5:
+		offset, err = x.fastReadField5(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_CreateProcessDraftReq[number], err)
+}
+
+func (x *CreateProcessDraftReq) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.OwnerUserId, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *CreateProcessDraftReq) fastReadField2(buf []byte, _type int8) (offset int, err error) {
+	x.ItemId, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *CreateProcessDraftReq) fastReadField3(buf []byte, _type int8) (offset int, err error) {
+	x.Name, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *CreateProcessDraftReq) fastReadField4(buf []byte, _type int8) (offset int, err error) {
+	x.Description, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *CreateProcessDraftReq) fastReadField5(buf []byte, _type int8) (offset int, err error) {
+	var v ProcessItemReq
+	offset, err = fastpb.ReadMessage(buf, _type, &v)
+	if err != nil {
+		return offset, err
+	}
+	x.Items = append(x.Items, &v)
+	return offset, nil
+}
+
+func (x *CreateProcessDraftResp) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_CreateProcessDraftResp[number], err)
+}
+
+func (x *CreateProcessDraftResp) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.Id, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *UpdateProcessDraftReq) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 2:
+		offset, err = x.fastReadField2(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 3:
+		offset, err = x.fastReadField3(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 4:
+		offset, err = x.fastReadField4(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 5:
+		offset, err = x.fastReadField5(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 6:
+		offset, err = x.fastReadField6(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_UpdateProcessDraftReq[number], err)
+}
+
+func (x *UpdateProcessDraftReq) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.Id, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *UpdateProcessDraftReq) fastReadField2(buf []byte, _type int8) (offset int, err error) {
+	x.OwnerUserId, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *UpdateProcessDraftReq) fastReadField3(buf []byte, _type int8) (offset int, err error) {
+	x.ItemId, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *UpdateProcessDraftReq) fastReadField4(buf []byte, _type int8) (offset int, err error) {
+	x.Name, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *UpdateProcessDraftReq) fastReadField5(buf []byte, _type int8) (offset int, err error) {
+	x.Description, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *UpdateProcessDraftReq) fastReadField6(buf []byte, _type int8) (offset int, err error) {
+	var v ProcessItemReq
+	offset, err = fastpb.ReadMessage(buf, _type, &v)
+	if err != nil {
+		return offset, err
+	}
+	x.Items = append(x.Items, &v)
+	return offset, nil
+}
+
+func (x *UpdateProcessDraftResp) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_UpdateProcessDraftResp[number], err)
+}
+
+func (x *UpdateProcessDraftResp) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.Success, offset, err = fastpb.ReadBool(buf, _type)
+	return offset, err
+}
+
+func (x *DeleteProcessDraftReq) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_DeleteProcessDraftReq[number], err)
+}
+
+func (x *DeleteProcessDraftReq) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.Id, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *DeleteProcessDraftResp) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_DeleteProcessDraftResp[number], err)
+}
+
+func (x *DeleteProcessDraftResp) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.Success, offset, err = fastpb.ReadBool(buf, _type)
+	return offset, err
+}
+
+func (x *SubmitProcessReq) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_SubmitProcessReq[number], err)
+}
+
+func (x *SubmitProcessReq) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.Id, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *SubmitProcessResp) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_SubmitProcessResp[number], err)
+}
+
+func (x *SubmitProcessResp) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.Success, offset, err = fastpb.ReadBool(buf, _type)
+	return offset, err
+}
+
+func (x *GetProcessReq) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_GetProcessReq[number], err)
+}
+
+func (x *GetProcessReq) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.Id, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *GetProcessResp) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_GetProcessResp[number], err)
+}
+
+func (x *GetProcessResp) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	var v ProcessInfo
+	offset, err = fastpb.ReadMessage(buf, _type, &v)
+	if err != nil {
+		return offset, err
+	}
+	x.Process = &v
+	return offset, nil
+}
+
+func (x *ListProcessReq) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 2:
+		offset, err = x.fastReadField2(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 3:
+		offset, err = x.fastReadField3(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 4:
+		offset, err = x.fastReadField4(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 5:
+		offset, err = x.fastReadField5(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 6:
+		offset, err = x.fastReadField6(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 7:
+		offset, err = x.fastReadField7(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 8:
+		offset, err = x.fastReadField8(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 9:
+		offset, err = x.fastReadField9(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 10:
+		offset, err = x.fastReadField10(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 11:
+		offset, err = x.fastReadField11(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_ListProcessReq[number], err)
+}
+
+func (x *ListProcessReq) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.OwnerUserId, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *ListProcessReq) fastReadField2(buf []byte, _type int8) (offset int, err error) {
+	x.ItemId, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *ListProcessReq) fastReadField3(buf []byte, _type int8) (offset int, err error) {
+	var v int32
+	v, offset, err = fastpb.ReadInt32(buf, _type)
+	if err != nil {
+		return offset, err
+	}
+	x.Status = DraftStatus(v)
+	return offset, nil
+}
+
+func (x *ListProcessReq) fastReadField4(buf []byte, _type int8) (offset int, err error) {
+	x.PageNum, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *ListProcessReq) fastReadField5(buf []byte, _type int8) (offset int, err error) {
+	x.PageSize, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *ListProcessReq) fastReadField6(buf []byte, _type int8) (offset int, err error) {
+	x.SinceTime, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *ListProcessReq) fastReadField7(buf []byte, _type int8) (offset int, err error) {
+	x.RecentSeconds, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *ListProcessReq) fastReadField8(buf []byte, _type int8) (offset int, err error) {
+	x.CursorUpdatedAt, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *ListProcessReq) fastReadField9(buf []byte, _type int8) (offset int, err error) {
+	x.CursorId, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *ListProcessReq) fastReadField10(buf []byte, _type int8) (offset int, err error) {
+	x.NamePrefix, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *ListProcessReq) fastReadField11(buf []byte, _type int8) (offset int, err error) {
+	x.ItemNamePrefix, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *ListProcessResp) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 2:
+		offset, err = x.fastReadField2(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 3:
+		offset, err = x.fastReadField3(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 4:
+		offset, err = x.fastReadField4(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 5:
+		offset, err = x.fastReadField5(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_ListProcessResp[number], err)
+}
+
+func (x *ListProcessResp) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	var v ProcessInfo
+	offset, err = fastpb.ReadMessage(buf, _type, &v)
+	if err != nil {
+		return offset, err
+	}
+	x.ProcessList = append(x.ProcessList, &v)
+	return offset, nil
+}
+
+func (x *ListProcessResp) fastReadField2(buf []byte, _type int8) (offset int, err error) {
+	x.Total, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *ListProcessResp) fastReadField3(buf []byte, _type int8) (offset int, err error) {
+	x.HasMore, offset, err = fastpb.ReadBool(buf, _type)
+	return offset, err
+}
+
+func (x *ListProcessResp) fastReadField4(buf []byte, _type int8) (offset int, err error) {
+	x.NextCursorUpdatedAt, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *ListProcessResp) fastReadField5(buf []byte, _type int8) (offset int, err error) {
+	x.NextCursorId, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
 func (x *AddItemUnitReq) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
 	switch number {
 	case 1:
@@ -806,6 +1861,11 @@ func (x *AddItemUnitReq) FastRead(buf []byte, _type int8, number int32) (offset 
 		}
 	case 4:
 		offset, err = x.fastReadField4(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 5:
+		offset, err = x.fastReadField5(buf, _type)
 		if err != nil {
 			goto ReadFieldError
 		}
@@ -849,6 +1909,11 @@ func (x *AddItemUnitReq) fastReadField3(buf []byte, _type int8) (offset int, err
 
 func (x *AddItemUnitReq) fastReadField4(buf []byte, _type int8) (offset int, err error) {
 	x.Description, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *AddItemUnitReq) fastReadField5(buf []byte, _type int8) (offset int, err error) {
+	x.EngineeringOrderId, offset, err = fastpb.ReadInt64(buf, _type)
 	return offset, err
 }
 
@@ -1039,6 +2104,21 @@ func (x *ListItemUnitReq) FastRead(buf []byte, _type int8, number int32) (offset
 		if err != nil {
 			goto ReadFieldError
 		}
+	case 6:
+		offset, err = x.fastReadField6(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 7:
+		offset, err = x.fastReadField7(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 8:
+		offset, err = x.fastReadField8(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
 	default:
 		offset, err = fastpb.Skip(buf, _type, number)
 		if err != nil {
@@ -1087,6 +2167,21 @@ func (x *ListItemUnitReq) fastReadField5(buf []byte, _type int8) (offset int, er
 	return offset, nil
 }
 
+func (x *ListItemUnitReq) fastReadField6(buf []byte, _type int8) (offset int, err error) {
+	x.EngineeringOrderId, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *ListItemUnitReq) fastReadField7(buf []byte, _type int8) (offset int, err error) {
+	x.CursorId, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *ListItemUnitReq) fastReadField8(buf []byte, _type int8) (offset int, err error) {
+	x.ItemNamePrefix, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
 func (x *ListItemUnitResp) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
 	switch number {
 	case 1:
@@ -1096,6 +2191,16 @@ func (x *ListItemUnitResp) FastRead(buf []byte, _type int8, number int32) (offse
 		}
 	case 2:
 		offset, err = x.fastReadField2(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 3:
+		offset, err = x.fastReadField3(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 4:
+		offset, err = x.fastReadField4(buf, _type)
 		if err != nil {
 			goto ReadFieldError
 		}
@@ -1124,6 +2229,16 @@ func (x *ListItemUnitResp) fastReadField1(buf []byte, _type int8) (offset int, e
 
 func (x *ListItemUnitResp) fastReadField2(buf []byte, _type int8) (offset int, err error) {
 	x.Total, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *ListItemUnitResp) fastReadField3(buf []byte, _type int8) (offset int, err error) {
+	x.HasMore, offset, err = fastpb.ReadBool(buf, _type)
+	return offset, err
+}
+
+func (x *ListItemUnitResp) fastReadField4(buf []byte, _type int8) (offset int, err error) {
+	x.NextCursorId, offset, err = fastpb.ReadInt64(buf, _type)
 	return offset, err
 }
 
@@ -1194,6 +2309,11 @@ func (x *CreateInventoryFlowReq) FastRead(buf []byte, _type int8, number int32) 
 		if err != nil {
 			goto ReadFieldError
 		}
+	case 7:
+		offset, err = x.fastReadField7(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
 	default:
 		offset, err = fastpb.Skip(buf, _type, number)
 		if err != nil {
@@ -1256,6 +2376,11 @@ func (x *CreateInventoryFlowReq) fastReadField6(buf []byte, _type int8) (offset 
 	return offset, err
 }
 
+func (x *CreateInventoryFlowReq) fastReadField7(buf []byte, _type int8) (offset int, err error) {
+	x.Name, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
 func (x *CreateInventoryFlowResp) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
 	switch number {
 	case 1:
@@ -1315,6 +2440,11 @@ func (x *UpdateInventoryFlowDraftReq) FastRead(buf []byte, _type int8, number in
 		}
 	case 7:
 		offset, err = x.fastReadField7(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 8:
+		offset, err = x.fastReadField8(buf, _type)
 		if err != nil {
 			goto ReadFieldError
 		}
@@ -1382,6 +2512,11 @@ func (x *UpdateInventoryFlowDraftReq) fastReadField7(buf []byte, _type int8) (of
 			x.ItemUnitIds = append(x.ItemUnitIds, v)
 			return offset, err
 		})
+	return offset, err
+}
+
+func (x *UpdateInventoryFlowDraftReq) fastReadField8(buf []byte, _type int8) (offset int, err error) {
+	x.Name, offset, err = fastpb.ReadString(buf, _type)
 	return offset, err
 }
 
@@ -1506,6 +2641,75 @@ ReadFieldError:
 }
 
 func (x *SubmitInventoryFlowResp) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.Success, offset, err = fastpb.ReadBool(buf, _type)
+	return offset, err
+}
+
+func (x *CompleteInventoryFlowReq) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 2:
+		offset, err = x.fastReadField2(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_CompleteInventoryFlowReq[number], err)
+}
+
+func (x *CompleteInventoryFlowReq) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.Id, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *CompleteInventoryFlowReq) fastReadField2(buf []byte, _type int8) (offset int, err error) {
+	offset, err = fastpb.ReadList(buf, _type,
+		func(buf []byte, _type int8) (n int, err error) {
+			var v int64
+			v, offset, err = fastpb.ReadInt64(buf, _type)
+			if err != nil {
+				return offset, err
+			}
+			x.ItemUnitIds = append(x.ItemUnitIds, v)
+			return offset, err
+		})
+	return offset, err
+}
+
+func (x *CompleteInventoryFlowResp) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_CompleteInventoryFlowResp[number], err)
+}
+
+func (x *CompleteInventoryFlowResp) fastReadField1(buf []byte, _type int8) (offset int, err error) {
 	x.Success, offset, err = fastpb.ReadBool(buf, _type)
 	return offset, err
 }
@@ -1667,6 +2871,36 @@ func (x *ListInventoryFlowReq) FastRead(buf []byte, _type int8, number int32) (o
 		if err != nil {
 			goto ReadFieldError
 		}
+	case 7:
+		offset, err = x.fastReadField7(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 8:
+		offset, err = x.fastReadField8(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 9:
+		offset, err = x.fastReadField9(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 10:
+		offset, err = x.fastReadField10(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 11:
+		offset, err = x.fastReadField11(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 12:
+		offset, err = x.fastReadField12(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
 	default:
 		offset, err = fastpb.Skip(buf, _type, number)
 		if err != nil {
@@ -1681,42 +2915,72 @@ ReadFieldError:
 }
 
 func (x *ListInventoryFlowReq) fastReadField1(buf []byte, _type int8) (offset int, err error) {
-	x.PageNum, offset, err = fastpb.ReadInt64(buf, _type)
+	x.UserId, offset, err = fastpb.ReadInt64(buf, _type)
 	return offset, err
 }
 
 func (x *ListInventoryFlowReq) fastReadField2(buf []byte, _type int8) (offset int, err error) {
-	x.PageSize, offset, err = fastpb.ReadInt64(buf, _type)
+	x.IsTo, offset, err = fastpb.ReadBool(buf, _type)
 	return offset, err
 }
 
 func (x *ListInventoryFlowReq) fastReadField3(buf []byte, _type int8) (offset int, err error) {
-	x.FromUserId, offset, err = fastpb.ReadInt64(buf, _type)
-	return offset, err
-}
-
-func (x *ListInventoryFlowReq) fastReadField4(buf []byte, _type int8) (offset int, err error) {
-	x.ToUserId, offset, err = fastpb.ReadInt64(buf, _type)
-	return offset, err
-}
-
-func (x *ListInventoryFlowReq) fastReadField5(buf []byte, _type int8) (offset int, err error) {
-	var v int32
-	v, offset, err = fastpb.ReadInt32(buf, _type)
-	if err != nil {
-		return offset, err
-	}
-	x.FlowType = FlowType(v)
-	return offset, nil
-}
-
-func (x *ListInventoryFlowReq) fastReadField6(buf []byte, _type int8) (offset int, err error) {
 	var v int32
 	v, offset, err = fastpb.ReadInt32(buf, _type)
 	if err != nil {
 		return offset, err
 	}
 	x.FlowStatus = FlowStatus(v)
+	return offset, nil
+}
+
+func (x *ListInventoryFlowReq) fastReadField4(buf []byte, _type int8) (offset int, err error) {
+	x.PageNum, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *ListInventoryFlowReq) fastReadField5(buf []byte, _type int8) (offset int, err error) {
+	x.PageSize, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *ListInventoryFlowReq) fastReadField6(buf []byte, _type int8) (offset int, err error) {
+	x.SinceTime, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *ListInventoryFlowReq) fastReadField7(buf []byte, _type int8) (offset int, err error) {
+	x.RecentSeconds, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *ListInventoryFlowReq) fastReadField8(buf []byte, _type int8) (offset int, err error) {
+	x.CursorUpdatedAt, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *ListInventoryFlowReq) fastReadField9(buf []byte, _type int8) (offset int, err error) {
+	x.CursorId, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *ListInventoryFlowReq) fastReadField10(buf []byte, _type int8) (offset int, err error) {
+	x.NamePrefix, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *ListInventoryFlowReq) fastReadField11(buf []byte, _type int8) (offset int, err error) {
+	x.ItemNamePrefix, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *ListInventoryFlowReq) fastReadField12(buf []byte, _type int8) (offset int, err error) {
+	var v int32
+	v, offset, err = fastpb.ReadInt32(buf, _type)
+	if err != nil {
+		return offset, err
+	}
+	x.Scope = ListScope(v)
 	return offset, nil
 }
 
@@ -1729,6 +2993,21 @@ func (x *ListInventoryFlowResp) FastRead(buf []byte, _type int8, number int32) (
 		}
 	case 2:
 		offset, err = x.fastReadField2(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 3:
+		offset, err = x.fastReadField3(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 4:
+		offset, err = x.fastReadField4(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 5:
+		offset, err = x.fastReadField5(buf, _type)
 		if err != nil {
 			goto ReadFieldError
 		}
@@ -1757,6 +3036,616 @@ func (x *ListInventoryFlowResp) fastReadField1(buf []byte, _type int8) (offset i
 
 func (x *ListInventoryFlowResp) fastReadField2(buf []byte, _type int8) (offset int, err error) {
 	x.Total, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *ListInventoryFlowResp) fastReadField3(buf []byte, _type int8) (offset int, err error) {
+	x.HasMore, offset, err = fastpb.ReadBool(buf, _type)
+	return offset, err
+}
+
+func (x *ListInventoryFlowResp) fastReadField4(buf []byte, _type int8) (offset int, err error) {
+	x.NextCursorUpdatedAt, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *ListInventoryFlowResp) fastReadField5(buf []byte, _type int8) (offset int, err error) {
+	x.NextCursorId, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *CreateEngineeringOrderDraftReq) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 2:
+		offset, err = x.fastReadField2(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 3:
+		offset, err = x.fastReadField3(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 4:
+		offset, err = x.fastReadField4(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 5:
+		offset, err = x.fastReadField5(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 6:
+		offset, err = x.fastReadField6(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 7:
+		offset, err = x.fastReadField7(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_CreateEngineeringOrderDraftReq[number], err)
+}
+
+func (x *CreateEngineeringOrderDraftReq) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.LeaderUserId, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *CreateEngineeringOrderDraftReq) fastReadField2(buf []byte, _type int8) (offset int, err error) {
+	x.ItemId, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *CreateEngineeringOrderDraftReq) fastReadField3(buf []byte, _type int8) (offset int, err error) {
+	x.ExpectedQuantity, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *CreateEngineeringOrderDraftReq) fastReadField4(buf []byte, _type int8) (offset int, err error) {
+	x.QualifiedQuantity, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *CreateEngineeringOrderDraftReq) fastReadField5(buf []byte, _type int8) (offset int, err error) {
+	x.Description, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *CreateEngineeringOrderDraftReq) fastReadField6(buf []byte, _type int8) (offset int, err error) {
+	x.ProcessId, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *CreateEngineeringOrderDraftReq) fastReadField7(buf []byte, _type int8) (offset int, err error) {
+	x.Name, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *CreateEngineeringOrderDraftResp) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_CreateEngineeringOrderDraftResp[number], err)
+}
+
+func (x *CreateEngineeringOrderDraftResp) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.Id, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *UpdateEngineeringOrderDraftReq) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 2:
+		offset, err = x.fastReadField2(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 3:
+		offset, err = x.fastReadField3(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 4:
+		offset, err = x.fastReadField4(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 5:
+		offset, err = x.fastReadField5(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 6:
+		offset, err = x.fastReadField6(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 7:
+		offset, err = x.fastReadField7(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 8:
+		offset, err = x.fastReadField8(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_UpdateEngineeringOrderDraftReq[number], err)
+}
+
+func (x *UpdateEngineeringOrderDraftReq) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.Id, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *UpdateEngineeringOrderDraftReq) fastReadField2(buf []byte, _type int8) (offset int, err error) {
+	x.LeaderUserId, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *UpdateEngineeringOrderDraftReq) fastReadField3(buf []byte, _type int8) (offset int, err error) {
+	x.ItemId, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *UpdateEngineeringOrderDraftReq) fastReadField4(buf []byte, _type int8) (offset int, err error) {
+	x.ExpectedQuantity, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *UpdateEngineeringOrderDraftReq) fastReadField5(buf []byte, _type int8) (offset int, err error) {
+	x.QualifiedQuantity, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *UpdateEngineeringOrderDraftReq) fastReadField6(buf []byte, _type int8) (offset int, err error) {
+	x.Description, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *UpdateEngineeringOrderDraftReq) fastReadField7(buf []byte, _type int8) (offset int, err error) {
+	x.ProcessId, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *UpdateEngineeringOrderDraftReq) fastReadField8(buf []byte, _type int8) (offset int, err error) {
+	x.Name, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *UpdateEngineeringOrderDraftResp) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_UpdateEngineeringOrderDraftResp[number], err)
+}
+
+func (x *UpdateEngineeringOrderDraftResp) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.Success, offset, err = fastpb.ReadBool(buf, _type)
+	return offset, err
+}
+
+func (x *DeleteEngineeringOrderDraftReq) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_DeleteEngineeringOrderDraftReq[number], err)
+}
+
+func (x *DeleteEngineeringOrderDraftReq) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.Id, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *DeleteEngineeringOrderDraftResp) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_DeleteEngineeringOrderDraftResp[number], err)
+}
+
+func (x *DeleteEngineeringOrderDraftResp) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.Success, offset, err = fastpb.ReadBool(buf, _type)
+	return offset, err
+}
+
+func (x *SubmitEngineeringOrderReq) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_SubmitEngineeringOrderReq[number], err)
+}
+
+func (x *SubmitEngineeringOrderReq) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.Id, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *SubmitEngineeringOrderResp) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_SubmitEngineeringOrderResp[number], err)
+}
+
+func (x *SubmitEngineeringOrderResp) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.Success, offset, err = fastpb.ReadBool(buf, _type)
+	return offset, err
+}
+
+func (x *GetEngineeringOrderReq) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_GetEngineeringOrderReq[number], err)
+}
+
+func (x *GetEngineeringOrderReq) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.Id, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *GetEngineeringOrderResp) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_GetEngineeringOrderResp[number], err)
+}
+
+func (x *GetEngineeringOrderResp) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	var v EngineeringOrderInfo
+	offset, err = fastpb.ReadMessage(buf, _type, &v)
+	if err != nil {
+		return offset, err
+	}
+	x.EngineeringOrder = &v
+	return offset, nil
+}
+
+func (x *ListEngineeringOrderReq) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 2:
+		offset, err = x.fastReadField2(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 3:
+		offset, err = x.fastReadField3(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 4:
+		offset, err = x.fastReadField4(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 5:
+		offset, err = x.fastReadField5(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 6:
+		offset, err = x.fastReadField6(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 7:
+		offset, err = x.fastReadField7(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 8:
+		offset, err = x.fastReadField8(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 9:
+		offset, err = x.fastReadField9(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 10:
+		offset, err = x.fastReadField10(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 11:
+		offset, err = x.fastReadField11(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 12:
+		offset, err = x.fastReadField12(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_ListEngineeringOrderReq[number], err)
+}
+
+func (x *ListEngineeringOrderReq) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.LeaderUserId, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *ListEngineeringOrderReq) fastReadField2(buf []byte, _type int8) (offset int, err error) {
+	x.ItemId, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *ListEngineeringOrderReq) fastReadField3(buf []byte, _type int8) (offset int, err error) {
+	x.PageNum, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *ListEngineeringOrderReq) fastReadField4(buf []byte, _type int8) (offset int, err error) {
+	x.PageSize, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *ListEngineeringOrderReq) fastReadField5(buf []byte, _type int8) (offset int, err error) {
+	x.ProcessId, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *ListEngineeringOrderReq) fastReadField6(buf []byte, _type int8) (offset int, err error) {
+	var v int32
+	v, offset, err = fastpb.ReadInt32(buf, _type)
+	if err != nil {
+		return offset, err
+	}
+	x.Status = DraftStatus(v)
+	return offset, nil
+}
+
+func (x *ListEngineeringOrderReq) fastReadField7(buf []byte, _type int8) (offset int, err error) {
+	x.SinceTime, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *ListEngineeringOrderReq) fastReadField8(buf []byte, _type int8) (offset int, err error) {
+	x.RecentSeconds, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *ListEngineeringOrderReq) fastReadField9(buf []byte, _type int8) (offset int, err error) {
+	x.CursorUpdatedAt, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *ListEngineeringOrderReq) fastReadField10(buf []byte, _type int8) (offset int, err error) {
+	x.CursorId, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *ListEngineeringOrderReq) fastReadField11(buf []byte, _type int8) (offset int, err error) {
+	x.NamePrefix, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *ListEngineeringOrderReq) fastReadField12(buf []byte, _type int8) (offset int, err error) {
+	x.ItemNamePrefix, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *ListEngineeringOrderResp) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 2:
+		offset, err = x.fastReadField2(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 3:
+		offset, err = x.fastReadField3(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 4:
+		offset, err = x.fastReadField4(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 5:
+		offset, err = x.fastReadField5(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_ListEngineeringOrderResp[number], err)
+}
+
+func (x *ListEngineeringOrderResp) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	var v EngineeringOrderInfo
+	offset, err = fastpb.ReadMessage(buf, _type, &v)
+	if err != nil {
+		return offset, err
+	}
+	x.EngineeringOrderList = append(x.EngineeringOrderList, &v)
+	return offset, nil
+}
+
+func (x *ListEngineeringOrderResp) fastReadField2(buf []byte, _type int8) (offset int, err error) {
+	x.Total, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *ListEngineeringOrderResp) fastReadField3(buf []byte, _type int8) (offset int, err error) {
+	x.HasMore, offset, err = fastpb.ReadBool(buf, _type)
+	return offset, err
+}
+
+func (x *ListEngineeringOrderResp) fastReadField4(buf []byte, _type int8) (offset int, err error) {
+	x.NextCursorUpdatedAt, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *ListEngineeringOrderResp) fastReadField5(buf []byte, _type int8) (offset int, err error) {
+	x.NextCursorId, offset, err = fastpb.ReadInt64(buf, _type)
 	return offset, err
 }
 
@@ -1893,6 +3782,157 @@ func (x *ItemInfo) fastWriteField14(buf []byte) (offset int) {
 	return offset
 }
 
+func (x *ProcessItemInfo) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	offset += x.fastWriteField2(buf[offset:])
+	offset += x.fastWriteField3(buf[offset:])
+	offset += x.fastWriteField4(buf[offset:])
+	offset += x.fastWriteField5(buf[offset:])
+	return offset
+}
+
+func (x *ProcessItemInfo) fastWriteField1(buf []byte) (offset int) {
+	if x.Id == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 1, x.GetId())
+	return offset
+}
+
+func (x *ProcessItemInfo) fastWriteField2(buf []byte) (offset int) {
+	if x.ProcessId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 2, x.GetProcessId())
+	return offset
+}
+
+func (x *ProcessItemInfo) fastWriteField3(buf []byte) (offset int) {
+	if x.ConsumeItemId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 3, x.GetConsumeItemId())
+	return offset
+}
+
+func (x *ProcessItemInfo) fastWriteField4(buf []byte) (offset int) {
+	if x.Quantity == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 4, x.GetQuantity())
+	return offset
+}
+
+func (x *ProcessItemInfo) fastWriteField5(buf []byte) (offset int) {
+	if x.ConsumeItem == nil {
+		return offset
+	}
+	offset += fastpb.WriteMessage(buf[offset:], 5, x.GetConsumeItem())
+	return offset
+}
+
+func (x *ProcessInfo) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	offset += x.fastWriteField2(buf[offset:])
+	offset += x.fastWriteField3(buf[offset:])
+	offset += x.fastWriteField4(buf[offset:])
+	offset += x.fastWriteField5(buf[offset:])
+	offset += x.fastWriteField6(buf[offset:])
+	offset += x.fastWriteField7(buf[offset:])
+	offset += x.fastWriteField8(buf[offset:])
+	offset += x.fastWriteField9(buf[offset:])
+	offset += x.fastWriteField10(buf[offset:])
+	return offset
+}
+
+func (x *ProcessInfo) fastWriteField1(buf []byte) (offset int) {
+	if x.Id == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 1, x.GetId())
+	return offset
+}
+
+func (x *ProcessInfo) fastWriteField2(buf []byte) (offset int) {
+	if x.ItemId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 2, x.GetItemId())
+	return offset
+}
+
+func (x *ProcessInfo) fastWriteField3(buf []byte) (offset int) {
+	if x.OwnerUserId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 3, x.GetOwnerUserId())
+	return offset
+}
+
+func (x *ProcessInfo) fastWriteField4(buf []byte) (offset int) {
+	if x.Name == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 4, x.GetName())
+	return offset
+}
+
+func (x *ProcessInfo) fastWriteField5(buf []byte) (offset int) {
+	if x.Description == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 5, x.GetDescription())
+	return offset
+}
+
+func (x *ProcessInfo) fastWriteField6(buf []byte) (offset int) {
+	if x.Status == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt32(buf[offset:], 6, int32(x.GetStatus()))
+	return offset
+}
+
+func (x *ProcessInfo) fastWriteField7(buf []byte) (offset int) {
+	if x.Item == nil {
+		return offset
+	}
+	offset += fastpb.WriteMessage(buf[offset:], 7, x.GetItem())
+	return offset
+}
+
+func (x *ProcessInfo) fastWriteField8(buf []byte) (offset int) {
+	if x.Items == nil {
+		return offset
+	}
+	for i := range x.GetItems() {
+		offset += fastpb.WriteMessage(buf[offset:], 8, x.GetItems()[i])
+	}
+	return offset
+}
+
+func (x *ProcessInfo) fastWriteField9(buf []byte) (offset int) {
+	if x.CreateTime == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 9, x.GetCreateTime())
+	return offset
+}
+
+func (x *ProcessInfo) fastWriteField10(buf []byte) (offset int) {
+	if x.UpdateTime == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 10, x.GetUpdateTime())
+	return offset
+}
+
 func (x *ItemUnitInfo) FastWrite(buf []byte) (offset int) {
 	if x == nil {
 		return offset
@@ -1904,6 +3944,7 @@ func (x *ItemUnitInfo) FastWrite(buf []byte) (offset int) {
 	offset += x.fastWriteField5(buf[offset:])
 	offset += x.fastWriteField6(buf[offset:])
 	offset += x.fastWriteField7(buf[offset:])
+	offset += x.fastWriteField8(buf[offset:])
 	return offset
 }
 
@@ -1960,6 +4001,167 @@ func (x *ItemUnitInfo) fastWriteField7(buf []byte) (offset int) {
 		return offset
 	}
 	offset += fastpb.WriteString(buf[offset:], 7, x.GetUpdateTime())
+	return offset
+}
+
+func (x *ItemUnitInfo) fastWriteField8(buf []byte) (offset int) {
+	if x.EngineeringOrderId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 8, x.GetEngineeringOrderId())
+	return offset
+}
+
+func (x *EngineeringOrderInfo) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	offset += x.fastWriteField2(buf[offset:])
+	offset += x.fastWriteField3(buf[offset:])
+	offset += x.fastWriteField4(buf[offset:])
+	offset += x.fastWriteField5(buf[offset:])
+	offset += x.fastWriteField6(buf[offset:])
+	offset += x.fastWriteField7(buf[offset:])
+	offset += x.fastWriteField8(buf[offset:])
+	offset += x.fastWriteField9(buf[offset:])
+	offset += x.fastWriteField10(buf[offset:])
+	offset += x.fastWriteField11(buf[offset:])
+	offset += x.fastWriteField12(buf[offset:])
+	offset += x.fastWriteField13(buf[offset:])
+	offset += x.fastWriteField14(buf[offset:])
+	offset += x.fastWriteField15(buf[offset:])
+	offset += x.fastWriteField16(buf[offset:])
+	return offset
+}
+
+func (x *EngineeringOrderInfo) fastWriteField1(buf []byte) (offset int) {
+	if x.Id == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 1, x.GetId())
+	return offset
+}
+
+func (x *EngineeringOrderInfo) fastWriteField2(buf []byte) (offset int) {
+	if x.LeaderUserId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 2, x.GetLeaderUserId())
+	return offset
+}
+
+func (x *EngineeringOrderInfo) fastWriteField3(buf []byte) (offset int) {
+	if x.ItemId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 3, x.GetItemId())
+	return offset
+}
+
+func (x *EngineeringOrderInfo) fastWriteField4(buf []byte) (offset int) {
+	if x.Item == nil {
+		return offset
+	}
+	offset += fastpb.WriteMessage(buf[offset:], 4, x.GetItem())
+	return offset
+}
+
+func (x *EngineeringOrderInfo) fastWriteField5(buf []byte) (offset int) {
+	if x.ExpectedQuantity == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 5, x.GetExpectedQuantity())
+	return offset
+}
+
+func (x *EngineeringOrderInfo) fastWriteField6(buf []byte) (offset int) {
+	if x.QualifiedQuantity == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 6, x.GetQualifiedQuantity())
+	return offset
+}
+
+func (x *EngineeringOrderInfo) fastWriteField7(buf []byte) (offset int) {
+	if x.ProducedQuantity == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 7, x.GetProducedQuantity())
+	return offset
+}
+
+func (x *EngineeringOrderInfo) fastWriteField8(buf []byte) (offset int) {
+	if x.Description == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 8, x.GetDescription())
+	return offset
+}
+
+func (x *EngineeringOrderInfo) fastWriteField9(buf []byte) (offset int) {
+	if x.ItemUnits == nil {
+		return offset
+	}
+	for i := range x.GetItemUnits() {
+		offset += fastpb.WriteMessage(buf[offset:], 9, x.GetItemUnits()[i])
+	}
+	return offset
+}
+
+func (x *EngineeringOrderInfo) fastWriteField10(buf []byte) (offset int) {
+	if x.CreateTime == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 10, x.GetCreateTime())
+	return offset
+}
+
+func (x *EngineeringOrderInfo) fastWriteField11(buf []byte) (offset int) {
+	if x.UpdateTime == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 11, x.GetUpdateTime())
+	return offset
+}
+
+func (x *EngineeringOrderInfo) fastWriteField12(buf []byte) (offset int) {
+	if x.ProcessId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 12, x.GetProcessId())
+	return offset
+}
+
+func (x *EngineeringOrderInfo) fastWriteField13(buf []byte) (offset int) {
+	if x.Process == nil {
+		return offset
+	}
+	offset += fastpb.WriteMessage(buf[offset:], 13, x.GetProcess())
+	return offset
+}
+
+func (x *EngineeringOrderInfo) fastWriteField14(buf []byte) (offset int) {
+	if x.Status == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt32(buf[offset:], 14, int32(x.GetStatus()))
+	return offset
+}
+
+func (x *EngineeringOrderInfo) fastWriteField15(buf []byte) (offset int) {
+	if x.UnqualifiedQuantity == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 15, x.GetUnqualifiedQuantity())
+	return offset
+}
+
+func (x *EngineeringOrderInfo) fastWriteField16(buf []byte) (offset int) {
+	if x.Name == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 16, x.GetName())
 	return offset
 }
 
@@ -2040,6 +4242,7 @@ func (x *InventoryFlowInfo) FastWrite(buf []byte) (offset int) {
 	offset += x.fastWriteField10(buf[offset:])
 	offset += x.fastWriteField11(buf[offset:])
 	offset += x.fastWriteField12(buf[offset:])
+	offset += x.fastWriteField13(buf[offset:])
 	return offset
 }
 
@@ -2140,6 +4343,14 @@ func (x *InventoryFlowInfo) fastWriteField12(buf []byte) (offset int) {
 		return offset
 	}
 	offset += fastpb.WriteString(buf[offset:], 12, x.GetUpdateTime())
+	return offset
+}
+
+func (x *InventoryFlowInfo) fastWriteField13(buf []byte) (offset int) {
+	if x.Name == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 13, x.GetName())
 	return offset
 }
 
@@ -2291,6 +4502,8 @@ func (x *ListItemReq) FastWrite(buf []byte) (offset int) {
 	offset += x.fastWriteField1(buf[offset:])
 	offset += x.fastWriteField2(buf[offset:])
 	offset += x.fastWriteField3(buf[offset:])
+	offset += x.fastWriteField4(buf[offset:])
+	offset += x.fastWriteField5(buf[offset:])
 	return offset
 }
 
@@ -2318,12 +4531,31 @@ func (x *ListItemReq) fastWriteField3(buf []byte) (offset int) {
 	return offset
 }
 
+func (x *ListItemReq) fastWriteField4(buf []byte) (offset int) {
+	if x.CursorName == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 4, x.GetCursorName())
+	return offset
+}
+
+func (x *ListItemReq) fastWriteField5(buf []byte) (offset int) {
+	if x.CursorId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 5, x.GetCursorId())
+	return offset
+}
+
 func (x *ListItemResp) FastWrite(buf []byte) (offset int) {
 	if x == nil {
 		return offset
 	}
 	offset += x.fastWriteField1(buf[offset:])
 	offset += x.fastWriteField2(buf[offset:])
+	offset += x.fastWriteField3(buf[offset:])
+	offset += x.fastWriteField4(buf[offset:])
+	offset += x.fastWriteField5(buf[offset:])
 	return offset
 }
 
@@ -2345,6 +4577,460 @@ func (x *ListItemResp) fastWriteField2(buf []byte) (offset int) {
 	return offset
 }
 
+func (x *ListItemResp) fastWriteField3(buf []byte) (offset int) {
+	if !x.HasMore {
+		return offset
+	}
+	offset += fastpb.WriteBool(buf[offset:], 3, x.GetHasMore())
+	return offset
+}
+
+func (x *ListItemResp) fastWriteField4(buf []byte) (offset int) {
+	if x.NextCursorName == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 4, x.GetNextCursorName())
+	return offset
+}
+
+func (x *ListItemResp) fastWriteField5(buf []byte) (offset int) {
+	if x.NextCursorId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 5, x.GetNextCursorId())
+	return offset
+}
+
+func (x *ProcessItemReq) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	offset += x.fastWriteField2(buf[offset:])
+	return offset
+}
+
+func (x *ProcessItemReq) fastWriteField1(buf []byte) (offset int) {
+	if x.ConsumeItemId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 1, x.GetConsumeItemId())
+	return offset
+}
+
+func (x *ProcessItemReq) fastWriteField2(buf []byte) (offset int) {
+	if x.Quantity == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 2, x.GetQuantity())
+	return offset
+}
+
+func (x *CreateProcessDraftReq) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	offset += x.fastWriteField2(buf[offset:])
+	offset += x.fastWriteField3(buf[offset:])
+	offset += x.fastWriteField4(buf[offset:])
+	offset += x.fastWriteField5(buf[offset:])
+	return offset
+}
+
+func (x *CreateProcessDraftReq) fastWriteField1(buf []byte) (offset int) {
+	if x.OwnerUserId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 1, x.GetOwnerUserId())
+	return offset
+}
+
+func (x *CreateProcessDraftReq) fastWriteField2(buf []byte) (offset int) {
+	if x.ItemId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 2, x.GetItemId())
+	return offset
+}
+
+func (x *CreateProcessDraftReq) fastWriteField3(buf []byte) (offset int) {
+	if x.Name == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 3, x.GetName())
+	return offset
+}
+
+func (x *CreateProcessDraftReq) fastWriteField4(buf []byte) (offset int) {
+	if x.Description == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 4, x.GetDescription())
+	return offset
+}
+
+func (x *CreateProcessDraftReq) fastWriteField5(buf []byte) (offset int) {
+	if x.Items == nil {
+		return offset
+	}
+	for i := range x.GetItems() {
+		offset += fastpb.WriteMessage(buf[offset:], 5, x.GetItems()[i])
+	}
+	return offset
+}
+
+func (x *CreateProcessDraftResp) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	return offset
+}
+
+func (x *CreateProcessDraftResp) fastWriteField1(buf []byte) (offset int) {
+	if x.Id == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 1, x.GetId())
+	return offset
+}
+
+func (x *UpdateProcessDraftReq) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	offset += x.fastWriteField2(buf[offset:])
+	offset += x.fastWriteField3(buf[offset:])
+	offset += x.fastWriteField4(buf[offset:])
+	offset += x.fastWriteField5(buf[offset:])
+	offset += x.fastWriteField6(buf[offset:])
+	return offset
+}
+
+func (x *UpdateProcessDraftReq) fastWriteField1(buf []byte) (offset int) {
+	if x.Id == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 1, x.GetId())
+	return offset
+}
+
+func (x *UpdateProcessDraftReq) fastWriteField2(buf []byte) (offset int) {
+	if x.OwnerUserId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 2, x.GetOwnerUserId())
+	return offset
+}
+
+func (x *UpdateProcessDraftReq) fastWriteField3(buf []byte) (offset int) {
+	if x.ItemId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 3, x.GetItemId())
+	return offset
+}
+
+func (x *UpdateProcessDraftReq) fastWriteField4(buf []byte) (offset int) {
+	if x.Name == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 4, x.GetName())
+	return offset
+}
+
+func (x *UpdateProcessDraftReq) fastWriteField5(buf []byte) (offset int) {
+	if x.Description == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 5, x.GetDescription())
+	return offset
+}
+
+func (x *UpdateProcessDraftReq) fastWriteField6(buf []byte) (offset int) {
+	if x.Items == nil {
+		return offset
+	}
+	for i := range x.GetItems() {
+		offset += fastpb.WriteMessage(buf[offset:], 6, x.GetItems()[i])
+	}
+	return offset
+}
+
+func (x *UpdateProcessDraftResp) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	return offset
+}
+
+func (x *UpdateProcessDraftResp) fastWriteField1(buf []byte) (offset int) {
+	if !x.Success {
+		return offset
+	}
+	offset += fastpb.WriteBool(buf[offset:], 1, x.GetSuccess())
+	return offset
+}
+
+func (x *DeleteProcessDraftReq) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	return offset
+}
+
+func (x *DeleteProcessDraftReq) fastWriteField1(buf []byte) (offset int) {
+	if x.Id == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 1, x.GetId())
+	return offset
+}
+
+func (x *DeleteProcessDraftResp) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	return offset
+}
+
+func (x *DeleteProcessDraftResp) fastWriteField1(buf []byte) (offset int) {
+	if !x.Success {
+		return offset
+	}
+	offset += fastpb.WriteBool(buf[offset:], 1, x.GetSuccess())
+	return offset
+}
+
+func (x *SubmitProcessReq) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	return offset
+}
+
+func (x *SubmitProcessReq) fastWriteField1(buf []byte) (offset int) {
+	if x.Id == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 1, x.GetId())
+	return offset
+}
+
+func (x *SubmitProcessResp) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	return offset
+}
+
+func (x *SubmitProcessResp) fastWriteField1(buf []byte) (offset int) {
+	if !x.Success {
+		return offset
+	}
+	offset += fastpb.WriteBool(buf[offset:], 1, x.GetSuccess())
+	return offset
+}
+
+func (x *GetProcessReq) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	return offset
+}
+
+func (x *GetProcessReq) fastWriteField1(buf []byte) (offset int) {
+	if x.Id == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 1, x.GetId())
+	return offset
+}
+
+func (x *GetProcessResp) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	return offset
+}
+
+func (x *GetProcessResp) fastWriteField1(buf []byte) (offset int) {
+	if x.Process == nil {
+		return offset
+	}
+	offset += fastpb.WriteMessage(buf[offset:], 1, x.GetProcess())
+	return offset
+}
+
+func (x *ListProcessReq) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	offset += x.fastWriteField2(buf[offset:])
+	offset += x.fastWriteField3(buf[offset:])
+	offset += x.fastWriteField4(buf[offset:])
+	offset += x.fastWriteField5(buf[offset:])
+	offset += x.fastWriteField6(buf[offset:])
+	offset += x.fastWriteField7(buf[offset:])
+	offset += x.fastWriteField8(buf[offset:])
+	offset += x.fastWriteField9(buf[offset:])
+	offset += x.fastWriteField10(buf[offset:])
+	offset += x.fastWriteField11(buf[offset:])
+	return offset
+}
+
+func (x *ListProcessReq) fastWriteField1(buf []byte) (offset int) {
+	if x.OwnerUserId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 1, x.GetOwnerUserId())
+	return offset
+}
+
+func (x *ListProcessReq) fastWriteField2(buf []byte) (offset int) {
+	if x.ItemId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 2, x.GetItemId())
+	return offset
+}
+
+func (x *ListProcessReq) fastWriteField3(buf []byte) (offset int) {
+	if x.Status == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt32(buf[offset:], 3, int32(x.GetStatus()))
+	return offset
+}
+
+func (x *ListProcessReq) fastWriteField4(buf []byte) (offset int) {
+	if x.PageNum == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 4, x.GetPageNum())
+	return offset
+}
+
+func (x *ListProcessReq) fastWriteField5(buf []byte) (offset int) {
+	if x.PageSize == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 5, x.GetPageSize())
+	return offset
+}
+
+func (x *ListProcessReq) fastWriteField6(buf []byte) (offset int) {
+	if x.SinceTime == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 6, x.GetSinceTime())
+	return offset
+}
+
+func (x *ListProcessReq) fastWriteField7(buf []byte) (offset int) {
+	if x.RecentSeconds == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 7, x.GetRecentSeconds())
+	return offset
+}
+
+func (x *ListProcessReq) fastWriteField8(buf []byte) (offset int) {
+	if x.CursorUpdatedAt == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 8, x.GetCursorUpdatedAt())
+	return offset
+}
+
+func (x *ListProcessReq) fastWriteField9(buf []byte) (offset int) {
+	if x.CursorId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 9, x.GetCursorId())
+	return offset
+}
+
+func (x *ListProcessReq) fastWriteField10(buf []byte) (offset int) {
+	if x.NamePrefix == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 10, x.GetNamePrefix())
+	return offset
+}
+
+func (x *ListProcessReq) fastWriteField11(buf []byte) (offset int) {
+	if x.ItemNamePrefix == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 11, x.GetItemNamePrefix())
+	return offset
+}
+
+func (x *ListProcessResp) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	offset += x.fastWriteField2(buf[offset:])
+	offset += x.fastWriteField3(buf[offset:])
+	offset += x.fastWriteField4(buf[offset:])
+	offset += x.fastWriteField5(buf[offset:])
+	return offset
+}
+
+func (x *ListProcessResp) fastWriteField1(buf []byte) (offset int) {
+	if x.ProcessList == nil {
+		return offset
+	}
+	for i := range x.GetProcessList() {
+		offset += fastpb.WriteMessage(buf[offset:], 1, x.GetProcessList()[i])
+	}
+	return offset
+}
+
+func (x *ListProcessResp) fastWriteField2(buf []byte) (offset int) {
+	if x.Total == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 2, x.GetTotal())
+	return offset
+}
+
+func (x *ListProcessResp) fastWriteField3(buf []byte) (offset int) {
+	if !x.HasMore {
+		return offset
+	}
+	offset += fastpb.WriteBool(buf[offset:], 3, x.GetHasMore())
+	return offset
+}
+
+func (x *ListProcessResp) fastWriteField4(buf []byte) (offset int) {
+	if x.NextCursorUpdatedAt == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 4, x.GetNextCursorUpdatedAt())
+	return offset
+}
+
+func (x *ListProcessResp) fastWriteField5(buf []byte) (offset int) {
+	if x.NextCursorId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 5, x.GetNextCursorId())
+	return offset
+}
+
 func (x *AddItemUnitReq) FastWrite(buf []byte) (offset int) {
 	if x == nil {
 		return offset
@@ -2353,6 +5039,7 @@ func (x *AddItemUnitReq) FastWrite(buf []byte) (offset int) {
 	offset += x.fastWriteField2(buf[offset:])
 	offset += x.fastWriteField3(buf[offset:])
 	offset += x.fastWriteField4(buf[offset:])
+	offset += x.fastWriteField5(buf[offset:])
 	return offset
 }
 
@@ -2385,6 +5072,14 @@ func (x *AddItemUnitReq) fastWriteField4(buf []byte) (offset int) {
 		return offset
 	}
 	offset += fastpb.WriteString(buf[offset:], 4, x.GetDescription())
+	return offset
+}
+
+func (x *AddItemUnitReq) fastWriteField5(buf []byte) (offset int) {
+	if x.EngineeringOrderId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 5, x.GetEngineeringOrderId())
 	return offset
 }
 
@@ -2495,6 +5190,9 @@ func (x *ListItemUnitReq) FastWrite(buf []byte) (offset int) {
 	offset += x.fastWriteField3(buf[offset:])
 	offset += x.fastWriteField4(buf[offset:])
 	offset += x.fastWriteField5(buf[offset:])
+	offset += x.fastWriteField6(buf[offset:])
+	offset += x.fastWriteField7(buf[offset:])
+	offset += x.fastWriteField8(buf[offset:])
 	return offset
 }
 
@@ -2538,12 +5236,38 @@ func (x *ListItemUnitReq) fastWriteField5(buf []byte) (offset int) {
 	return offset
 }
 
+func (x *ListItemUnitReq) fastWriteField6(buf []byte) (offset int) {
+	if x.EngineeringOrderId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 6, x.GetEngineeringOrderId())
+	return offset
+}
+
+func (x *ListItemUnitReq) fastWriteField7(buf []byte) (offset int) {
+	if x.CursorId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 7, x.GetCursorId())
+	return offset
+}
+
+func (x *ListItemUnitReq) fastWriteField8(buf []byte) (offset int) {
+	if x.ItemNamePrefix == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 8, x.GetItemNamePrefix())
+	return offset
+}
+
 func (x *ListItemUnitResp) FastWrite(buf []byte) (offset int) {
 	if x == nil {
 		return offset
 	}
 	offset += x.fastWriteField1(buf[offset:])
 	offset += x.fastWriteField2(buf[offset:])
+	offset += x.fastWriteField3(buf[offset:])
+	offset += x.fastWriteField4(buf[offset:])
 	return offset
 }
 
@@ -2562,6 +5286,22 @@ func (x *ListItemUnitResp) fastWriteField2(buf []byte) (offset int) {
 		return offset
 	}
 	offset += fastpb.WriteInt64(buf[offset:], 2, x.GetTotal())
+	return offset
+}
+
+func (x *ListItemUnitResp) fastWriteField3(buf []byte) (offset int) {
+	if !x.HasMore {
+		return offset
+	}
+	offset += fastpb.WriteBool(buf[offset:], 3, x.GetHasMore())
+	return offset
+}
+
+func (x *ListItemUnitResp) fastWriteField4(buf []byte) (offset int) {
+	if x.NextCursorId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 4, x.GetNextCursorId())
 	return offset
 }
 
@@ -2600,6 +5340,7 @@ func (x *CreateInventoryFlowReq) FastWrite(buf []byte) (offset int) {
 	offset += x.fastWriteField4(buf[offset:])
 	offset += x.fastWriteField5(buf[offset:])
 	offset += x.fastWriteField6(buf[offset:])
+	offset += x.fastWriteField7(buf[offset:])
 	return offset
 }
 
@@ -2658,6 +5399,14 @@ func (x *CreateInventoryFlowReq) fastWriteField6(buf []byte) (offset int) {
 	return offset
 }
 
+func (x *CreateInventoryFlowReq) fastWriteField7(buf []byte) (offset int) {
+	if x.Name == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 7, x.GetName())
+	return offset
+}
+
 func (x *CreateInventoryFlowResp) FastWrite(buf []byte) (offset int) {
 	if x == nil {
 		return offset
@@ -2685,6 +5434,7 @@ func (x *UpdateInventoryFlowDraftReq) FastWrite(buf []byte) (offset int) {
 	offset += x.fastWriteField5(buf[offset:])
 	offset += x.fastWriteField6(buf[offset:])
 	offset += x.fastWriteField7(buf[offset:])
+	offset += x.fastWriteField8(buf[offset:])
 	return offset
 }
 
@@ -2748,6 +5498,14 @@ func (x *UpdateInventoryFlowDraftReq) fastWriteField7(buf []byte) (offset int) {
 			offset += fastpb.WriteInt64(buf[offset:], numTagOrKey, x.GetItemUnitIds()[numIdxOrVal])
 			return offset
 		})
+	return offset
+}
+
+func (x *UpdateInventoryFlowDraftReq) fastWriteField8(buf []byte) (offset int) {
+	if x.Name == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 8, x.GetName())
 	return offset
 }
 
@@ -2824,6 +5582,52 @@ func (x *SubmitInventoryFlowResp) FastWrite(buf []byte) (offset int) {
 }
 
 func (x *SubmitInventoryFlowResp) fastWriteField1(buf []byte) (offset int) {
+	if !x.Success {
+		return offset
+	}
+	offset += fastpb.WriteBool(buf[offset:], 1, x.GetSuccess())
+	return offset
+}
+
+func (x *CompleteInventoryFlowReq) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	offset += x.fastWriteField2(buf[offset:])
+	return offset
+}
+
+func (x *CompleteInventoryFlowReq) fastWriteField1(buf []byte) (offset int) {
+	if x.Id == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 1, x.GetId())
+	return offset
+}
+
+func (x *CompleteInventoryFlowReq) fastWriteField2(buf []byte) (offset int) {
+	if len(x.ItemUnitIds) == 0 {
+		return offset
+	}
+	offset += fastpb.WriteListPacked(buf[offset:], 2, len(x.GetItemUnitIds()),
+		func(buf []byte, numTagOrKey, numIdxOrVal int32) int {
+			offset := 0
+			offset += fastpb.WriteInt64(buf[offset:], numTagOrKey, x.GetItemUnitIds()[numIdxOrVal])
+			return offset
+		})
+	return offset
+}
+
+func (x *CompleteInventoryFlowResp) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	return offset
+}
+
+func (x *CompleteInventoryFlowResp) fastWriteField1(buf []byte) (offset int) {
 	if !x.Success {
 		return offset
 	}
@@ -2923,54 +5727,108 @@ func (x *ListInventoryFlowReq) FastWrite(buf []byte) (offset int) {
 	offset += x.fastWriteField4(buf[offset:])
 	offset += x.fastWriteField5(buf[offset:])
 	offset += x.fastWriteField6(buf[offset:])
+	offset += x.fastWriteField7(buf[offset:])
+	offset += x.fastWriteField8(buf[offset:])
+	offset += x.fastWriteField9(buf[offset:])
+	offset += x.fastWriteField10(buf[offset:])
+	offset += x.fastWriteField11(buf[offset:])
+	offset += x.fastWriteField12(buf[offset:])
 	return offset
 }
 
 func (x *ListInventoryFlowReq) fastWriteField1(buf []byte) (offset int) {
-	if x.PageNum == 0 {
+	if x.UserId == 0 {
 		return offset
 	}
-	offset += fastpb.WriteInt64(buf[offset:], 1, x.GetPageNum())
+	offset += fastpb.WriteInt64(buf[offset:], 1, x.GetUserId())
 	return offset
 }
 
 func (x *ListInventoryFlowReq) fastWriteField2(buf []byte) (offset int) {
-	if x.PageSize == 0 {
+	if !x.IsTo {
 		return offset
 	}
-	offset += fastpb.WriteInt64(buf[offset:], 2, x.GetPageSize())
+	offset += fastpb.WriteBool(buf[offset:], 2, x.GetIsTo())
 	return offset
 }
 
 func (x *ListInventoryFlowReq) fastWriteField3(buf []byte) (offset int) {
-	if x.FromUserId == 0 {
+	if x.FlowStatus == 0 {
 		return offset
 	}
-	offset += fastpb.WriteInt64(buf[offset:], 3, x.GetFromUserId())
+	offset += fastpb.WriteInt32(buf[offset:], 3, int32(x.GetFlowStatus()))
 	return offset
 }
 
 func (x *ListInventoryFlowReq) fastWriteField4(buf []byte) (offset int) {
-	if x.ToUserId == 0 {
+	if x.PageNum == 0 {
 		return offset
 	}
-	offset += fastpb.WriteInt64(buf[offset:], 4, x.GetToUserId())
+	offset += fastpb.WriteInt64(buf[offset:], 4, x.GetPageNum())
 	return offset
 }
 
 func (x *ListInventoryFlowReq) fastWriteField5(buf []byte) (offset int) {
-	if x.FlowType == 0 {
+	if x.PageSize == 0 {
 		return offset
 	}
-	offset += fastpb.WriteInt32(buf[offset:], 5, int32(x.GetFlowType()))
+	offset += fastpb.WriteInt64(buf[offset:], 5, x.GetPageSize())
 	return offset
 }
 
 func (x *ListInventoryFlowReq) fastWriteField6(buf []byte) (offset int) {
-	if x.FlowStatus == 0 {
+	if x.SinceTime == "" {
 		return offset
 	}
-	offset += fastpb.WriteInt32(buf[offset:], 6, int32(x.GetFlowStatus()))
+	offset += fastpb.WriteString(buf[offset:], 6, x.GetSinceTime())
+	return offset
+}
+
+func (x *ListInventoryFlowReq) fastWriteField7(buf []byte) (offset int) {
+	if x.RecentSeconds == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 7, x.GetRecentSeconds())
+	return offset
+}
+
+func (x *ListInventoryFlowReq) fastWriteField8(buf []byte) (offset int) {
+	if x.CursorUpdatedAt == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 8, x.GetCursorUpdatedAt())
+	return offset
+}
+
+func (x *ListInventoryFlowReq) fastWriteField9(buf []byte) (offset int) {
+	if x.CursorId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 9, x.GetCursorId())
+	return offset
+}
+
+func (x *ListInventoryFlowReq) fastWriteField10(buf []byte) (offset int) {
+	if x.NamePrefix == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 10, x.GetNamePrefix())
+	return offset
+}
+
+func (x *ListInventoryFlowReq) fastWriteField11(buf []byte) (offset int) {
+	if x.ItemNamePrefix == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 11, x.GetItemNamePrefix())
+	return offset
+}
+
+func (x *ListInventoryFlowReq) fastWriteField12(buf []byte) (offset int) {
+	if x.Scope == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt32(buf[offset:], 12, int32(x.GetScope()))
 	return offset
 }
 
@@ -2980,6 +5838,9 @@ func (x *ListInventoryFlowResp) FastWrite(buf []byte) (offset int) {
 	}
 	offset += x.fastWriteField1(buf[offset:])
 	offset += x.fastWriteField2(buf[offset:])
+	offset += x.fastWriteField3(buf[offset:])
+	offset += x.fastWriteField4(buf[offset:])
+	offset += x.fastWriteField5(buf[offset:])
 	return offset
 }
 
@@ -2998,6 +5859,476 @@ func (x *ListInventoryFlowResp) fastWriteField2(buf []byte) (offset int) {
 		return offset
 	}
 	offset += fastpb.WriteInt64(buf[offset:], 2, x.GetTotal())
+	return offset
+}
+
+func (x *ListInventoryFlowResp) fastWriteField3(buf []byte) (offset int) {
+	if !x.HasMore {
+		return offset
+	}
+	offset += fastpb.WriteBool(buf[offset:], 3, x.GetHasMore())
+	return offset
+}
+
+func (x *ListInventoryFlowResp) fastWriteField4(buf []byte) (offset int) {
+	if x.NextCursorUpdatedAt == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 4, x.GetNextCursorUpdatedAt())
+	return offset
+}
+
+func (x *ListInventoryFlowResp) fastWriteField5(buf []byte) (offset int) {
+	if x.NextCursorId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 5, x.GetNextCursorId())
+	return offset
+}
+
+func (x *CreateEngineeringOrderDraftReq) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	offset += x.fastWriteField2(buf[offset:])
+	offset += x.fastWriteField3(buf[offset:])
+	offset += x.fastWriteField4(buf[offset:])
+	offset += x.fastWriteField5(buf[offset:])
+	offset += x.fastWriteField6(buf[offset:])
+	offset += x.fastWriteField7(buf[offset:])
+	return offset
+}
+
+func (x *CreateEngineeringOrderDraftReq) fastWriteField1(buf []byte) (offset int) {
+	if x.LeaderUserId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 1, x.GetLeaderUserId())
+	return offset
+}
+
+func (x *CreateEngineeringOrderDraftReq) fastWriteField2(buf []byte) (offset int) {
+	if x.ItemId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 2, x.GetItemId())
+	return offset
+}
+
+func (x *CreateEngineeringOrderDraftReq) fastWriteField3(buf []byte) (offset int) {
+	if x.ExpectedQuantity == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 3, x.GetExpectedQuantity())
+	return offset
+}
+
+func (x *CreateEngineeringOrderDraftReq) fastWriteField4(buf []byte) (offset int) {
+	if x.QualifiedQuantity == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 4, x.GetQualifiedQuantity())
+	return offset
+}
+
+func (x *CreateEngineeringOrderDraftReq) fastWriteField5(buf []byte) (offset int) {
+	if x.Description == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 5, x.GetDescription())
+	return offset
+}
+
+func (x *CreateEngineeringOrderDraftReq) fastWriteField6(buf []byte) (offset int) {
+	if x.ProcessId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 6, x.GetProcessId())
+	return offset
+}
+
+func (x *CreateEngineeringOrderDraftReq) fastWriteField7(buf []byte) (offset int) {
+	if x.Name == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 7, x.GetName())
+	return offset
+}
+
+func (x *CreateEngineeringOrderDraftResp) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	return offset
+}
+
+func (x *CreateEngineeringOrderDraftResp) fastWriteField1(buf []byte) (offset int) {
+	if x.Id == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 1, x.GetId())
+	return offset
+}
+
+func (x *UpdateEngineeringOrderDraftReq) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	offset += x.fastWriteField2(buf[offset:])
+	offset += x.fastWriteField3(buf[offset:])
+	offset += x.fastWriteField4(buf[offset:])
+	offset += x.fastWriteField5(buf[offset:])
+	offset += x.fastWriteField6(buf[offset:])
+	offset += x.fastWriteField7(buf[offset:])
+	offset += x.fastWriteField8(buf[offset:])
+	return offset
+}
+
+func (x *UpdateEngineeringOrderDraftReq) fastWriteField1(buf []byte) (offset int) {
+	if x.Id == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 1, x.GetId())
+	return offset
+}
+
+func (x *UpdateEngineeringOrderDraftReq) fastWriteField2(buf []byte) (offset int) {
+	if x.LeaderUserId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 2, x.GetLeaderUserId())
+	return offset
+}
+
+func (x *UpdateEngineeringOrderDraftReq) fastWriteField3(buf []byte) (offset int) {
+	if x.ItemId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 3, x.GetItemId())
+	return offset
+}
+
+func (x *UpdateEngineeringOrderDraftReq) fastWriteField4(buf []byte) (offset int) {
+	if x.ExpectedQuantity == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 4, x.GetExpectedQuantity())
+	return offset
+}
+
+func (x *UpdateEngineeringOrderDraftReq) fastWriteField5(buf []byte) (offset int) {
+	if x.QualifiedQuantity == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 5, x.GetQualifiedQuantity())
+	return offset
+}
+
+func (x *UpdateEngineeringOrderDraftReq) fastWriteField6(buf []byte) (offset int) {
+	if x.Description == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 6, x.GetDescription())
+	return offset
+}
+
+func (x *UpdateEngineeringOrderDraftReq) fastWriteField7(buf []byte) (offset int) {
+	if x.ProcessId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 7, x.GetProcessId())
+	return offset
+}
+
+func (x *UpdateEngineeringOrderDraftReq) fastWriteField8(buf []byte) (offset int) {
+	if x.Name == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 8, x.GetName())
+	return offset
+}
+
+func (x *UpdateEngineeringOrderDraftResp) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	return offset
+}
+
+func (x *UpdateEngineeringOrderDraftResp) fastWriteField1(buf []byte) (offset int) {
+	if !x.Success {
+		return offset
+	}
+	offset += fastpb.WriteBool(buf[offset:], 1, x.GetSuccess())
+	return offset
+}
+
+func (x *DeleteEngineeringOrderDraftReq) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	return offset
+}
+
+func (x *DeleteEngineeringOrderDraftReq) fastWriteField1(buf []byte) (offset int) {
+	if x.Id == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 1, x.GetId())
+	return offset
+}
+
+func (x *DeleteEngineeringOrderDraftResp) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	return offset
+}
+
+func (x *DeleteEngineeringOrderDraftResp) fastWriteField1(buf []byte) (offset int) {
+	if !x.Success {
+		return offset
+	}
+	offset += fastpb.WriteBool(buf[offset:], 1, x.GetSuccess())
+	return offset
+}
+
+func (x *SubmitEngineeringOrderReq) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	return offset
+}
+
+func (x *SubmitEngineeringOrderReq) fastWriteField1(buf []byte) (offset int) {
+	if x.Id == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 1, x.GetId())
+	return offset
+}
+
+func (x *SubmitEngineeringOrderResp) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	return offset
+}
+
+func (x *SubmitEngineeringOrderResp) fastWriteField1(buf []byte) (offset int) {
+	if !x.Success {
+		return offset
+	}
+	offset += fastpb.WriteBool(buf[offset:], 1, x.GetSuccess())
+	return offset
+}
+
+func (x *GetEngineeringOrderReq) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	return offset
+}
+
+func (x *GetEngineeringOrderReq) fastWriteField1(buf []byte) (offset int) {
+	if x.Id == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 1, x.GetId())
+	return offset
+}
+
+func (x *GetEngineeringOrderResp) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	return offset
+}
+
+func (x *GetEngineeringOrderResp) fastWriteField1(buf []byte) (offset int) {
+	if x.EngineeringOrder == nil {
+		return offset
+	}
+	offset += fastpb.WriteMessage(buf[offset:], 1, x.GetEngineeringOrder())
+	return offset
+}
+
+func (x *ListEngineeringOrderReq) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	offset += x.fastWriteField2(buf[offset:])
+	offset += x.fastWriteField3(buf[offset:])
+	offset += x.fastWriteField4(buf[offset:])
+	offset += x.fastWriteField5(buf[offset:])
+	offset += x.fastWriteField6(buf[offset:])
+	offset += x.fastWriteField7(buf[offset:])
+	offset += x.fastWriteField8(buf[offset:])
+	offset += x.fastWriteField9(buf[offset:])
+	offset += x.fastWriteField10(buf[offset:])
+	offset += x.fastWriteField11(buf[offset:])
+	offset += x.fastWriteField12(buf[offset:])
+	return offset
+}
+
+func (x *ListEngineeringOrderReq) fastWriteField1(buf []byte) (offset int) {
+	if x.LeaderUserId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 1, x.GetLeaderUserId())
+	return offset
+}
+
+func (x *ListEngineeringOrderReq) fastWriteField2(buf []byte) (offset int) {
+	if x.ItemId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 2, x.GetItemId())
+	return offset
+}
+
+func (x *ListEngineeringOrderReq) fastWriteField3(buf []byte) (offset int) {
+	if x.PageNum == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 3, x.GetPageNum())
+	return offset
+}
+
+func (x *ListEngineeringOrderReq) fastWriteField4(buf []byte) (offset int) {
+	if x.PageSize == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 4, x.GetPageSize())
+	return offset
+}
+
+func (x *ListEngineeringOrderReq) fastWriteField5(buf []byte) (offset int) {
+	if x.ProcessId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 5, x.GetProcessId())
+	return offset
+}
+
+func (x *ListEngineeringOrderReq) fastWriteField6(buf []byte) (offset int) {
+	if x.Status == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt32(buf[offset:], 6, int32(x.GetStatus()))
+	return offset
+}
+
+func (x *ListEngineeringOrderReq) fastWriteField7(buf []byte) (offset int) {
+	if x.SinceTime == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 7, x.GetSinceTime())
+	return offset
+}
+
+func (x *ListEngineeringOrderReq) fastWriteField8(buf []byte) (offset int) {
+	if x.RecentSeconds == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 8, x.GetRecentSeconds())
+	return offset
+}
+
+func (x *ListEngineeringOrderReq) fastWriteField9(buf []byte) (offset int) {
+	if x.CursorUpdatedAt == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 9, x.GetCursorUpdatedAt())
+	return offset
+}
+
+func (x *ListEngineeringOrderReq) fastWriteField10(buf []byte) (offset int) {
+	if x.CursorId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 10, x.GetCursorId())
+	return offset
+}
+
+func (x *ListEngineeringOrderReq) fastWriteField11(buf []byte) (offset int) {
+	if x.NamePrefix == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 11, x.GetNamePrefix())
+	return offset
+}
+
+func (x *ListEngineeringOrderReq) fastWriteField12(buf []byte) (offset int) {
+	if x.ItemNamePrefix == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 12, x.GetItemNamePrefix())
+	return offset
+}
+
+func (x *ListEngineeringOrderResp) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	offset += x.fastWriteField2(buf[offset:])
+	offset += x.fastWriteField3(buf[offset:])
+	offset += x.fastWriteField4(buf[offset:])
+	offset += x.fastWriteField5(buf[offset:])
+	return offset
+}
+
+func (x *ListEngineeringOrderResp) fastWriteField1(buf []byte) (offset int) {
+	if x.EngineeringOrderList == nil {
+		return offset
+	}
+	for i := range x.GetEngineeringOrderList() {
+		offset += fastpb.WriteMessage(buf[offset:], 1, x.GetEngineeringOrderList()[i])
+	}
+	return offset
+}
+
+func (x *ListEngineeringOrderResp) fastWriteField2(buf []byte) (offset int) {
+	if x.Total == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 2, x.GetTotal())
+	return offset
+}
+
+func (x *ListEngineeringOrderResp) fastWriteField3(buf []byte) (offset int) {
+	if !x.HasMore {
+		return offset
+	}
+	offset += fastpb.WriteBool(buf[offset:], 3, x.GetHasMore())
+	return offset
+}
+
+func (x *ListEngineeringOrderResp) fastWriteField4(buf []byte) (offset int) {
+	if x.NextCursorUpdatedAt == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 4, x.GetNextCursorUpdatedAt())
+	return offset
+}
+
+func (x *ListEngineeringOrderResp) fastWriteField5(buf []byte) (offset int) {
+	if x.NextCursorId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 5, x.GetNextCursorId())
 	return offset
 }
 
@@ -3134,6 +6465,157 @@ func (x *ItemInfo) sizeField14() (n int) {
 	return n
 }
 
+func (x *ProcessItemInfo) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	n += x.sizeField2()
+	n += x.sizeField3()
+	n += x.sizeField4()
+	n += x.sizeField5()
+	return n
+}
+
+func (x *ProcessItemInfo) sizeField1() (n int) {
+	if x.Id == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(1, x.GetId())
+	return n
+}
+
+func (x *ProcessItemInfo) sizeField2() (n int) {
+	if x.ProcessId == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(2, x.GetProcessId())
+	return n
+}
+
+func (x *ProcessItemInfo) sizeField3() (n int) {
+	if x.ConsumeItemId == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(3, x.GetConsumeItemId())
+	return n
+}
+
+func (x *ProcessItemInfo) sizeField4() (n int) {
+	if x.Quantity == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(4, x.GetQuantity())
+	return n
+}
+
+func (x *ProcessItemInfo) sizeField5() (n int) {
+	if x.ConsumeItem == nil {
+		return n
+	}
+	n += fastpb.SizeMessage(5, x.GetConsumeItem())
+	return n
+}
+
+func (x *ProcessInfo) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	n += x.sizeField2()
+	n += x.sizeField3()
+	n += x.sizeField4()
+	n += x.sizeField5()
+	n += x.sizeField6()
+	n += x.sizeField7()
+	n += x.sizeField8()
+	n += x.sizeField9()
+	n += x.sizeField10()
+	return n
+}
+
+func (x *ProcessInfo) sizeField1() (n int) {
+	if x.Id == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(1, x.GetId())
+	return n
+}
+
+func (x *ProcessInfo) sizeField2() (n int) {
+	if x.ItemId == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(2, x.GetItemId())
+	return n
+}
+
+func (x *ProcessInfo) sizeField3() (n int) {
+	if x.OwnerUserId == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(3, x.GetOwnerUserId())
+	return n
+}
+
+func (x *ProcessInfo) sizeField4() (n int) {
+	if x.Name == "" {
+		return n
+	}
+	n += fastpb.SizeString(4, x.GetName())
+	return n
+}
+
+func (x *ProcessInfo) sizeField5() (n int) {
+	if x.Description == "" {
+		return n
+	}
+	n += fastpb.SizeString(5, x.GetDescription())
+	return n
+}
+
+func (x *ProcessInfo) sizeField6() (n int) {
+	if x.Status == 0 {
+		return n
+	}
+	n += fastpb.SizeInt32(6, int32(x.GetStatus()))
+	return n
+}
+
+func (x *ProcessInfo) sizeField7() (n int) {
+	if x.Item == nil {
+		return n
+	}
+	n += fastpb.SizeMessage(7, x.GetItem())
+	return n
+}
+
+func (x *ProcessInfo) sizeField8() (n int) {
+	if x.Items == nil {
+		return n
+	}
+	for i := range x.GetItems() {
+		n += fastpb.SizeMessage(8, x.GetItems()[i])
+	}
+	return n
+}
+
+func (x *ProcessInfo) sizeField9() (n int) {
+	if x.CreateTime == "" {
+		return n
+	}
+	n += fastpb.SizeString(9, x.GetCreateTime())
+	return n
+}
+
+func (x *ProcessInfo) sizeField10() (n int) {
+	if x.UpdateTime == "" {
+		return n
+	}
+	n += fastpb.SizeString(10, x.GetUpdateTime())
+	return n
+}
+
 func (x *ItemUnitInfo) Size() (n int) {
 	if x == nil {
 		return n
@@ -3145,6 +6627,7 @@ func (x *ItemUnitInfo) Size() (n int) {
 	n += x.sizeField5()
 	n += x.sizeField6()
 	n += x.sizeField7()
+	n += x.sizeField8()
 	return n
 }
 
@@ -3201,6 +6684,167 @@ func (x *ItemUnitInfo) sizeField7() (n int) {
 		return n
 	}
 	n += fastpb.SizeString(7, x.GetUpdateTime())
+	return n
+}
+
+func (x *ItemUnitInfo) sizeField8() (n int) {
+	if x.EngineeringOrderId == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(8, x.GetEngineeringOrderId())
+	return n
+}
+
+func (x *EngineeringOrderInfo) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	n += x.sizeField2()
+	n += x.sizeField3()
+	n += x.sizeField4()
+	n += x.sizeField5()
+	n += x.sizeField6()
+	n += x.sizeField7()
+	n += x.sizeField8()
+	n += x.sizeField9()
+	n += x.sizeField10()
+	n += x.sizeField11()
+	n += x.sizeField12()
+	n += x.sizeField13()
+	n += x.sizeField14()
+	n += x.sizeField15()
+	n += x.sizeField16()
+	return n
+}
+
+func (x *EngineeringOrderInfo) sizeField1() (n int) {
+	if x.Id == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(1, x.GetId())
+	return n
+}
+
+func (x *EngineeringOrderInfo) sizeField2() (n int) {
+	if x.LeaderUserId == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(2, x.GetLeaderUserId())
+	return n
+}
+
+func (x *EngineeringOrderInfo) sizeField3() (n int) {
+	if x.ItemId == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(3, x.GetItemId())
+	return n
+}
+
+func (x *EngineeringOrderInfo) sizeField4() (n int) {
+	if x.Item == nil {
+		return n
+	}
+	n += fastpb.SizeMessage(4, x.GetItem())
+	return n
+}
+
+func (x *EngineeringOrderInfo) sizeField5() (n int) {
+	if x.ExpectedQuantity == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(5, x.GetExpectedQuantity())
+	return n
+}
+
+func (x *EngineeringOrderInfo) sizeField6() (n int) {
+	if x.QualifiedQuantity == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(6, x.GetQualifiedQuantity())
+	return n
+}
+
+func (x *EngineeringOrderInfo) sizeField7() (n int) {
+	if x.ProducedQuantity == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(7, x.GetProducedQuantity())
+	return n
+}
+
+func (x *EngineeringOrderInfo) sizeField8() (n int) {
+	if x.Description == "" {
+		return n
+	}
+	n += fastpb.SizeString(8, x.GetDescription())
+	return n
+}
+
+func (x *EngineeringOrderInfo) sizeField9() (n int) {
+	if x.ItemUnits == nil {
+		return n
+	}
+	for i := range x.GetItemUnits() {
+		n += fastpb.SizeMessage(9, x.GetItemUnits()[i])
+	}
+	return n
+}
+
+func (x *EngineeringOrderInfo) sizeField10() (n int) {
+	if x.CreateTime == "" {
+		return n
+	}
+	n += fastpb.SizeString(10, x.GetCreateTime())
+	return n
+}
+
+func (x *EngineeringOrderInfo) sizeField11() (n int) {
+	if x.UpdateTime == "" {
+		return n
+	}
+	n += fastpb.SizeString(11, x.GetUpdateTime())
+	return n
+}
+
+func (x *EngineeringOrderInfo) sizeField12() (n int) {
+	if x.ProcessId == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(12, x.GetProcessId())
+	return n
+}
+
+func (x *EngineeringOrderInfo) sizeField13() (n int) {
+	if x.Process == nil {
+		return n
+	}
+	n += fastpb.SizeMessage(13, x.GetProcess())
+	return n
+}
+
+func (x *EngineeringOrderInfo) sizeField14() (n int) {
+	if x.Status == 0 {
+		return n
+	}
+	n += fastpb.SizeInt32(14, int32(x.GetStatus()))
+	return n
+}
+
+func (x *EngineeringOrderInfo) sizeField15() (n int) {
+	if x.UnqualifiedQuantity == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(15, x.GetUnqualifiedQuantity())
+	return n
+}
+
+func (x *EngineeringOrderInfo) sizeField16() (n int) {
+	if x.Name == "" {
+		return n
+	}
+	n += fastpb.SizeString(16, x.GetName())
 	return n
 }
 
@@ -3281,6 +6925,7 @@ func (x *InventoryFlowInfo) Size() (n int) {
 	n += x.sizeField10()
 	n += x.sizeField11()
 	n += x.sizeField12()
+	n += x.sizeField13()
 	return n
 }
 
@@ -3381,6 +7026,14 @@ func (x *InventoryFlowInfo) sizeField12() (n int) {
 		return n
 	}
 	n += fastpb.SizeString(12, x.GetUpdateTime())
+	return n
+}
+
+func (x *InventoryFlowInfo) sizeField13() (n int) {
+	if x.Name == "" {
+		return n
+	}
+	n += fastpb.SizeString(13, x.GetName())
 	return n
 }
 
@@ -3532,6 +7185,8 @@ func (x *ListItemReq) Size() (n int) {
 	n += x.sizeField1()
 	n += x.sizeField2()
 	n += x.sizeField3()
+	n += x.sizeField4()
+	n += x.sizeField5()
 	return n
 }
 
@@ -3559,12 +7214,31 @@ func (x *ListItemReq) sizeField3() (n int) {
 	return n
 }
 
+func (x *ListItemReq) sizeField4() (n int) {
+	if x.CursorName == "" {
+		return n
+	}
+	n += fastpb.SizeString(4, x.GetCursorName())
+	return n
+}
+
+func (x *ListItemReq) sizeField5() (n int) {
+	if x.CursorId == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(5, x.GetCursorId())
+	return n
+}
+
 func (x *ListItemResp) Size() (n int) {
 	if x == nil {
 		return n
 	}
 	n += x.sizeField1()
 	n += x.sizeField2()
+	n += x.sizeField3()
+	n += x.sizeField4()
+	n += x.sizeField5()
 	return n
 }
 
@@ -3586,6 +7260,460 @@ func (x *ListItemResp) sizeField2() (n int) {
 	return n
 }
 
+func (x *ListItemResp) sizeField3() (n int) {
+	if !x.HasMore {
+		return n
+	}
+	n += fastpb.SizeBool(3, x.GetHasMore())
+	return n
+}
+
+func (x *ListItemResp) sizeField4() (n int) {
+	if x.NextCursorName == "" {
+		return n
+	}
+	n += fastpb.SizeString(4, x.GetNextCursorName())
+	return n
+}
+
+func (x *ListItemResp) sizeField5() (n int) {
+	if x.NextCursorId == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(5, x.GetNextCursorId())
+	return n
+}
+
+func (x *ProcessItemReq) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	n += x.sizeField2()
+	return n
+}
+
+func (x *ProcessItemReq) sizeField1() (n int) {
+	if x.ConsumeItemId == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(1, x.GetConsumeItemId())
+	return n
+}
+
+func (x *ProcessItemReq) sizeField2() (n int) {
+	if x.Quantity == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(2, x.GetQuantity())
+	return n
+}
+
+func (x *CreateProcessDraftReq) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	n += x.sizeField2()
+	n += x.sizeField3()
+	n += x.sizeField4()
+	n += x.sizeField5()
+	return n
+}
+
+func (x *CreateProcessDraftReq) sizeField1() (n int) {
+	if x.OwnerUserId == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(1, x.GetOwnerUserId())
+	return n
+}
+
+func (x *CreateProcessDraftReq) sizeField2() (n int) {
+	if x.ItemId == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(2, x.GetItemId())
+	return n
+}
+
+func (x *CreateProcessDraftReq) sizeField3() (n int) {
+	if x.Name == "" {
+		return n
+	}
+	n += fastpb.SizeString(3, x.GetName())
+	return n
+}
+
+func (x *CreateProcessDraftReq) sizeField4() (n int) {
+	if x.Description == "" {
+		return n
+	}
+	n += fastpb.SizeString(4, x.GetDescription())
+	return n
+}
+
+func (x *CreateProcessDraftReq) sizeField5() (n int) {
+	if x.Items == nil {
+		return n
+	}
+	for i := range x.GetItems() {
+		n += fastpb.SizeMessage(5, x.GetItems()[i])
+	}
+	return n
+}
+
+func (x *CreateProcessDraftResp) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	return n
+}
+
+func (x *CreateProcessDraftResp) sizeField1() (n int) {
+	if x.Id == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(1, x.GetId())
+	return n
+}
+
+func (x *UpdateProcessDraftReq) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	n += x.sizeField2()
+	n += x.sizeField3()
+	n += x.sizeField4()
+	n += x.sizeField5()
+	n += x.sizeField6()
+	return n
+}
+
+func (x *UpdateProcessDraftReq) sizeField1() (n int) {
+	if x.Id == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(1, x.GetId())
+	return n
+}
+
+func (x *UpdateProcessDraftReq) sizeField2() (n int) {
+	if x.OwnerUserId == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(2, x.GetOwnerUserId())
+	return n
+}
+
+func (x *UpdateProcessDraftReq) sizeField3() (n int) {
+	if x.ItemId == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(3, x.GetItemId())
+	return n
+}
+
+func (x *UpdateProcessDraftReq) sizeField4() (n int) {
+	if x.Name == "" {
+		return n
+	}
+	n += fastpb.SizeString(4, x.GetName())
+	return n
+}
+
+func (x *UpdateProcessDraftReq) sizeField5() (n int) {
+	if x.Description == "" {
+		return n
+	}
+	n += fastpb.SizeString(5, x.GetDescription())
+	return n
+}
+
+func (x *UpdateProcessDraftReq) sizeField6() (n int) {
+	if x.Items == nil {
+		return n
+	}
+	for i := range x.GetItems() {
+		n += fastpb.SizeMessage(6, x.GetItems()[i])
+	}
+	return n
+}
+
+func (x *UpdateProcessDraftResp) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	return n
+}
+
+func (x *UpdateProcessDraftResp) sizeField1() (n int) {
+	if !x.Success {
+		return n
+	}
+	n += fastpb.SizeBool(1, x.GetSuccess())
+	return n
+}
+
+func (x *DeleteProcessDraftReq) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	return n
+}
+
+func (x *DeleteProcessDraftReq) sizeField1() (n int) {
+	if x.Id == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(1, x.GetId())
+	return n
+}
+
+func (x *DeleteProcessDraftResp) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	return n
+}
+
+func (x *DeleteProcessDraftResp) sizeField1() (n int) {
+	if !x.Success {
+		return n
+	}
+	n += fastpb.SizeBool(1, x.GetSuccess())
+	return n
+}
+
+func (x *SubmitProcessReq) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	return n
+}
+
+func (x *SubmitProcessReq) sizeField1() (n int) {
+	if x.Id == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(1, x.GetId())
+	return n
+}
+
+func (x *SubmitProcessResp) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	return n
+}
+
+func (x *SubmitProcessResp) sizeField1() (n int) {
+	if !x.Success {
+		return n
+	}
+	n += fastpb.SizeBool(1, x.GetSuccess())
+	return n
+}
+
+func (x *GetProcessReq) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	return n
+}
+
+func (x *GetProcessReq) sizeField1() (n int) {
+	if x.Id == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(1, x.GetId())
+	return n
+}
+
+func (x *GetProcessResp) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	return n
+}
+
+func (x *GetProcessResp) sizeField1() (n int) {
+	if x.Process == nil {
+		return n
+	}
+	n += fastpb.SizeMessage(1, x.GetProcess())
+	return n
+}
+
+func (x *ListProcessReq) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	n += x.sizeField2()
+	n += x.sizeField3()
+	n += x.sizeField4()
+	n += x.sizeField5()
+	n += x.sizeField6()
+	n += x.sizeField7()
+	n += x.sizeField8()
+	n += x.sizeField9()
+	n += x.sizeField10()
+	n += x.sizeField11()
+	return n
+}
+
+func (x *ListProcessReq) sizeField1() (n int) {
+	if x.OwnerUserId == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(1, x.GetOwnerUserId())
+	return n
+}
+
+func (x *ListProcessReq) sizeField2() (n int) {
+	if x.ItemId == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(2, x.GetItemId())
+	return n
+}
+
+func (x *ListProcessReq) sizeField3() (n int) {
+	if x.Status == 0 {
+		return n
+	}
+	n += fastpb.SizeInt32(3, int32(x.GetStatus()))
+	return n
+}
+
+func (x *ListProcessReq) sizeField4() (n int) {
+	if x.PageNum == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(4, x.GetPageNum())
+	return n
+}
+
+func (x *ListProcessReq) sizeField5() (n int) {
+	if x.PageSize == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(5, x.GetPageSize())
+	return n
+}
+
+func (x *ListProcessReq) sizeField6() (n int) {
+	if x.SinceTime == "" {
+		return n
+	}
+	n += fastpb.SizeString(6, x.GetSinceTime())
+	return n
+}
+
+func (x *ListProcessReq) sizeField7() (n int) {
+	if x.RecentSeconds == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(7, x.GetRecentSeconds())
+	return n
+}
+
+func (x *ListProcessReq) sizeField8() (n int) {
+	if x.CursorUpdatedAt == "" {
+		return n
+	}
+	n += fastpb.SizeString(8, x.GetCursorUpdatedAt())
+	return n
+}
+
+func (x *ListProcessReq) sizeField9() (n int) {
+	if x.CursorId == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(9, x.GetCursorId())
+	return n
+}
+
+func (x *ListProcessReq) sizeField10() (n int) {
+	if x.NamePrefix == "" {
+		return n
+	}
+	n += fastpb.SizeString(10, x.GetNamePrefix())
+	return n
+}
+
+func (x *ListProcessReq) sizeField11() (n int) {
+	if x.ItemNamePrefix == "" {
+		return n
+	}
+	n += fastpb.SizeString(11, x.GetItemNamePrefix())
+	return n
+}
+
+func (x *ListProcessResp) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	n += x.sizeField2()
+	n += x.sizeField3()
+	n += x.sizeField4()
+	n += x.sizeField5()
+	return n
+}
+
+func (x *ListProcessResp) sizeField1() (n int) {
+	if x.ProcessList == nil {
+		return n
+	}
+	for i := range x.GetProcessList() {
+		n += fastpb.SizeMessage(1, x.GetProcessList()[i])
+	}
+	return n
+}
+
+func (x *ListProcessResp) sizeField2() (n int) {
+	if x.Total == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(2, x.GetTotal())
+	return n
+}
+
+func (x *ListProcessResp) sizeField3() (n int) {
+	if !x.HasMore {
+		return n
+	}
+	n += fastpb.SizeBool(3, x.GetHasMore())
+	return n
+}
+
+func (x *ListProcessResp) sizeField4() (n int) {
+	if x.NextCursorUpdatedAt == "" {
+		return n
+	}
+	n += fastpb.SizeString(4, x.GetNextCursorUpdatedAt())
+	return n
+}
+
+func (x *ListProcessResp) sizeField5() (n int) {
+	if x.NextCursorId == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(5, x.GetNextCursorId())
+	return n
+}
+
 func (x *AddItemUnitReq) Size() (n int) {
 	if x == nil {
 		return n
@@ -3594,6 +7722,7 @@ func (x *AddItemUnitReq) Size() (n int) {
 	n += x.sizeField2()
 	n += x.sizeField3()
 	n += x.sizeField4()
+	n += x.sizeField5()
 	return n
 }
 
@@ -3626,6 +7755,14 @@ func (x *AddItemUnitReq) sizeField4() (n int) {
 		return n
 	}
 	n += fastpb.SizeString(4, x.GetDescription())
+	return n
+}
+
+func (x *AddItemUnitReq) sizeField5() (n int) {
+	if x.EngineeringOrderId == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(5, x.GetEngineeringOrderId())
 	return n
 }
 
@@ -3736,6 +7873,9 @@ func (x *ListItemUnitReq) Size() (n int) {
 	n += x.sizeField3()
 	n += x.sizeField4()
 	n += x.sizeField5()
+	n += x.sizeField6()
+	n += x.sizeField7()
+	n += x.sizeField8()
 	return n
 }
 
@@ -3779,12 +7919,38 @@ func (x *ListItemUnitReq) sizeField5() (n int) {
 	return n
 }
 
+func (x *ListItemUnitReq) sizeField6() (n int) {
+	if x.EngineeringOrderId == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(6, x.GetEngineeringOrderId())
+	return n
+}
+
+func (x *ListItemUnitReq) sizeField7() (n int) {
+	if x.CursorId == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(7, x.GetCursorId())
+	return n
+}
+
+func (x *ListItemUnitReq) sizeField8() (n int) {
+	if x.ItemNamePrefix == "" {
+		return n
+	}
+	n += fastpb.SizeString(8, x.GetItemNamePrefix())
+	return n
+}
+
 func (x *ListItemUnitResp) Size() (n int) {
 	if x == nil {
 		return n
 	}
 	n += x.sizeField1()
 	n += x.sizeField2()
+	n += x.sizeField3()
+	n += x.sizeField4()
 	return n
 }
 
@@ -3803,6 +7969,22 @@ func (x *ListItemUnitResp) sizeField2() (n int) {
 		return n
 	}
 	n += fastpb.SizeInt64(2, x.GetTotal())
+	return n
+}
+
+func (x *ListItemUnitResp) sizeField3() (n int) {
+	if !x.HasMore {
+		return n
+	}
+	n += fastpb.SizeBool(3, x.GetHasMore())
+	return n
+}
+
+func (x *ListItemUnitResp) sizeField4() (n int) {
+	if x.NextCursorId == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(4, x.GetNextCursorId())
 	return n
 }
 
@@ -3841,6 +8023,7 @@ func (x *CreateInventoryFlowReq) Size() (n int) {
 	n += x.sizeField4()
 	n += x.sizeField5()
 	n += x.sizeField6()
+	n += x.sizeField7()
 	return n
 }
 
@@ -3899,6 +8082,14 @@ func (x *CreateInventoryFlowReq) sizeField6() (n int) {
 	return n
 }
 
+func (x *CreateInventoryFlowReq) sizeField7() (n int) {
+	if x.Name == "" {
+		return n
+	}
+	n += fastpb.SizeString(7, x.GetName())
+	return n
+}
+
 func (x *CreateInventoryFlowResp) Size() (n int) {
 	if x == nil {
 		return n
@@ -3926,6 +8117,7 @@ func (x *UpdateInventoryFlowDraftReq) Size() (n int) {
 	n += x.sizeField5()
 	n += x.sizeField6()
 	n += x.sizeField7()
+	n += x.sizeField8()
 	return n
 }
 
@@ -3989,6 +8181,14 @@ func (x *UpdateInventoryFlowDraftReq) sizeField7() (n int) {
 			n += fastpb.SizeInt64(numTagOrKey, x.GetItemUnitIds()[numIdxOrVal])
 			return n
 		})
+	return n
+}
+
+func (x *UpdateInventoryFlowDraftReq) sizeField8() (n int) {
+	if x.Name == "" {
+		return n
+	}
+	n += fastpb.SizeString(8, x.GetName())
 	return n
 }
 
@@ -4065,6 +8265,52 @@ func (x *SubmitInventoryFlowResp) Size() (n int) {
 }
 
 func (x *SubmitInventoryFlowResp) sizeField1() (n int) {
+	if !x.Success {
+		return n
+	}
+	n += fastpb.SizeBool(1, x.GetSuccess())
+	return n
+}
+
+func (x *CompleteInventoryFlowReq) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	n += x.sizeField2()
+	return n
+}
+
+func (x *CompleteInventoryFlowReq) sizeField1() (n int) {
+	if x.Id == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(1, x.GetId())
+	return n
+}
+
+func (x *CompleteInventoryFlowReq) sizeField2() (n int) {
+	if len(x.ItemUnitIds) == 0 {
+		return n
+	}
+	n += fastpb.SizeListPacked(2, len(x.GetItemUnitIds()),
+		func(numTagOrKey, numIdxOrVal int32) int {
+			n := 0
+			n += fastpb.SizeInt64(numTagOrKey, x.GetItemUnitIds()[numIdxOrVal])
+			return n
+		})
+	return n
+}
+
+func (x *CompleteInventoryFlowResp) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	return n
+}
+
+func (x *CompleteInventoryFlowResp) sizeField1() (n int) {
 	if !x.Success {
 		return n
 	}
@@ -4164,54 +8410,108 @@ func (x *ListInventoryFlowReq) Size() (n int) {
 	n += x.sizeField4()
 	n += x.sizeField5()
 	n += x.sizeField6()
+	n += x.sizeField7()
+	n += x.sizeField8()
+	n += x.sizeField9()
+	n += x.sizeField10()
+	n += x.sizeField11()
+	n += x.sizeField12()
 	return n
 }
 
 func (x *ListInventoryFlowReq) sizeField1() (n int) {
-	if x.PageNum == 0 {
+	if x.UserId == 0 {
 		return n
 	}
-	n += fastpb.SizeInt64(1, x.GetPageNum())
+	n += fastpb.SizeInt64(1, x.GetUserId())
 	return n
 }
 
 func (x *ListInventoryFlowReq) sizeField2() (n int) {
-	if x.PageSize == 0 {
+	if !x.IsTo {
 		return n
 	}
-	n += fastpb.SizeInt64(2, x.GetPageSize())
+	n += fastpb.SizeBool(2, x.GetIsTo())
 	return n
 }
 
 func (x *ListInventoryFlowReq) sizeField3() (n int) {
-	if x.FromUserId == 0 {
+	if x.FlowStatus == 0 {
 		return n
 	}
-	n += fastpb.SizeInt64(3, x.GetFromUserId())
+	n += fastpb.SizeInt32(3, int32(x.GetFlowStatus()))
 	return n
 }
 
 func (x *ListInventoryFlowReq) sizeField4() (n int) {
-	if x.ToUserId == 0 {
+	if x.PageNum == 0 {
 		return n
 	}
-	n += fastpb.SizeInt64(4, x.GetToUserId())
+	n += fastpb.SizeInt64(4, x.GetPageNum())
 	return n
 }
 
 func (x *ListInventoryFlowReq) sizeField5() (n int) {
-	if x.FlowType == 0 {
+	if x.PageSize == 0 {
 		return n
 	}
-	n += fastpb.SizeInt32(5, int32(x.GetFlowType()))
+	n += fastpb.SizeInt64(5, x.GetPageSize())
 	return n
 }
 
 func (x *ListInventoryFlowReq) sizeField6() (n int) {
-	if x.FlowStatus == 0 {
+	if x.SinceTime == "" {
 		return n
 	}
-	n += fastpb.SizeInt32(6, int32(x.GetFlowStatus()))
+	n += fastpb.SizeString(6, x.GetSinceTime())
+	return n
+}
+
+func (x *ListInventoryFlowReq) sizeField7() (n int) {
+	if x.RecentSeconds == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(7, x.GetRecentSeconds())
+	return n
+}
+
+func (x *ListInventoryFlowReq) sizeField8() (n int) {
+	if x.CursorUpdatedAt == "" {
+		return n
+	}
+	n += fastpb.SizeString(8, x.GetCursorUpdatedAt())
+	return n
+}
+
+func (x *ListInventoryFlowReq) sizeField9() (n int) {
+	if x.CursorId == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(9, x.GetCursorId())
+	return n
+}
+
+func (x *ListInventoryFlowReq) sizeField10() (n int) {
+	if x.NamePrefix == "" {
+		return n
+	}
+	n += fastpb.SizeString(10, x.GetNamePrefix())
+	return n
+}
+
+func (x *ListInventoryFlowReq) sizeField11() (n int) {
+	if x.ItemNamePrefix == "" {
+		return n
+	}
+	n += fastpb.SizeString(11, x.GetItemNamePrefix())
+	return n
+}
+
+func (x *ListInventoryFlowReq) sizeField12() (n int) {
+	if x.Scope == 0 {
+		return n
+	}
+	n += fastpb.SizeInt32(12, int32(x.GetScope()))
 	return n
 }
 
@@ -4221,6 +8521,9 @@ func (x *ListInventoryFlowResp) Size() (n int) {
 	}
 	n += x.sizeField1()
 	n += x.sizeField2()
+	n += x.sizeField3()
+	n += x.sizeField4()
+	n += x.sizeField5()
 	return n
 }
 
@@ -4242,6 +8545,476 @@ func (x *ListInventoryFlowResp) sizeField2() (n int) {
 	return n
 }
 
+func (x *ListInventoryFlowResp) sizeField3() (n int) {
+	if !x.HasMore {
+		return n
+	}
+	n += fastpb.SizeBool(3, x.GetHasMore())
+	return n
+}
+
+func (x *ListInventoryFlowResp) sizeField4() (n int) {
+	if x.NextCursorUpdatedAt == "" {
+		return n
+	}
+	n += fastpb.SizeString(4, x.GetNextCursorUpdatedAt())
+	return n
+}
+
+func (x *ListInventoryFlowResp) sizeField5() (n int) {
+	if x.NextCursorId == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(5, x.GetNextCursorId())
+	return n
+}
+
+func (x *CreateEngineeringOrderDraftReq) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	n += x.sizeField2()
+	n += x.sizeField3()
+	n += x.sizeField4()
+	n += x.sizeField5()
+	n += x.sizeField6()
+	n += x.sizeField7()
+	return n
+}
+
+func (x *CreateEngineeringOrderDraftReq) sizeField1() (n int) {
+	if x.LeaderUserId == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(1, x.GetLeaderUserId())
+	return n
+}
+
+func (x *CreateEngineeringOrderDraftReq) sizeField2() (n int) {
+	if x.ItemId == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(2, x.GetItemId())
+	return n
+}
+
+func (x *CreateEngineeringOrderDraftReq) sizeField3() (n int) {
+	if x.ExpectedQuantity == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(3, x.GetExpectedQuantity())
+	return n
+}
+
+func (x *CreateEngineeringOrderDraftReq) sizeField4() (n int) {
+	if x.QualifiedQuantity == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(4, x.GetQualifiedQuantity())
+	return n
+}
+
+func (x *CreateEngineeringOrderDraftReq) sizeField5() (n int) {
+	if x.Description == "" {
+		return n
+	}
+	n += fastpb.SizeString(5, x.GetDescription())
+	return n
+}
+
+func (x *CreateEngineeringOrderDraftReq) sizeField6() (n int) {
+	if x.ProcessId == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(6, x.GetProcessId())
+	return n
+}
+
+func (x *CreateEngineeringOrderDraftReq) sizeField7() (n int) {
+	if x.Name == "" {
+		return n
+	}
+	n += fastpb.SizeString(7, x.GetName())
+	return n
+}
+
+func (x *CreateEngineeringOrderDraftResp) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	return n
+}
+
+func (x *CreateEngineeringOrderDraftResp) sizeField1() (n int) {
+	if x.Id == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(1, x.GetId())
+	return n
+}
+
+func (x *UpdateEngineeringOrderDraftReq) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	n += x.sizeField2()
+	n += x.sizeField3()
+	n += x.sizeField4()
+	n += x.sizeField5()
+	n += x.sizeField6()
+	n += x.sizeField7()
+	n += x.sizeField8()
+	return n
+}
+
+func (x *UpdateEngineeringOrderDraftReq) sizeField1() (n int) {
+	if x.Id == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(1, x.GetId())
+	return n
+}
+
+func (x *UpdateEngineeringOrderDraftReq) sizeField2() (n int) {
+	if x.LeaderUserId == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(2, x.GetLeaderUserId())
+	return n
+}
+
+func (x *UpdateEngineeringOrderDraftReq) sizeField3() (n int) {
+	if x.ItemId == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(3, x.GetItemId())
+	return n
+}
+
+func (x *UpdateEngineeringOrderDraftReq) sizeField4() (n int) {
+	if x.ExpectedQuantity == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(4, x.GetExpectedQuantity())
+	return n
+}
+
+func (x *UpdateEngineeringOrderDraftReq) sizeField5() (n int) {
+	if x.QualifiedQuantity == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(5, x.GetQualifiedQuantity())
+	return n
+}
+
+func (x *UpdateEngineeringOrderDraftReq) sizeField6() (n int) {
+	if x.Description == "" {
+		return n
+	}
+	n += fastpb.SizeString(6, x.GetDescription())
+	return n
+}
+
+func (x *UpdateEngineeringOrderDraftReq) sizeField7() (n int) {
+	if x.ProcessId == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(7, x.GetProcessId())
+	return n
+}
+
+func (x *UpdateEngineeringOrderDraftReq) sizeField8() (n int) {
+	if x.Name == "" {
+		return n
+	}
+	n += fastpb.SizeString(8, x.GetName())
+	return n
+}
+
+func (x *UpdateEngineeringOrderDraftResp) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	return n
+}
+
+func (x *UpdateEngineeringOrderDraftResp) sizeField1() (n int) {
+	if !x.Success {
+		return n
+	}
+	n += fastpb.SizeBool(1, x.GetSuccess())
+	return n
+}
+
+func (x *DeleteEngineeringOrderDraftReq) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	return n
+}
+
+func (x *DeleteEngineeringOrderDraftReq) sizeField1() (n int) {
+	if x.Id == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(1, x.GetId())
+	return n
+}
+
+func (x *DeleteEngineeringOrderDraftResp) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	return n
+}
+
+func (x *DeleteEngineeringOrderDraftResp) sizeField1() (n int) {
+	if !x.Success {
+		return n
+	}
+	n += fastpb.SizeBool(1, x.GetSuccess())
+	return n
+}
+
+func (x *SubmitEngineeringOrderReq) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	return n
+}
+
+func (x *SubmitEngineeringOrderReq) sizeField1() (n int) {
+	if x.Id == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(1, x.GetId())
+	return n
+}
+
+func (x *SubmitEngineeringOrderResp) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	return n
+}
+
+func (x *SubmitEngineeringOrderResp) sizeField1() (n int) {
+	if !x.Success {
+		return n
+	}
+	n += fastpb.SizeBool(1, x.GetSuccess())
+	return n
+}
+
+func (x *GetEngineeringOrderReq) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	return n
+}
+
+func (x *GetEngineeringOrderReq) sizeField1() (n int) {
+	if x.Id == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(1, x.GetId())
+	return n
+}
+
+func (x *GetEngineeringOrderResp) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	return n
+}
+
+func (x *GetEngineeringOrderResp) sizeField1() (n int) {
+	if x.EngineeringOrder == nil {
+		return n
+	}
+	n += fastpb.SizeMessage(1, x.GetEngineeringOrder())
+	return n
+}
+
+func (x *ListEngineeringOrderReq) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	n += x.sizeField2()
+	n += x.sizeField3()
+	n += x.sizeField4()
+	n += x.sizeField5()
+	n += x.sizeField6()
+	n += x.sizeField7()
+	n += x.sizeField8()
+	n += x.sizeField9()
+	n += x.sizeField10()
+	n += x.sizeField11()
+	n += x.sizeField12()
+	return n
+}
+
+func (x *ListEngineeringOrderReq) sizeField1() (n int) {
+	if x.LeaderUserId == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(1, x.GetLeaderUserId())
+	return n
+}
+
+func (x *ListEngineeringOrderReq) sizeField2() (n int) {
+	if x.ItemId == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(2, x.GetItemId())
+	return n
+}
+
+func (x *ListEngineeringOrderReq) sizeField3() (n int) {
+	if x.PageNum == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(3, x.GetPageNum())
+	return n
+}
+
+func (x *ListEngineeringOrderReq) sizeField4() (n int) {
+	if x.PageSize == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(4, x.GetPageSize())
+	return n
+}
+
+func (x *ListEngineeringOrderReq) sizeField5() (n int) {
+	if x.ProcessId == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(5, x.GetProcessId())
+	return n
+}
+
+func (x *ListEngineeringOrderReq) sizeField6() (n int) {
+	if x.Status == 0 {
+		return n
+	}
+	n += fastpb.SizeInt32(6, int32(x.GetStatus()))
+	return n
+}
+
+func (x *ListEngineeringOrderReq) sizeField7() (n int) {
+	if x.SinceTime == "" {
+		return n
+	}
+	n += fastpb.SizeString(7, x.GetSinceTime())
+	return n
+}
+
+func (x *ListEngineeringOrderReq) sizeField8() (n int) {
+	if x.RecentSeconds == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(8, x.GetRecentSeconds())
+	return n
+}
+
+func (x *ListEngineeringOrderReq) sizeField9() (n int) {
+	if x.CursorUpdatedAt == "" {
+		return n
+	}
+	n += fastpb.SizeString(9, x.GetCursorUpdatedAt())
+	return n
+}
+
+func (x *ListEngineeringOrderReq) sizeField10() (n int) {
+	if x.CursorId == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(10, x.GetCursorId())
+	return n
+}
+
+func (x *ListEngineeringOrderReq) sizeField11() (n int) {
+	if x.NamePrefix == "" {
+		return n
+	}
+	n += fastpb.SizeString(11, x.GetNamePrefix())
+	return n
+}
+
+func (x *ListEngineeringOrderReq) sizeField12() (n int) {
+	if x.ItemNamePrefix == "" {
+		return n
+	}
+	n += fastpb.SizeString(12, x.GetItemNamePrefix())
+	return n
+}
+
+func (x *ListEngineeringOrderResp) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	n += x.sizeField2()
+	n += x.sizeField3()
+	n += x.sizeField4()
+	n += x.sizeField5()
+	return n
+}
+
+func (x *ListEngineeringOrderResp) sizeField1() (n int) {
+	if x.EngineeringOrderList == nil {
+		return n
+	}
+	for i := range x.GetEngineeringOrderList() {
+		n += fastpb.SizeMessage(1, x.GetEngineeringOrderList()[i])
+	}
+	return n
+}
+
+func (x *ListEngineeringOrderResp) sizeField2() (n int) {
+	if x.Total == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(2, x.GetTotal())
+	return n
+}
+
+func (x *ListEngineeringOrderResp) sizeField3() (n int) {
+	if !x.HasMore {
+		return n
+	}
+	n += fastpb.SizeBool(3, x.GetHasMore())
+	return n
+}
+
+func (x *ListEngineeringOrderResp) sizeField4() (n int) {
+	if x.NextCursorUpdatedAt == "" {
+		return n
+	}
+	n += fastpb.SizeString(4, x.GetNextCursorUpdatedAt())
+	return n
+}
+
+func (x *ListEngineeringOrderResp) sizeField5() (n int) {
+	if x.NextCursorId == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(5, x.GetNextCursorId())
+	return n
+}
+
 var fieldIDToName_ItemInfo = map[int32]string{
 	1:  "Id",
 	2:  "Name",
@@ -4259,6 +9032,27 @@ var fieldIDToName_ItemInfo = map[int32]string{
 	14: "UpdateTime",
 }
 
+var fieldIDToName_ProcessItemInfo = map[int32]string{
+	1: "Id",
+	2: "ProcessId",
+	3: "ConsumeItemId",
+	4: "Quantity",
+	5: "ConsumeItem",
+}
+
+var fieldIDToName_ProcessInfo = map[int32]string{
+	1:  "Id",
+	2:  "ItemId",
+	3:  "OwnerUserId",
+	4:  "Name",
+	5:  "Description",
+	6:  "Status",
+	7:  "Item",
+	8:  "Items",
+	9:  "CreateTime",
+	10: "UpdateTime",
+}
+
 var fieldIDToName_ItemUnitInfo = map[int32]string{
 	1: "Id",
 	2: "ItemId",
@@ -4267,6 +9061,26 @@ var fieldIDToName_ItemUnitInfo = map[int32]string{
 	5: "Description",
 	6: "CreateTime",
 	7: "UpdateTime",
+	8: "EngineeringOrderId",
+}
+
+var fieldIDToName_EngineeringOrderInfo = map[int32]string{
+	1:  "Id",
+	2:  "LeaderUserId",
+	3:  "ItemId",
+	4:  "Item",
+	5:  "ExpectedQuantity",
+	6:  "QualifiedQuantity",
+	7:  "ProducedQuantity",
+	8:  "Description",
+	9:  "ItemUnits",
+	10: "CreateTime",
+	11: "UpdateTime",
+	12: "ProcessId",
+	13: "Process",
+	14: "Status",
+	15: "UnqualifiedQuantity",
+	16: "Name",
 }
 
 var fieldIDToName_InventoryFlowItemInfo = map[int32]string{
@@ -4291,6 +9105,7 @@ var fieldIDToName_InventoryFlowInfo = map[int32]string{
 	10: "ItemUnits",
 	11: "CreateTime",
 	12: "UpdateTime",
+	13: "Name",
 }
 
 var fieldIDToName_AddItemReq = map[int32]string{
@@ -4326,11 +9141,92 @@ var fieldIDToName_ListItemReq = map[int32]string{
 	1: "PageNum",
 	2: "PageSize",
 	3: "NamePrefix",
+	4: "CursorName",
+	5: "CursorId",
 }
 
 var fieldIDToName_ListItemResp = map[int32]string{
 	1: "ItemList",
 	2: "Total",
+	3: "HasMore",
+	4: "NextCursorName",
+	5: "NextCursorId",
+}
+
+var fieldIDToName_ProcessItemReq = map[int32]string{
+	1: "ConsumeItemId",
+	2: "Quantity",
+}
+
+var fieldIDToName_CreateProcessDraftReq = map[int32]string{
+	1: "OwnerUserId",
+	2: "ItemId",
+	3: "Name",
+	4: "Description",
+	5: "Items",
+}
+
+var fieldIDToName_CreateProcessDraftResp = map[int32]string{
+	1: "Id",
+}
+
+var fieldIDToName_UpdateProcessDraftReq = map[int32]string{
+	1: "Id",
+	2: "OwnerUserId",
+	3: "ItemId",
+	4: "Name",
+	5: "Description",
+	6: "Items",
+}
+
+var fieldIDToName_UpdateProcessDraftResp = map[int32]string{
+	1: "Success",
+}
+
+var fieldIDToName_DeleteProcessDraftReq = map[int32]string{
+	1: "Id",
+}
+
+var fieldIDToName_DeleteProcessDraftResp = map[int32]string{
+	1: "Success",
+}
+
+var fieldIDToName_SubmitProcessReq = map[int32]string{
+	1: "Id",
+}
+
+var fieldIDToName_SubmitProcessResp = map[int32]string{
+	1: "Success",
+}
+
+var fieldIDToName_GetProcessReq = map[int32]string{
+	1: "Id",
+}
+
+var fieldIDToName_GetProcessResp = map[int32]string{
+	1: "Process",
+}
+
+var fieldIDToName_ListProcessReq = map[int32]string{
+	1:  "OwnerUserId",
+	2:  "ItemId",
+	3:  "Status",
+	4:  "PageNum",
+	5:  "PageSize",
+	6:  "SinceTime",
+	7:  "RecentSeconds",
+	8:  "CursorUpdatedAt",
+	9:  "CursorId",
+	10: "NamePrefix",
+	11: "ItemNamePrefix",
+}
+
+var fieldIDToName_ListProcessResp = map[int32]string{
+	1: "ProcessList",
+	2: "Total",
+	3: "HasMore",
+	4: "NextCursorUpdatedAt",
+	5: "NextCursorId",
 }
 
 var fieldIDToName_AddItemUnitReq = map[int32]string{
@@ -4338,6 +9234,7 @@ var fieldIDToName_AddItemUnitReq = map[int32]string{
 	2: "StockStatus",
 	3: "QualityStatus",
 	4: "Description",
+	5: "EngineeringOrderId",
 }
 
 var fieldIDToName_AddItemUnitResp = map[int32]string{
@@ -4368,11 +9265,16 @@ var fieldIDToName_ListItemUnitReq = map[int32]string{
 	3: "ItemId",
 	4: "StockStatus",
 	5: "QualityStatus",
+	6: "EngineeringOrderId",
+	7: "CursorId",
+	8: "ItemNamePrefix",
 }
 
 var fieldIDToName_ListItemUnitResp = map[int32]string{
 	1: "ItemUnitList",
 	2: "Total",
+	3: "HasMore",
+	4: "NextCursorId",
 }
 
 var fieldIDToName_InventoryFlowItemReq = map[int32]string{
@@ -4387,6 +9289,7 @@ var fieldIDToName_CreateInventoryFlowReq = map[int32]string{
 	4: "Description",
 	5: "Items",
 	6: "ItemUnitIds",
+	7: "Name",
 }
 
 var fieldIDToName_CreateInventoryFlowResp = map[int32]string{
@@ -4401,6 +9304,7 @@ var fieldIDToName_UpdateInventoryFlowDraftReq = map[int32]string{
 	5: "Description",
 	6: "Items",
 	7: "ItemUnitIds",
+	8: "Name",
 }
 
 var fieldIDToName_UpdateInventoryFlowDraftResp = map[int32]string{
@@ -4423,6 +9327,15 @@ var fieldIDToName_SubmitInventoryFlowResp = map[int32]string{
 	1: "Success",
 }
 
+var fieldIDToName_CompleteInventoryFlowReq = map[int32]string{
+	1: "Id",
+	2: "ItemUnitIds",
+}
+
+var fieldIDToName_CompleteInventoryFlowResp = map[int32]string{
+	1: "Success",
+}
+
 var fieldIDToName_AuditInventoryFlowReq = map[int32]string{
 	1: "Id",
 	2: "ApprovedBy",
@@ -4442,15 +9355,100 @@ var fieldIDToName_GetInventoryFlowResp = map[int32]string{
 }
 
 var fieldIDToName_ListInventoryFlowReq = map[int32]string{
-	1: "PageNum",
-	2: "PageSize",
-	3: "FromUserId",
-	4: "ToUserId",
-	5: "FlowType",
-	6: "FlowStatus",
+	1:  "UserId",
+	2:  "IsTo",
+	3:  "FlowStatus",
+	4:  "PageNum",
+	5:  "PageSize",
+	6:  "SinceTime",
+	7:  "RecentSeconds",
+	8:  "CursorUpdatedAt",
+	9:  "CursorId",
+	10: "NamePrefix",
+	11: "ItemNamePrefix",
+	12: "Scope",
 }
 
 var fieldIDToName_ListInventoryFlowResp = map[int32]string{
 	1: "InventoryFlowList",
 	2: "Total",
+	3: "HasMore",
+	4: "NextCursorUpdatedAt",
+	5: "NextCursorId",
+}
+
+var fieldIDToName_CreateEngineeringOrderDraftReq = map[int32]string{
+	1: "LeaderUserId",
+	2: "ItemId",
+	3: "ExpectedQuantity",
+	4: "QualifiedQuantity",
+	5: "Description",
+	6: "ProcessId",
+	7: "Name",
+}
+
+var fieldIDToName_CreateEngineeringOrderDraftResp = map[int32]string{
+	1: "Id",
+}
+
+var fieldIDToName_UpdateEngineeringOrderDraftReq = map[int32]string{
+	1: "Id",
+	2: "LeaderUserId",
+	3: "ItemId",
+	4: "ExpectedQuantity",
+	5: "QualifiedQuantity",
+	6: "Description",
+	7: "ProcessId",
+	8: "Name",
+}
+
+var fieldIDToName_UpdateEngineeringOrderDraftResp = map[int32]string{
+	1: "Success",
+}
+
+var fieldIDToName_DeleteEngineeringOrderDraftReq = map[int32]string{
+	1: "Id",
+}
+
+var fieldIDToName_DeleteEngineeringOrderDraftResp = map[int32]string{
+	1: "Success",
+}
+
+var fieldIDToName_SubmitEngineeringOrderReq = map[int32]string{
+	1: "Id",
+}
+
+var fieldIDToName_SubmitEngineeringOrderResp = map[int32]string{
+	1: "Success",
+}
+
+var fieldIDToName_GetEngineeringOrderReq = map[int32]string{
+	1: "Id",
+}
+
+var fieldIDToName_GetEngineeringOrderResp = map[int32]string{
+	1: "EngineeringOrder",
+}
+
+var fieldIDToName_ListEngineeringOrderReq = map[int32]string{
+	1:  "LeaderUserId",
+	2:  "ItemId",
+	3:  "PageNum",
+	4:  "PageSize",
+	5:  "ProcessId",
+	6:  "Status",
+	7:  "SinceTime",
+	8:  "RecentSeconds",
+	9:  "CursorUpdatedAt",
+	10: "CursorId",
+	11: "NamePrefix",
+	12: "ItemNamePrefix",
+}
+
+var fieldIDToName_ListEngineeringOrderResp = map[int32]string{
+	1: "EngineeringOrderList",
+	2: "Total",
+	3: "HasMore",
+	4: "NextCursorUpdatedAt",
+	5: "NextCursorId",
 }

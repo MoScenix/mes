@@ -16,6 +16,12 @@ type RPCClient interface {
 	UpdateItem(ctx context.Context, Req *inventory.UpdateItemReq, callOptions ...callopt.Option) (r *inventory.UpdateItemResp, err error)
 	GetItem(ctx context.Context, Req *inventory.GetItemReq, callOptions ...callopt.Option) (r *inventory.GetItemResp, err error)
 	ListItem(ctx context.Context, Req *inventory.ListItemReq, callOptions ...callopt.Option) (r *inventory.ListItemResp, err error)
+	CreateProcessDraft(ctx context.Context, Req *inventory.CreateProcessDraftReq, callOptions ...callopt.Option) (r *inventory.CreateProcessDraftResp, err error)
+	UpdateProcessDraft(ctx context.Context, Req *inventory.UpdateProcessDraftReq, callOptions ...callopt.Option) (r *inventory.UpdateProcessDraftResp, err error)
+	DeleteProcessDraft(ctx context.Context, Req *inventory.DeleteProcessDraftReq, callOptions ...callopt.Option) (r *inventory.DeleteProcessDraftResp, err error)
+	SubmitProcess(ctx context.Context, Req *inventory.SubmitProcessReq, callOptions ...callopt.Option) (r *inventory.SubmitProcessResp, err error)
+	GetProcess(ctx context.Context, Req *inventory.GetProcessReq, callOptions ...callopt.Option) (r *inventory.GetProcessResp, err error)
+	ListProcess(ctx context.Context, Req *inventory.ListProcessReq, callOptions ...callopt.Option) (r *inventory.ListProcessResp, err error)
 	AddItemUnit(ctx context.Context, Req *inventory.AddItemUnitReq, callOptions ...callopt.Option) (r *inventory.AddItemUnitResp, err error)
 	UpdateItemUnitStatus(ctx context.Context, Req *inventory.UpdateItemUnitStatusReq, callOptions ...callopt.Option) (r *inventory.UpdateItemUnitStatusResp, err error)
 	GetItemUnit(ctx context.Context, Req *inventory.GetItemUnitReq, callOptions ...callopt.Option) (r *inventory.GetItemUnitResp, err error)
@@ -24,9 +30,16 @@ type RPCClient interface {
 	UpdateInventoryFlowDraft(ctx context.Context, Req *inventory.UpdateInventoryFlowDraftReq, callOptions ...callopt.Option) (r *inventory.UpdateInventoryFlowDraftResp, err error)
 	DeleteInventoryFlowDraft(ctx context.Context, Req *inventory.DeleteInventoryFlowDraftReq, callOptions ...callopt.Option) (r *inventory.DeleteInventoryFlowDraftResp, err error)
 	SubmitInventoryFlow(ctx context.Context, Req *inventory.SubmitInventoryFlowReq, callOptions ...callopt.Option) (r *inventory.SubmitInventoryFlowResp, err error)
+	CompleteInventoryFlow(ctx context.Context, Req *inventory.CompleteInventoryFlowReq, callOptions ...callopt.Option) (r *inventory.CompleteInventoryFlowResp, err error)
 	AuditInventoryFlow(ctx context.Context, Req *inventory.AuditInventoryFlowReq, callOptions ...callopt.Option) (r *inventory.AuditInventoryFlowResp, err error)
 	GetInventoryFlow(ctx context.Context, Req *inventory.GetInventoryFlowReq, callOptions ...callopt.Option) (r *inventory.GetInventoryFlowResp, err error)
 	ListInventoryFlow(ctx context.Context, Req *inventory.ListInventoryFlowReq, callOptions ...callopt.Option) (r *inventory.ListInventoryFlowResp, err error)
+	CreateEngineeringOrderDraft(ctx context.Context, Req *inventory.CreateEngineeringOrderDraftReq, callOptions ...callopt.Option) (r *inventory.CreateEngineeringOrderDraftResp, err error)
+	UpdateEngineeringOrderDraft(ctx context.Context, Req *inventory.UpdateEngineeringOrderDraftReq, callOptions ...callopt.Option) (r *inventory.UpdateEngineeringOrderDraftResp, err error)
+	DeleteEngineeringOrderDraft(ctx context.Context, Req *inventory.DeleteEngineeringOrderDraftReq, callOptions ...callopt.Option) (r *inventory.DeleteEngineeringOrderDraftResp, err error)
+	SubmitEngineeringOrder(ctx context.Context, Req *inventory.SubmitEngineeringOrderReq, callOptions ...callopt.Option) (r *inventory.SubmitEngineeringOrderResp, err error)
+	GetEngineeringOrder(ctx context.Context, Req *inventory.GetEngineeringOrderReq, callOptions ...callopt.Option) (r *inventory.GetEngineeringOrderResp, err error)
+	ListEngineeringOrder(ctx context.Context, Req *inventory.ListEngineeringOrderReq, callOptions ...callopt.Option) (r *inventory.ListEngineeringOrderResp, err error)
 }
 
 func NewRPCClient(dstService string, opts ...client.Option) (RPCClient, error) {
@@ -71,6 +84,30 @@ func (c *clientImpl) ListItem(ctx context.Context, Req *inventory.ListItemReq, c
 	return c.kitexClient.ListItem(ctx, Req, callOptions...)
 }
 
+func (c *clientImpl) CreateProcessDraft(ctx context.Context, Req *inventory.CreateProcessDraftReq, callOptions ...callopt.Option) (r *inventory.CreateProcessDraftResp, err error) {
+	return c.kitexClient.CreateProcessDraft(ctx, Req, callOptions...)
+}
+
+func (c *clientImpl) UpdateProcessDraft(ctx context.Context, Req *inventory.UpdateProcessDraftReq, callOptions ...callopt.Option) (r *inventory.UpdateProcessDraftResp, err error) {
+	return c.kitexClient.UpdateProcessDraft(ctx, Req, callOptions...)
+}
+
+func (c *clientImpl) DeleteProcessDraft(ctx context.Context, Req *inventory.DeleteProcessDraftReq, callOptions ...callopt.Option) (r *inventory.DeleteProcessDraftResp, err error) {
+	return c.kitexClient.DeleteProcessDraft(ctx, Req, callOptions...)
+}
+
+func (c *clientImpl) SubmitProcess(ctx context.Context, Req *inventory.SubmitProcessReq, callOptions ...callopt.Option) (r *inventory.SubmitProcessResp, err error) {
+	return c.kitexClient.SubmitProcess(ctx, Req, callOptions...)
+}
+
+func (c *clientImpl) GetProcess(ctx context.Context, Req *inventory.GetProcessReq, callOptions ...callopt.Option) (r *inventory.GetProcessResp, err error) {
+	return c.kitexClient.GetProcess(ctx, Req, callOptions...)
+}
+
+func (c *clientImpl) ListProcess(ctx context.Context, Req *inventory.ListProcessReq, callOptions ...callopt.Option) (r *inventory.ListProcessResp, err error) {
+	return c.kitexClient.ListProcess(ctx, Req, callOptions...)
+}
+
 func (c *clientImpl) AddItemUnit(ctx context.Context, Req *inventory.AddItemUnitReq, callOptions ...callopt.Option) (r *inventory.AddItemUnitResp, err error) {
 	return c.kitexClient.AddItemUnit(ctx, Req, callOptions...)
 }
@@ -103,6 +140,10 @@ func (c *clientImpl) SubmitInventoryFlow(ctx context.Context, Req *inventory.Sub
 	return c.kitexClient.SubmitInventoryFlow(ctx, Req, callOptions...)
 }
 
+func (c *clientImpl) CompleteInventoryFlow(ctx context.Context, Req *inventory.CompleteInventoryFlowReq, callOptions ...callopt.Option) (r *inventory.CompleteInventoryFlowResp, err error) {
+	return c.kitexClient.CompleteInventoryFlow(ctx, Req, callOptions...)
+}
+
 func (c *clientImpl) AuditInventoryFlow(ctx context.Context, Req *inventory.AuditInventoryFlowReq, callOptions ...callopt.Option) (r *inventory.AuditInventoryFlowResp, err error) {
 	return c.kitexClient.AuditInventoryFlow(ctx, Req, callOptions...)
 }
@@ -113,4 +154,28 @@ func (c *clientImpl) GetInventoryFlow(ctx context.Context, Req *inventory.GetInv
 
 func (c *clientImpl) ListInventoryFlow(ctx context.Context, Req *inventory.ListInventoryFlowReq, callOptions ...callopt.Option) (r *inventory.ListInventoryFlowResp, err error) {
 	return c.kitexClient.ListInventoryFlow(ctx, Req, callOptions...)
+}
+
+func (c *clientImpl) CreateEngineeringOrderDraft(ctx context.Context, Req *inventory.CreateEngineeringOrderDraftReq, callOptions ...callopt.Option) (r *inventory.CreateEngineeringOrderDraftResp, err error) {
+	return c.kitexClient.CreateEngineeringOrderDraft(ctx, Req, callOptions...)
+}
+
+func (c *clientImpl) UpdateEngineeringOrderDraft(ctx context.Context, Req *inventory.UpdateEngineeringOrderDraftReq, callOptions ...callopt.Option) (r *inventory.UpdateEngineeringOrderDraftResp, err error) {
+	return c.kitexClient.UpdateEngineeringOrderDraft(ctx, Req, callOptions...)
+}
+
+func (c *clientImpl) DeleteEngineeringOrderDraft(ctx context.Context, Req *inventory.DeleteEngineeringOrderDraftReq, callOptions ...callopt.Option) (r *inventory.DeleteEngineeringOrderDraftResp, err error) {
+	return c.kitexClient.DeleteEngineeringOrderDraft(ctx, Req, callOptions...)
+}
+
+func (c *clientImpl) SubmitEngineeringOrder(ctx context.Context, Req *inventory.SubmitEngineeringOrderReq, callOptions ...callopt.Option) (r *inventory.SubmitEngineeringOrderResp, err error) {
+	return c.kitexClient.SubmitEngineeringOrder(ctx, Req, callOptions...)
+}
+
+func (c *clientImpl) GetEngineeringOrder(ctx context.Context, Req *inventory.GetEngineeringOrderReq, callOptions ...callopt.Option) (r *inventory.GetEngineeringOrderResp, err error) {
+	return c.kitexClient.GetEngineeringOrder(ctx, Req, callOptions...)
+}
+
+func (c *clientImpl) ListEngineeringOrder(ctx context.Context, Req *inventory.ListEngineeringOrderReq, callOptions ...callopt.Option) (r *inventory.ListEngineeringOrderResp, err error) {
+	return c.kitexClient.ListEngineeringOrder(ctx, Req, callOptions...)
 }

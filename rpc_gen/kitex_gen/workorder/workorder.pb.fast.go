@@ -49,6 +49,16 @@ func (x *WorkOrderInfo) FastRead(buf []byte, _type int8, number int32) (offset i
 		if err != nil {
 			goto ReadFieldError
 		}
+	case 8:
+		offset, err = x.fastReadField8(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 9:
+		offset, err = x.fastReadField9(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
 	default:
 		offset, err = fastpb.Skip(buf, _type, number)
 		if err != nil {
@@ -102,6 +112,21 @@ func (x *WorkOrderInfo) fastReadField7(buf []byte, _type int8) (offset int, err 
 	return offset, err
 }
 
+func (x *WorkOrderInfo) fastReadField8(buf []byte, _type int8) (offset int, err error) {
+	var v int32
+	v, offset, err = fastpb.ReadInt32(buf, _type)
+	if err != nil {
+		return offset, err
+	}
+	x.ReadStatus = WorkOrderReadStatus(v)
+	return offset, nil
+}
+
+func (x *WorkOrderInfo) fastReadField9(buf []byte, _type int8) (offset int, err error) {
+	x.Name, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
 func (x *CreateWorkOrderReq) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
 	switch number {
 	case 1:
@@ -116,6 +141,11 @@ func (x *CreateWorkOrderReq) FastRead(buf []byte, _type int8, number int32) (off
 		}
 	case 3:
 		offset, err = x.fastReadField3(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 4:
+		offset, err = x.fastReadField4(buf, _type)
 		if err != nil {
 			goto ReadFieldError
 		}
@@ -144,6 +174,11 @@ func (x *CreateWorkOrderReq) fastReadField2(buf []byte, _type int8) (offset int,
 
 func (x *CreateWorkOrderReq) fastReadField3(buf []byte, _type int8) (offset int, err error) {
 	x.Description, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *CreateWorkOrderReq) fastReadField4(buf []byte, _type int8) (offset int, err error) {
+	x.Name, offset, err = fastpb.ReadString(buf, _type)
 	return offset, err
 }
 
@@ -194,6 +229,11 @@ func (x *UpdateWorkOrderDraftReq) FastRead(buf []byte, _type int8, number int32)
 		if err != nil {
 			goto ReadFieldError
 		}
+	case 5:
+		offset, err = x.fastReadField5(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
 	default:
 		offset, err = fastpb.Skip(buf, _type, number)
 		if err != nil {
@@ -224,6 +264,11 @@ func (x *UpdateWorkOrderDraftReq) fastReadField3(buf []byte, _type int8) (offset
 
 func (x *UpdateWorkOrderDraftReq) fastReadField4(buf []byte, _type int8) (offset int, err error) {
 	x.Description, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *UpdateWorkOrderDraftReq) fastReadField5(buf []byte, _type int8) (offset int, err error) {
+	x.Name, offset, err = fastpb.ReadString(buf, _type)
 	return offset, err
 }
 
@@ -434,6 +479,36 @@ func (x *ListWorkOrderReq) FastRead(buf []byte, _type int8, number int32) (offse
 		if err != nil {
 			goto ReadFieldError
 		}
+	case 6:
+		offset, err = x.fastReadField6(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 7:
+		offset, err = x.fastReadField7(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 8:
+		offset, err = x.fastReadField8(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 9:
+		offset, err = x.fastReadField9(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 10:
+		offset, err = x.fastReadField10(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 11:
+		offset, err = x.fastReadField11(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
 	default:
 		offset, err = fastpb.Skip(buf, _type, number)
 		if err != nil {
@@ -458,16 +533,46 @@ func (x *ListWorkOrderReq) fastReadField2(buf []byte, _type int8) (offset int, e
 }
 
 func (x *ListWorkOrderReq) fastReadField3(buf []byte, _type int8) (offset int, err error) {
-	x.FromUserId, offset, err = fastpb.ReadInt64(buf, _type)
+	x.Id, offset, err = fastpb.ReadInt64(buf, _type)
 	return offset, err
 }
 
 func (x *ListWorkOrderReq) fastReadField4(buf []byte, _type int8) (offset int, err error) {
-	x.ToUserId, offset, err = fastpb.ReadInt64(buf, _type)
+	x.IsTo, offset, err = fastpb.ReadBool(buf, _type)
 	return offset, err
 }
 
 func (x *ListWorkOrderReq) fastReadField5(buf []byte, _type int8) (offset int, err error) {
+	x.IsUnread, offset, err = fastpb.ReadBool(buf, _type)
+	return offset, err
+}
+
+func (x *ListWorkOrderReq) fastReadField6(buf []byte, _type int8) (offset int, err error) {
+	x.SinceTime, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *ListWorkOrderReq) fastReadField7(buf []byte, _type int8) (offset int, err error) {
+	x.RecentSeconds, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *ListWorkOrderReq) fastReadField8(buf []byte, _type int8) (offset int, err error) {
+	x.CursorUpdatedAt, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *ListWorkOrderReq) fastReadField9(buf []byte, _type int8) (offset int, err error) {
+	x.CursorId, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *ListWorkOrderReq) fastReadField10(buf []byte, _type int8) (offset int, err error) {
+	x.NamePrefix, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *ListWorkOrderReq) fastReadField11(buf []byte, _type int8) (offset int, err error) {
 	var v int32
 	v, offset, err = fastpb.ReadInt32(buf, _type)
 	if err != nil {
@@ -486,6 +591,21 @@ func (x *ListWorkOrderResp) FastRead(buf []byte, _type int8, number int32) (offs
 		}
 	case 2:
 		offset, err = x.fastReadField2(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 3:
+		offset, err = x.fastReadField3(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 4:
+		offset, err = x.fastReadField4(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 5:
+		offset, err = x.fastReadField5(buf, _type)
 		if err != nil {
 			goto ReadFieldError
 		}
@@ -517,6 +637,71 @@ func (x *ListWorkOrderResp) fastReadField2(buf []byte, _type int8) (offset int, 
 	return offset, err
 }
 
+func (x *ListWorkOrderResp) fastReadField3(buf []byte, _type int8) (offset int, err error) {
+	x.HasMore, offset, err = fastpb.ReadBool(buf, _type)
+	return offset, err
+}
+
+func (x *ListWorkOrderResp) fastReadField4(buf []byte, _type int8) (offset int, err error) {
+	x.NextCursorUpdatedAt, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *ListWorkOrderResp) fastReadField5(buf []byte, _type int8) (offset int, err error) {
+	x.NextCursorId, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *MarkWorkOrderReadReq) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_MarkWorkOrderReadReq[number], err)
+}
+
+func (x *MarkWorkOrderReadReq) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.Id, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *MarkWorkOrderReadResp) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_MarkWorkOrderReadResp[number], err)
+}
+
+func (x *MarkWorkOrderReadResp) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.Success, offset, err = fastpb.ReadBool(buf, _type)
+	return offset, err
+}
+
 func (x *WorkOrderInfo) FastWrite(buf []byte) (offset int) {
 	if x == nil {
 		return offset
@@ -528,6 +713,8 @@ func (x *WorkOrderInfo) FastWrite(buf []byte) (offset int) {
 	offset += x.fastWriteField5(buf[offset:])
 	offset += x.fastWriteField6(buf[offset:])
 	offset += x.fastWriteField7(buf[offset:])
+	offset += x.fastWriteField8(buf[offset:])
+	offset += x.fastWriteField9(buf[offset:])
 	return offset
 }
 
@@ -587,6 +774,22 @@ func (x *WorkOrderInfo) fastWriteField7(buf []byte) (offset int) {
 	return offset
 }
 
+func (x *WorkOrderInfo) fastWriteField8(buf []byte) (offset int) {
+	if x.ReadStatus == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt32(buf[offset:], 8, int32(x.GetReadStatus()))
+	return offset
+}
+
+func (x *WorkOrderInfo) fastWriteField9(buf []byte) (offset int) {
+	if x.Name == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 9, x.GetName())
+	return offset
+}
+
 func (x *CreateWorkOrderReq) FastWrite(buf []byte) (offset int) {
 	if x == nil {
 		return offset
@@ -594,6 +797,7 @@ func (x *CreateWorkOrderReq) FastWrite(buf []byte) (offset int) {
 	offset += x.fastWriteField1(buf[offset:])
 	offset += x.fastWriteField2(buf[offset:])
 	offset += x.fastWriteField3(buf[offset:])
+	offset += x.fastWriteField4(buf[offset:])
 	return offset
 }
 
@@ -621,6 +825,14 @@ func (x *CreateWorkOrderReq) fastWriteField3(buf []byte) (offset int) {
 	return offset
 }
 
+func (x *CreateWorkOrderReq) fastWriteField4(buf []byte) (offset int) {
+	if x.Name == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 4, x.GetName())
+	return offset
+}
+
 func (x *CreateWorkOrderResp) FastWrite(buf []byte) (offset int) {
 	if x == nil {
 		return offset
@@ -645,6 +857,7 @@ func (x *UpdateWorkOrderDraftReq) FastWrite(buf []byte) (offset int) {
 	offset += x.fastWriteField2(buf[offset:])
 	offset += x.fastWriteField3(buf[offset:])
 	offset += x.fastWriteField4(buf[offset:])
+	offset += x.fastWriteField5(buf[offset:])
 	return offset
 }
 
@@ -677,6 +890,14 @@ func (x *UpdateWorkOrderDraftReq) fastWriteField4(buf []byte) (offset int) {
 		return offset
 	}
 	offset += fastpb.WriteString(buf[offset:], 4, x.GetDescription())
+	return offset
+}
+
+func (x *UpdateWorkOrderDraftReq) fastWriteField5(buf []byte) (offset int) {
+	if x.Name == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 5, x.GetName())
 	return offset
 }
 
@@ -801,6 +1022,12 @@ func (x *ListWorkOrderReq) FastWrite(buf []byte) (offset int) {
 	offset += x.fastWriteField3(buf[offset:])
 	offset += x.fastWriteField4(buf[offset:])
 	offset += x.fastWriteField5(buf[offset:])
+	offset += x.fastWriteField6(buf[offset:])
+	offset += x.fastWriteField7(buf[offset:])
+	offset += x.fastWriteField8(buf[offset:])
+	offset += x.fastWriteField9(buf[offset:])
+	offset += x.fastWriteField10(buf[offset:])
+	offset += x.fastWriteField11(buf[offset:])
 	return offset
 }
 
@@ -821,26 +1048,74 @@ func (x *ListWorkOrderReq) fastWriteField2(buf []byte) (offset int) {
 }
 
 func (x *ListWorkOrderReq) fastWriteField3(buf []byte) (offset int) {
-	if x.FromUserId == 0 {
+	if x.Id == 0 {
 		return offset
 	}
-	offset += fastpb.WriteInt64(buf[offset:], 3, x.GetFromUserId())
+	offset += fastpb.WriteInt64(buf[offset:], 3, x.GetId())
 	return offset
 }
 
 func (x *ListWorkOrderReq) fastWriteField4(buf []byte) (offset int) {
-	if x.ToUserId == 0 {
+	if !x.IsTo {
 		return offset
 	}
-	offset += fastpb.WriteInt64(buf[offset:], 4, x.GetToUserId())
+	offset += fastpb.WriteBool(buf[offset:], 4, x.GetIsTo())
 	return offset
 }
 
 func (x *ListWorkOrderReq) fastWriteField5(buf []byte) (offset int) {
+	if !x.IsUnread {
+		return offset
+	}
+	offset += fastpb.WriteBool(buf[offset:], 5, x.GetIsUnread())
+	return offset
+}
+
+func (x *ListWorkOrderReq) fastWriteField6(buf []byte) (offset int) {
+	if x.SinceTime == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 6, x.GetSinceTime())
+	return offset
+}
+
+func (x *ListWorkOrderReq) fastWriteField7(buf []byte) (offset int) {
+	if x.RecentSeconds == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 7, x.GetRecentSeconds())
+	return offset
+}
+
+func (x *ListWorkOrderReq) fastWriteField8(buf []byte) (offset int) {
+	if x.CursorUpdatedAt == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 8, x.GetCursorUpdatedAt())
+	return offset
+}
+
+func (x *ListWorkOrderReq) fastWriteField9(buf []byte) (offset int) {
+	if x.CursorId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 9, x.GetCursorId())
+	return offset
+}
+
+func (x *ListWorkOrderReq) fastWriteField10(buf []byte) (offset int) {
+	if x.NamePrefix == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 10, x.GetNamePrefix())
+	return offset
+}
+
+func (x *ListWorkOrderReq) fastWriteField11(buf []byte) (offset int) {
 	if x.Status == 0 {
 		return offset
 	}
-	offset += fastpb.WriteInt32(buf[offset:], 5, int32(x.GetStatus()))
+	offset += fastpb.WriteInt32(buf[offset:], 11, int32(x.GetStatus()))
 	return offset
 }
 
@@ -850,6 +1125,9 @@ func (x *ListWorkOrderResp) FastWrite(buf []byte) (offset int) {
 	}
 	offset += x.fastWriteField1(buf[offset:])
 	offset += x.fastWriteField2(buf[offset:])
+	offset += x.fastWriteField3(buf[offset:])
+	offset += x.fastWriteField4(buf[offset:])
+	offset += x.fastWriteField5(buf[offset:])
 	return offset
 }
 
@@ -871,6 +1149,62 @@ func (x *ListWorkOrderResp) fastWriteField2(buf []byte) (offset int) {
 	return offset
 }
 
+func (x *ListWorkOrderResp) fastWriteField3(buf []byte) (offset int) {
+	if !x.HasMore {
+		return offset
+	}
+	offset += fastpb.WriteBool(buf[offset:], 3, x.GetHasMore())
+	return offset
+}
+
+func (x *ListWorkOrderResp) fastWriteField4(buf []byte) (offset int) {
+	if x.NextCursorUpdatedAt == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 4, x.GetNextCursorUpdatedAt())
+	return offset
+}
+
+func (x *ListWorkOrderResp) fastWriteField5(buf []byte) (offset int) {
+	if x.NextCursorId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 5, x.GetNextCursorId())
+	return offset
+}
+
+func (x *MarkWorkOrderReadReq) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	return offset
+}
+
+func (x *MarkWorkOrderReadReq) fastWriteField1(buf []byte) (offset int) {
+	if x.Id == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 1, x.GetId())
+	return offset
+}
+
+func (x *MarkWorkOrderReadResp) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	return offset
+}
+
+func (x *MarkWorkOrderReadResp) fastWriteField1(buf []byte) (offset int) {
+	if !x.Success {
+		return offset
+	}
+	offset += fastpb.WriteBool(buf[offset:], 1, x.GetSuccess())
+	return offset
+}
+
 func (x *WorkOrderInfo) Size() (n int) {
 	if x == nil {
 		return n
@@ -882,6 +1216,8 @@ func (x *WorkOrderInfo) Size() (n int) {
 	n += x.sizeField5()
 	n += x.sizeField6()
 	n += x.sizeField7()
+	n += x.sizeField8()
+	n += x.sizeField9()
 	return n
 }
 
@@ -941,6 +1277,22 @@ func (x *WorkOrderInfo) sizeField7() (n int) {
 	return n
 }
 
+func (x *WorkOrderInfo) sizeField8() (n int) {
+	if x.ReadStatus == 0 {
+		return n
+	}
+	n += fastpb.SizeInt32(8, int32(x.GetReadStatus()))
+	return n
+}
+
+func (x *WorkOrderInfo) sizeField9() (n int) {
+	if x.Name == "" {
+		return n
+	}
+	n += fastpb.SizeString(9, x.GetName())
+	return n
+}
+
 func (x *CreateWorkOrderReq) Size() (n int) {
 	if x == nil {
 		return n
@@ -948,6 +1300,7 @@ func (x *CreateWorkOrderReq) Size() (n int) {
 	n += x.sizeField1()
 	n += x.sizeField2()
 	n += x.sizeField3()
+	n += x.sizeField4()
 	return n
 }
 
@@ -975,6 +1328,14 @@ func (x *CreateWorkOrderReq) sizeField3() (n int) {
 	return n
 }
 
+func (x *CreateWorkOrderReq) sizeField4() (n int) {
+	if x.Name == "" {
+		return n
+	}
+	n += fastpb.SizeString(4, x.GetName())
+	return n
+}
+
 func (x *CreateWorkOrderResp) Size() (n int) {
 	if x == nil {
 		return n
@@ -999,6 +1360,7 @@ func (x *UpdateWorkOrderDraftReq) Size() (n int) {
 	n += x.sizeField2()
 	n += x.sizeField3()
 	n += x.sizeField4()
+	n += x.sizeField5()
 	return n
 }
 
@@ -1031,6 +1393,14 @@ func (x *UpdateWorkOrderDraftReq) sizeField4() (n int) {
 		return n
 	}
 	n += fastpb.SizeString(4, x.GetDescription())
+	return n
+}
+
+func (x *UpdateWorkOrderDraftReq) sizeField5() (n int) {
+	if x.Name == "" {
+		return n
+	}
+	n += fastpb.SizeString(5, x.GetName())
 	return n
 }
 
@@ -1155,6 +1525,12 @@ func (x *ListWorkOrderReq) Size() (n int) {
 	n += x.sizeField3()
 	n += x.sizeField4()
 	n += x.sizeField5()
+	n += x.sizeField6()
+	n += x.sizeField7()
+	n += x.sizeField8()
+	n += x.sizeField9()
+	n += x.sizeField10()
+	n += x.sizeField11()
 	return n
 }
 
@@ -1175,26 +1551,74 @@ func (x *ListWorkOrderReq) sizeField2() (n int) {
 }
 
 func (x *ListWorkOrderReq) sizeField3() (n int) {
-	if x.FromUserId == 0 {
+	if x.Id == 0 {
 		return n
 	}
-	n += fastpb.SizeInt64(3, x.GetFromUserId())
+	n += fastpb.SizeInt64(3, x.GetId())
 	return n
 }
 
 func (x *ListWorkOrderReq) sizeField4() (n int) {
-	if x.ToUserId == 0 {
+	if !x.IsTo {
 		return n
 	}
-	n += fastpb.SizeInt64(4, x.GetToUserId())
+	n += fastpb.SizeBool(4, x.GetIsTo())
 	return n
 }
 
 func (x *ListWorkOrderReq) sizeField5() (n int) {
+	if !x.IsUnread {
+		return n
+	}
+	n += fastpb.SizeBool(5, x.GetIsUnread())
+	return n
+}
+
+func (x *ListWorkOrderReq) sizeField6() (n int) {
+	if x.SinceTime == "" {
+		return n
+	}
+	n += fastpb.SizeString(6, x.GetSinceTime())
+	return n
+}
+
+func (x *ListWorkOrderReq) sizeField7() (n int) {
+	if x.RecentSeconds == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(7, x.GetRecentSeconds())
+	return n
+}
+
+func (x *ListWorkOrderReq) sizeField8() (n int) {
+	if x.CursorUpdatedAt == "" {
+		return n
+	}
+	n += fastpb.SizeString(8, x.GetCursorUpdatedAt())
+	return n
+}
+
+func (x *ListWorkOrderReq) sizeField9() (n int) {
+	if x.CursorId == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(9, x.GetCursorId())
+	return n
+}
+
+func (x *ListWorkOrderReq) sizeField10() (n int) {
+	if x.NamePrefix == "" {
+		return n
+	}
+	n += fastpb.SizeString(10, x.GetNamePrefix())
+	return n
+}
+
+func (x *ListWorkOrderReq) sizeField11() (n int) {
 	if x.Status == 0 {
 		return n
 	}
-	n += fastpb.SizeInt32(5, int32(x.GetStatus()))
+	n += fastpb.SizeInt32(11, int32(x.GetStatus()))
 	return n
 }
 
@@ -1204,6 +1628,9 @@ func (x *ListWorkOrderResp) Size() (n int) {
 	}
 	n += x.sizeField1()
 	n += x.sizeField2()
+	n += x.sizeField3()
+	n += x.sizeField4()
+	n += x.sizeField5()
 	return n
 }
 
@@ -1225,6 +1652,62 @@ func (x *ListWorkOrderResp) sizeField2() (n int) {
 	return n
 }
 
+func (x *ListWorkOrderResp) sizeField3() (n int) {
+	if !x.HasMore {
+		return n
+	}
+	n += fastpb.SizeBool(3, x.GetHasMore())
+	return n
+}
+
+func (x *ListWorkOrderResp) sizeField4() (n int) {
+	if x.NextCursorUpdatedAt == "" {
+		return n
+	}
+	n += fastpb.SizeString(4, x.GetNextCursorUpdatedAt())
+	return n
+}
+
+func (x *ListWorkOrderResp) sizeField5() (n int) {
+	if x.NextCursorId == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(5, x.GetNextCursorId())
+	return n
+}
+
+func (x *MarkWorkOrderReadReq) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	return n
+}
+
+func (x *MarkWorkOrderReadReq) sizeField1() (n int) {
+	if x.Id == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(1, x.GetId())
+	return n
+}
+
+func (x *MarkWorkOrderReadResp) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	return n
+}
+
+func (x *MarkWorkOrderReadResp) sizeField1() (n int) {
+	if !x.Success {
+		return n
+	}
+	n += fastpb.SizeBool(1, x.GetSuccess())
+	return n
+}
+
 var fieldIDToName_WorkOrderInfo = map[int32]string{
 	1: "Id",
 	2: "FromUserId",
@@ -1233,12 +1716,15 @@ var fieldIDToName_WorkOrderInfo = map[int32]string{
 	5: "Status",
 	6: "CreateTime",
 	7: "UpdateTime",
+	8: "ReadStatus",
+	9: "Name",
 }
 
 var fieldIDToName_CreateWorkOrderReq = map[int32]string{
 	1: "FromUserId",
 	2: "ToUserId",
 	3: "Description",
+	4: "Name",
 }
 
 var fieldIDToName_CreateWorkOrderResp = map[int32]string{
@@ -1250,6 +1736,7 @@ var fieldIDToName_UpdateWorkOrderDraftReq = map[int32]string{
 	2: "FromUserId",
 	3: "ToUserId",
 	4: "Description",
+	5: "Name",
 }
 
 var fieldIDToName_UpdateWorkOrderDraftResp = map[int32]string{
@@ -1281,14 +1768,31 @@ var fieldIDToName_GetWorkOrderResp = map[int32]string{
 }
 
 var fieldIDToName_ListWorkOrderReq = map[int32]string{
-	1: "PageNum",
-	2: "PageSize",
-	3: "FromUserId",
-	4: "ToUserId",
-	5: "Status",
+	1:  "PageNum",
+	2:  "PageSize",
+	3:  "Id",
+	4:  "IsTo",
+	5:  "IsUnread",
+	6:  "SinceTime",
+	7:  "RecentSeconds",
+	8:  "CursorUpdatedAt",
+	9:  "CursorId",
+	10: "NamePrefix",
+	11: "Status",
 }
 
 var fieldIDToName_ListWorkOrderResp = map[int32]string{
 	1: "WorkOrderList",
 	2: "Total",
+	3: "HasMore",
+	4: "NextCursorUpdatedAt",
+	5: "NextCursorId",
+}
+
+var fieldIDToName_MarkWorkOrderReadReq = map[int32]string{
+	1: "Id",
+}
+
+var fieldIDToName_MarkWorkOrderReadResp = map[int32]string{
+	1: "Success",
 }

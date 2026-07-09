@@ -8,11 +8,9 @@ import (
 
 func Buildaicode(ctx context.Context) (r compose.Runnable[any, any], err error) {
 	g := compose.NewGraph[any, any]()
-	_ = g.AddLambdaNode(designerNode, compose.InvokableLambda(newLambda))
-	_ = g.AddLambdaNode(coderNode, compose.InvokableLambda(newLambda1))
-	_ = g.AddEdge(coderNode, compose.END)
-	_ = g.AddEdge(designerNode, coderNode)
-	_ = g.AddBranch(compose.START, compose.NewGraphBranch(newBranch, map[string]bool{designerNode: true, coderNode: true}))
+	_ = g.AddLambdaNode(assistantNode, compose.InvokableLambda(runAssistantNode))
+	_ = g.AddEdge(compose.START, assistantNode)
+	_ = g.AddEdge(assistantNode, compose.END)
 	opts := []compose.GraphCompileOption{compose.WithGraphName("aicode")}
 	if store, ok := newGraphCheckpointStore(ctx); ok {
 		opts = append(opts, compose.WithCheckPointStore(store))

@@ -25,26 +25,46 @@
           <a-image :src="record.userAvatar" :width="120" />
         </template>
         <template v-else-if="column.dataIndex === 'userRole'">
-          <div v-if="record.userRole === 'admin'">
-            <a-tag color="green">管理员</a-tag>
-          </div>
-          <div v-else>
-            <a-tag color="blue">普通用户</a-tag>
-          </div>
+          <a-tag :color="roleColor(record.userRole)">{{ roleLabel(record.userRole) }}</a-tag>
         </template>
         <template v-else-if="column.dataIndex === 'createTime'">
           {{ dayjs(record.createTime).format('YYYY-MM-DD HH:mm:ss') }}
         </template>
         <template v-else-if="column.key === 'action'">
-          <a-button danger @click="doDelete(record.id)">删除</a-button>
+          <a-space>
+            <a-button @click="openEdit(record)">编辑</a-button>
+            <a-button danger @click="doDelete(record.id)">删除</a-button>
+          </a-space>
         </template>
       </template>
     </a-table>
+
+    <a-modal
+      v-model:open="editOpen"
+      title="编辑人员信息"
+      :confirm-loading="saving"
+      @ok="saveUser"
+    >
+      <a-form layout="vertical" :model="editForm">
+        <a-form-item label="用户名">
+          <a-input v-model:value="editForm.userName" placeholder="输入用户名" />
+        </a-form-item>
+        <a-form-item label="头像地址">
+          <a-input v-model:value="editForm.userAvatar" placeholder="输入头像 URL" />
+        </a-form-item>
+        <a-form-item label="简介">
+          <a-textarea v-model:value="editForm.userProfile" :rows="3" placeholder="输入人员简介" />
+        </a-form-item>
+        <a-form-item label="角色">
+          <a-select v-model:value="editForm.userRole" :options="roleOptions" />
+        </a-form-item>
+      </a-form>
+    </a-modal>
   </div>
 </template>
 <script lang="ts" setup>
 import { computed, onMounted, reactive, ref } from 'vue'
-import { deleteUser, listUserVoByPage } from '@/api/userController.ts'
+import { deleteUser, listUserVoByPage, updateUser } from '@/api/userController.ts'
 import { message } from 'ant-design-vue'
 import dayjs from 'dayjs'
 
@@ -86,6 +106,26 @@ const columns = [
 // 展示的数据
 const data = ref<API.UserVO[]>([])
 const total = ref(0)
+const editOpen = ref(false)
+const saving = ref(false)
+
+const roleOptions = [
+  { label: '管理员', value: 'admin' },
+  { label: '组长', value: 'leader' },
+  { label: '采购专员', value: 'purchase' },
+  { label: '普通工人', value: 'worker' },
+  { label: '工艺工程师', value: 'process_engineer' },
+  { label: '仓库管理员', value: 'warehouse_admin' },
+  { label: '销售', value: 'sales' },
+]
+
+const editForm = reactive<API.UserUpdateRequest>({
+  id: undefined,
+  userName: '',
+  userAvatar: '',
+  userProfile: '',
+  userRole: 'worker',
+})
 
 // 搜索条件
 const searchParams = reactive<API.UserQueryRequest>({
@@ -131,6 +171,32 @@ const doSearch = () => {
   fetchData()
 }
 
+const openEdit = (record: API.UserVO) => {
+  editForm.id = record.id
+  editForm.userName = record.userName
+  editForm.userAvatar = record.userAvatar
+  editForm.userProfile = record.userProfile
+  editForm.userRole = record.userRole || 'worker'
+  editOpen.value = true
+}
+
+const saveUser = async () => {
+  if (!editForm.id) return
+  saving.value = true
+  try {
+    const res = await updateUser({ ...editForm })
+    if (res.data.code === 0) {
+      message.success('人员信息已更新')
+      editOpen.value = false
+      await fetchData()
+    } else {
+      message.error(res.data.message || '更新失败')
+    }
+  } finally {
+    saving.value = false
+  }
+}
+
 // 删除数据
 const doDelete = async (id: number) => {
   if (!id) {
@@ -145,6 +211,19 @@ const doDelete = async (id: number) => {
     message.error('删除失败')
   }
 }
+
+const roleLabel = (role?: string) => roleOptions.find((item) => item.value === role)?.label || '普通用户'
+
+const roleColor = (role?: string) =>
+  ({
+    admin: 'green',
+    leader: 'purple',
+    purchase: 'blue',
+    worker: 'cyan',
+    process_engineer: 'geekblue',
+    warehouse_admin: 'orange',
+    sales: 'magenta',
+  })[role || ''] || 'default'
 
 // 页面加载时请求一次
 onMounted(() => {
