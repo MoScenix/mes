@@ -72,12 +72,9 @@ import {
   MenuOutlined,
   InboxOutlined,
   ShoppingCartOutlined,
-  ToolOutlined,
   AppstoreOutlined,
   DatabaseOutlined,
-  FileAddOutlined,
   FileSearchOutlined,
-  FormOutlined,
   SafetyCertificateOutlined,
   UserOutlined,
 } from '@ant-design/icons-vue'
@@ -85,13 +82,17 @@ import { useLoginUserStore } from '@/stores/loginUser'
 import FloatingAssistant from '@/components/mes/FloatingAssistant.vue'
 import { normalizeMesRole, type MesRoleKey } from '@/utils/mesRole'
 
-type NavItem = {
-  key: string
+type NavTarget = {
   path: string
-  label: string
   panel?: string
   view: string
   scanMode?: string
+}
+
+type NavItem = {
+  key: string
+  label: string
+  target: NavTarget | ((role: MesRoleKey) => NavTarget)
   roles: MesRoleKey[]
   icon: typeof ShoppingCartOutlined
 }
@@ -99,134 +100,81 @@ type NavItem = {
 const navItems: NavItem[] = [
   {
     key: 'purchase-add',
-    path: '/mes/purchase',
-    panel: 'items',
-    view: 'catalog',
+    target: { path: '/mes/purchase', panel: 'items', view: 'catalog' },
     label: '物料',
     roles: ['purchase'],
     icon: ShoppingCartOutlined,
   },
   {
-    key: 'purchase-units',
-    path: '/mes/purchase',
-    panel: 'itemUnits',
-    view: 'units',
-    label: '库存单体',
-    roles: ['purchase'],
-    icon: ToolOutlined,
-  },
-  {
     key: 'purchase-scan',
-    path: '/mes/scan',
-    view: 'inbound',
-    scanMode: 'inbound',
+    target: { path: '/mes/scan', view: 'inbound', scanMode: 'inbound' },
     label: '扫描入库',
     roles: ['purchase'],
     icon: InboxOutlined,
   },
   {
-    key: 'purchase-flow',
-    path: '/mes/purchase',
-    panel: 'flows',
-    view: 'purchase',
+    key: 'inventory-flow',
+    target: (role) => {
+      if (role === 'sales') return { path: '/mes/sales', panel: 'flows', view: 'flows' }
+      if (role === 'leader') return { path: '/mes/leader', panel: 'flows', view: 'flows' }
+      return { path: '/mes/purchase', panel: 'flows', view: 'purchase' }
+    },
     label: '流转单',
-    roles: ['purchase'],
+    roles: ['purchase', 'sales', 'leader'],
     icon: FileSearchOutlined,
   },
   {
-    key: 'worker-add',
-    path: '/mes/worker',
-    panel: 'itemUnits',
-    view: 'units',
-    label: '新增单品',
-    roles: ['worker'],
-    icon: ToolOutlined,
-  },
-  {
     key: 'worker-receive',
-    path: '/mes/scan',
-    view: 'receive',
-    scanMode: 'receive',
+    target: { path: '/mes/scan', view: 'receive', scanMode: 'receive' },
     label: '领取货物',
     roles: ['worker', 'sales'],
     icon: InboxOutlined,
   },
   {
     key: 'worker-inspect',
-    path: '/mes/scan',
-    view: 'inspect',
-    scanMode: 'inspect',
+    target: { path: '/mes/scan', view: 'inspect', scanMode: 'inspect' },
     label: '检验单品',
     roles: ['worker'],
     icon: SafetyCertificateOutlined,
   },
   {
     key: 'process-engineer-processes',
-    path: '/mes/processes',
-    panel: 'processes',
-    view: 'processes',
+    target: { path: '/mes/processes', panel: 'processes', view: 'processes' },
     label: '工艺管理',
     roles: ['process_engineer'],
     icon: AppstoreOutlined,
   },
   {
     key: 'leader-engineering',
-    path: '/mes/leader',
-    panel: 'engineering',
-    view: 'engineering',
+    target: { path: '/mes/leader', panel: 'engineering', view: 'engineering' },
     label: '工程单',
     roles: ['leader'],
     icon: AppstoreOutlined,
   },
   {
-    key: 'leader-workorder',
-    path: '/mes/leader',
-    panel: 'workOrders',
-    view: 'workOrders',
-    label: '发工单',
-    roles: ['leader'],
-    icon: FormOutlined,
-  },
-  {
     key: 'warehouse-audit',
-    path: '/mes/warehouse',
-    panel: 'audit',
-    view: 'audit',
+    target: { path: '/mes/warehouse', panel: 'audit', view: 'audit' },
     label: '审批流转单',
     roles: ['warehouse_admin'],
     icon: InboxOutlined,
   },
   {
+    key: 'warehouse-flow',
+    target: { path: '/mes/warehouse', panel: 'flows', view: 'flows' },
+    label: '流转单',
+    roles: ['warehouse_admin'],
+    icon: FileSearchOutlined,
+  },
+  {
     key: 'warehouse-inventory',
-    path: '/mes/warehouse',
-    panel: 'inventory',
-    view: 'inventory',
+    target: { path: '/mes/warehouse', panel: 'inventory', view: 'inventory' },
     label: '物资情况',
     roles: ['warehouse_admin'],
     icon: DatabaseOutlined,
   },
   {
-    key: 'warehouse-workorder',
-    path: '/mes/warehouse',
-    panel: 'workOrders',
-    view: 'workOrders',
-    label: '发工单',
-    roles: ['warehouse_admin'],
-    icon: FormOutlined,
-  },
-  {
-    key: 'sales-apply',
-    path: '/mes/sales',
-    panel: 'flows',
-    view: 'flows',
-    label: '流转单',
-    roles: ['sales'],
-    icon: FileAddOutlined,
-  },
-  {
     key: 'admin-users',
-    path: '/mes/admin/users',
-    view: 'admin-users',
+    target: { path: '/mes/admin/users', view: 'admin-users' },
     label: '员工管理',
     roles: ['admin'],
     icon: UserOutlined,
@@ -246,20 +194,26 @@ const visibleNavItems = computed(() => {
 	return navItems.filter((item) => item.roles.includes(role))
 })
 
+const targetFor = (item: NavItem) => {
+  return typeof item.target === 'function' ? item.target(normalizedRole.value) : item.target
+}
+
 const isActive = (item: NavItem) => {
-  if (route.path !== item.path) return false
-  if (item.scanMode) return String(route.query.mode || '') === item.scanMode
-  return String(route.query.panel || '') === (item.panel || '') && String(route.query.view || '') === item.view
+  const target = targetFor(item)
+  if (route.path !== target.path) return false
+  if (target.scanMode) return String(route.query.mode || '') === target.scanMode
+  return String(route.query.panel || '') === (target.panel || '') && String(route.query.view || '') === target.view
 }
 
 const go = async (item: NavItem) => {
   drawerOpen.value = false
-  const query = item.scanMode ? { mode: item.scanMode } : item.panel ? { panel: item.panel, view: item.view } : { view: item.view }
-  const active = item.scanMode
-    ? route.path === item.path && String(route.query.mode || '') === item.scanMode
-    : route.path === item.path && String(route.query.panel || '') === (item.panel || '') && String(route.query.view || '') === item.view
+  const target = targetFor(item)
+  const query = target.scanMode ? { mode: target.scanMode } : target.panel ? { panel: target.panel, view: target.view } : { view: target.view }
+  const active = target.scanMode
+    ? route.path === target.path && String(route.query.mode || '') === target.scanMode
+    : route.path === target.path && String(route.query.panel || '') === (target.panel || '') && String(route.query.view || '') === target.view
   if (!active) {
-    await router.push({ path: item.path, query })
+    await router.push({ path: target.path, query })
   }
 }
 

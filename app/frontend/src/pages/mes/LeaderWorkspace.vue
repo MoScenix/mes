@@ -145,6 +145,7 @@ import dayjs from 'dayjs'
 import { message } from 'ant-design-vue'
 import {
   FLOW_TYPE_IN, FLOW_TYPE_OUT,
+  MesListScope,
   listInventoryFlow, listEngineeringOrder, listWorkOrder,
   createInventoryFlowDraft, deleteInventoryFlowDraft, submitInventoryFlow,
   createEngineeringOrder, submitEngineeringOrder,
@@ -238,19 +239,33 @@ const fetchData = async (next = false) => {
   if (next) loadingMore.value = true
   else loading.value = true
   try {
-    const p = {
+    const baseParams = {
       pageSize: listPage.pageSize,
-      namePrefix: searchText.value.trim() || undefined,
       cursorUpdatedAt: next ? listPage.nextCursorUpdatedAt : undefined,
       cursorId: next ? listPage.nextCursorId : undefined,
     }
+    const entitySearchParams = {
+      ...baseParams,
+      namePrefix: searchText.value.trim() || undefined,
+    }
     let res: any
     if (selectedType.value === 'engineering') {
-      res = await listEngineeringOrder({ ...p, itemId: searchItemId.value, recentSeconds: 30 * 24 * 60 * 60 })
+      res = await listEngineeringOrder({
+        ...baseParams,
+        itemId: searchItemId.value,
+        itemNamePrefix: searchItemId.value ? undefined : searchText.value.trim() || undefined,
+        scope: MesListScope.Mine,
+        recentSeconds: 30 * 24 * 60 * 60,
+      })
     } else if (selectedType.value === 'workOrders') {
-      res = await listWorkOrder({ ...p })
+      res = await listWorkOrder({ ...entitySearchParams })
     } else {
-      res = await listInventoryFlow({ ...p, recentSeconds: 30 * 24 * 60 * 60 })
+      res = await listInventoryFlow({
+        ...baseParams,
+        itemNamePrefix: searchText.value.trim() || undefined,
+        scope: MesListScope.Mine,
+        recentSeconds: 30 * 24 * 60 * 60,
+      })
     }
     if (res.data.code === 0 && res.data.data) {
       dataList.value = next ? [...dataList.value, ...(res.data.data.records ?? [])] : (res.data.data.records ?? [])

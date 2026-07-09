@@ -212,6 +212,7 @@ import {
   QUALITY_STATUS_QUALIFIED,
   STOCK_STATUS_OUT_STOCK,
   DraftStatus,
+  MesListScope,
   addItem,
   addItemUnit,
   createEngineeringOrder,
@@ -329,6 +330,7 @@ const loadEngineeringProcesses = async () => {
     const res = await listProcess({
       itemId: engineeringForm.itemId,
       status: DraftStatus.Submitted,
+      scope: MesListScope.All,
       pageSize: 50,
     })
     if (res.data.code !== 0) {

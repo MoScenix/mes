@@ -8,22 +8,22 @@ import (
 )
 
 type EngineeringOrder struct {
-	ID        uint `gorm:"primarykey;index:idx_engineering_order_leader_updated_id,priority:4;index:idx_engineering_order_leader_status_updated_id,priority:5;index:idx_engineering_order_process_updated_id,priority:4;index:idx_engineering_order_item_updated_id,priority:4;index:idx_engineering_order_status_updated_id,priority:4;index:idx_engineering_order_updated_id,priority:3;index:idx_engineering_order_process_status_updated_id,priority:5;index:idx_engineering_order_item_status_updated_id,priority:5;index:idx_engineering_order_leader_process_updated_id,priority:5;index:idx_engineering_order_leader_process_status_updated_id,priority:6;index:idx_engineering_order_leader_item_updated_id,priority:5;index:idx_engineering_order_leader_item_status_updated_id,priority:6;index:idx_engineering_order_name_id,priority:3;index:idx_engineering_order_leader_name_id,priority:4;index:idx_engineering_order_item_name_id,priority:4;index:idx_engineering_order_process_name_id,priority:4;index:idx_engineering_order_leader_status_name_id,priority:5;index:idx_engineering_order_item_status_name_id,priority:5;index:idx_engineering_order_process_status_name_id,priority:5;index:idx_engineering_order_item_process_updated_id,priority:5;index:idx_engineering_order_item_process_status_updated_id,priority:6"`
+	ID        uint `gorm:"primarykey;index:idx_engineering_order_updated_id,priority:3;index:idx_engineering_order_leader_updated_id,priority:4;index:idx_engineering_order_leader_status_updated_id,priority:5;index:idx_engineering_order_status_updated_id,priority:4;index:idx_engineering_order_item_updated_id,priority:4;index:idx_engineering_order_item_status_updated_id,priority:5;index:idx_engineering_order_process_updated_id,priority:4;index:idx_engineering_order_process_status_updated_id,priority:5;index:idx_engineering_order_item_process_updated_id,priority:5;index:idx_engineering_order_name_id,priority:3"`
 	CreatedAt time.Time
-	UpdatedAt time.Time      `gorm:"index:idx_engineering_order_leader_updated_id,priority:3;index:idx_engineering_order_leader_status_updated_id,priority:4;index:idx_engineering_order_process_updated_id,priority:3;index:idx_engineering_order_item_updated_id,priority:3;index:idx_engineering_order_status_updated_id,priority:3;index:idx_engineering_order_updated_id,priority:2;index:idx_engineering_order_process_status_updated_id,priority:4;index:idx_engineering_order_item_status_updated_id,priority:4;index:idx_engineering_order_leader_process_updated_id,priority:4;index:idx_engineering_order_leader_process_status_updated_id,priority:5;index:idx_engineering_order_leader_item_updated_id,priority:4;index:idx_engineering_order_leader_item_status_updated_id,priority:5;index:idx_engineering_order_item_process_updated_id,priority:4;index:idx_engineering_order_item_process_status_updated_id,priority:5"`
-	DeletedAt gorm.DeletedAt `gorm:"index;index:idx_engineering_order_leader_updated_id,priority:1;index:idx_engineering_order_leader_status_updated_id,priority:1;index:idx_engineering_order_process_updated_id,priority:1;index:idx_engineering_order_item_updated_id,priority:1;index:idx_engineering_order_status_updated_id,priority:1;index:idx_engineering_order_updated_id,priority:1;index:idx_engineering_order_process_status_updated_id,priority:1;index:idx_engineering_order_item_status_updated_id,priority:1;index:idx_engineering_order_leader_process_updated_id,priority:1;index:idx_engineering_order_leader_process_status_updated_id,priority:1;index:idx_engineering_order_leader_item_updated_id,priority:1;index:idx_engineering_order_leader_item_status_updated_id,priority:1;index:idx_engineering_order_name_id,priority:1;index:idx_engineering_order_leader_name_id,priority:1;index:idx_engineering_order_item_name_id,priority:1;index:idx_engineering_order_process_name_id,priority:1;index:idx_engineering_order_leader_status_name_id,priority:1;index:idx_engineering_order_item_status_name_id,priority:1;index:idx_engineering_order_process_status_name_id,priority:1;index:idx_engineering_order_item_process_updated_id,priority:1;index:idx_engineering_order_item_process_status_updated_id,priority:1"`
+	UpdatedAt time.Time      `gorm:"index:idx_engineering_order_updated_id,priority:2;index:idx_engineering_order_leader_updated_id,priority:3;index:idx_engineering_order_leader_status_updated_id,priority:4;index:idx_engineering_order_status_updated_id,priority:3;index:idx_engineering_order_item_updated_id,priority:3;index:idx_engineering_order_item_status_updated_id,priority:4;index:idx_engineering_order_process_updated_id,priority:3;index:idx_engineering_order_process_status_updated_id,priority:4;index:idx_engineering_order_item_process_updated_id,priority:4"`
+	DeletedAt gorm.DeletedAt `gorm:"index;index:idx_engineering_order_updated_id,priority:1;index:idx_engineering_order_leader_updated_id,priority:1;index:idx_engineering_order_leader_status_updated_id,priority:1;index:idx_engineering_order_status_updated_id,priority:1;index:idx_engineering_order_item_updated_id,priority:1;index:idx_engineering_order_item_status_updated_id,priority:1;index:idx_engineering_order_process_updated_id,priority:1;index:idx_engineering_order_process_status_updated_id,priority:1;index:idx_engineering_order_item_process_updated_id,priority:1;index:idx_engineering_order_name_id,priority:1"`
 
-	LeaderUserID        int64   `gorm:"not null;index:idx_engineering_order_leader_updated_id,priority:2;index:idx_engineering_order_leader_status_updated_id,priority:2;index:idx_engineering_order_leader_process_updated_id,priority:2;index:idx_engineering_order_leader_process_status_updated_id,priority:2;index:idx_engineering_order_leader_item_updated_id,priority:2;index:idx_engineering_order_leader_item_status_updated_id,priority:2;index:idx_engineering_order_leader_name_id,priority:2;index:idx_engineering_order_leader_status_name_id,priority:2"`
-	ProcessID           uint    `gorm:"not null;index:idx_engineering_order_process_updated_id,priority:2;index:idx_engineering_order_process_status_updated_id,priority:2;index:idx_engineering_order_leader_process_updated_id,priority:3;index:idx_engineering_order_leader_process_status_updated_id,priority:3;index:idx_engineering_order_process_name_id,priority:2;index:idx_engineering_order_process_status_name_id,priority:2;index:idx_engineering_order_item_process_updated_id,priority:3;index:idx_engineering_order_item_process_status_updated_id,priority:3"`
+	LeaderUserID        int64   `gorm:"not null;index:idx_engineering_order_leader_updated_id,priority:2;index:idx_engineering_order_leader_status_updated_id,priority:2"`
+	ProcessID           uint    `gorm:"not null;index:idx_engineering_order_process_updated_id,priority:2;index:idx_engineering_order_process_status_updated_id,priority:2;index:idx_engineering_order_item_process_updated_id,priority:3"`
 	Process             Process `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;"`
-	ItemID              uint    `gorm:"not null;index:idx_engineering_order_item_updated_id,priority:2;index:idx_engineering_order_item_status_updated_id,priority:2;index:idx_engineering_order_leader_item_updated_id,priority:3;index:idx_engineering_order_leader_item_status_updated_id,priority:3;index:idx_engineering_order_item_name_id,priority:2;index:idx_engineering_order_item_status_name_id,priority:2;index:idx_engineering_order_item_process_updated_id,priority:2;index:idx_engineering_order_item_process_status_updated_id,priority:2"`
+	ItemID              uint    `gorm:"not null;index:idx_engineering_order_item_updated_id,priority:2;index:idx_engineering_order_item_status_updated_id,priority:2;index:idx_engineering_order_item_process_updated_id,priority:2"`
 	Item                Item    `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;"`
-	Name                string  `gorm:"type:varchar(100);not null;default:'';index:idx_engineering_order_name_id,priority:2,length:64;index:idx_engineering_order_leader_name_id,priority:3,length:64;index:idx_engineering_order_item_name_id,priority:3,length:64;index:idx_engineering_order_process_name_id,priority:3,length:64;index:idx_engineering_order_leader_status_name_id,priority:4,length:64;index:idx_engineering_order_item_status_name_id,priority:4,length:64;index:idx_engineering_order_process_status_name_id,priority:4,length:64"`
+	Name                string  `gorm:"type:varchar(100);not null;default:'';index:idx_engineering_order_name_id,priority:2,length:64"`
 	ExpectedQuantity    int64   `gorm:"not null;default:0"`
 	QualifiedQuantity   int64   `gorm:"not null;default:0"`
 	UnqualifiedQuantity int64   `gorm:"not null;default:0"`
 	ProducedQuantity    int64   `gorm:"not null;default:0"`
-	Status              int32   `gorm:"not null;default:1;index:idx_engineering_order_leader_status_updated_id,priority:3;index:idx_engineering_order_status_updated_id,priority:2;index:idx_engineering_order_process_status_updated_id,priority:3;index:idx_engineering_order_item_status_updated_id,priority:3;index:idx_engineering_order_leader_process_status_updated_id,priority:4;index:idx_engineering_order_leader_item_status_updated_id,priority:4;index:idx_engineering_order_leader_status_name_id,priority:3;index:idx_engineering_order_item_status_name_id,priority:3;index:idx_engineering_order_process_status_name_id,priority:3;index:idx_engineering_order_item_process_status_updated_id,priority:4"`
+	Status              int32   `gorm:"not null;default:1;index:idx_engineering_order_leader_status_updated_id,priority:3;index:idx_engineering_order_status_updated_id,priority:2;index:idx_engineering_order_process_status_updated_id,priority:3;index:idx_engineering_order_item_status_updated_id,priority:3"`
 	Description         string  `gorm:"type:varchar(255);not null;default:''"`
 
 	ItemUnits []ItemUnit `gorm:"foreignKey:EngineeringOrderID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
@@ -56,32 +56,36 @@ func (q *EngineeringOrderQuery) Get(id uint, withUnits bool) (EngineeringOrder, 
 	return order, err
 }
 
-func (q *EngineeringOrderQuery) List(pageSize int, leaderUserID int64, itemID uint, processID uint, status int32, namePrefix string, sinceTime *time.Time, cursorUpdatedAt *time.Time, cursorID uint) ([]EngineeringOrder, bool, error) {
+func (q *EngineeringOrderQuery) List(pageSize int, leaderUserID int64, itemID uint, processID uint, status int32, namePrefix string, itemNamePrefix string, sinceTime *time.Time, cursorUpdatedAt *time.Time, cursorID uint) ([]EngineeringOrder, bool, error) {
 	var orders []EngineeringOrder
 	db := q.db.WithContext(q.ctx).Model(&EngineeringOrder{})
+	if itemNamePrefix != "" {
+		db = db.Joins("JOIN items ON items.id = engineering_orders.item_id AND items.deleted_at IS NULL").
+			Where("items.name LIKE ?", itemNamePrefix+"%")
+	}
 	if leaderUserID > 0 {
-		db = db.Where("leader_user_id = ?", leaderUserID)
+		db = db.Where("engineering_orders.leader_user_id = ?", leaderUserID)
 	}
 	if itemID > 0 {
-		db = db.Where("item_id = ?", itemID)
+		db = db.Where("engineering_orders.item_id = ?", itemID)
 	}
 	if processID > 0 {
-		db = db.Where("process_id = ?", processID)
+		db = db.Where("engineering_orders.process_id = ?", processID)
 	}
 	if status > 0 {
-		db = db.Where("status = ?", status)
+		db = db.Where("engineering_orders.status = ?", status)
 	}
 	if namePrefix != "" {
-		db = db.Where("name LIKE ?", namePrefix+"%")
+		db = db.Where("engineering_orders.name LIKE ?", namePrefix+"%")
 	}
 	if sinceTime != nil {
-		db = db.Where("updated_at > ?", *sinceTime)
+		db = db.Where("engineering_orders.updated_at > ?", *sinceTime)
 	}
 	if cursorUpdatedAt != nil && cursorID > 0 {
-		db = db.Where("(updated_at < ? OR (updated_at = ? AND id < ?))", *cursorUpdatedAt, *cursorUpdatedAt, cursorID)
+		db = db.Where("(engineering_orders.updated_at < ? OR (engineering_orders.updated_at = ? AND engineering_orders.id < ?))", *cursorUpdatedAt, *cursorUpdatedAt, cursorID)
 	}
 	err := db.Preload("Item").Preload("Process").
-		Order("updated_at DESC, id DESC").
+		Order("engineering_orders.updated_at DESC, engineering_orders.id DESC").
 		Limit(pageSize + 1).
 		Find(&orders).Error
 	if err != nil {

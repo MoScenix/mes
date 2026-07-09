@@ -303,7 +303,7 @@ func runListProcess(ctx context.Context, req *inventory.ListProcessReq) (*invent
 			return nil, err
 		}
 	}
-	processes, hasMore, err := model.NewProcessQuery(ctx, db).List(pageSize, req.GetOwnerUserId(), itemID, int32(req.GetStatus()), req.GetNamePrefix(), sinceTime, cursorUpdatedAt, cursorID)
+	processes, hasMore, err := model.NewProcessQuery(ctx, db).List(pageSize, req.GetOwnerUserId(), itemID, int32(req.GetStatus()), req.GetNamePrefix(), req.GetItemNamePrefix(), sinceTime, cursorUpdatedAt, cursorID)
 	if err != nil {
 		return nil, err
 	}
@@ -445,7 +445,7 @@ func runListItemUnit(ctx context.Context, req *inventory.ListItemUnitReq) (*inve
 			return nil, err
 		}
 	}
-	units, hasMore, err := model.NewItemUnitQuery(ctx, db).List(pageSize, itemID, engineeringOrderID, int32(req.GetStockStatus()), int32(req.GetQualityStatus()), cursorID)
+	units, hasMore, err := model.NewItemUnitQuery(ctx, db).List(pageSize, itemID, engineeringOrderID, int32(req.GetStockStatus()), int32(req.GetQualityStatus()), req.GetItemNamePrefix(), cursorID)
 	if err != nil {
 		return nil, err
 	}
@@ -788,7 +788,9 @@ func runListInventoryFlow(ctx context.Context, req *inventory.ListInventoryFlowR
 	if err != nil {
 		return nil, err
 	}
-	if req.GetUserId() <= 0 {
+	scope := req.GetScope()
+	filterUser := scope != inventory.ListScope_LIST_SCOPE_ALL && scope != inventory.ListScope_LIST_SCOPE_AUDIT
+	if filterUser && req.GetUserId() <= 0 {
 		return nil, errors.New("user id must be positive")
 	}
 	_, pageSize := normalizePage(req.GetPageNum(), req.GetPageSize())
@@ -807,12 +809,18 @@ func runListInventoryFlow(ctx context.Context, req *inventory.ListInventoryFlowR
 			return nil, err
 		}
 	}
+	flowStatus := int32(req.GetFlowStatus())
+	if scope == inventory.ListScope_LIST_SCOPE_AUDIT && flowStatus <= 0 {
+		flowStatus = int32(inventory.FlowStatus_FLOW_STATUS_SUBMITTED)
+	}
 	flows, hasMore, err := model.NewInventoryFlowQuery(ctx, db).List(
 		pageSize,
 		req.GetUserId(),
 		req.GetIsTo(),
-		int32(req.GetFlowStatus()),
+		filterUser,
+		flowStatus,
 		req.GetNamePrefix(),
+		req.GetItemNamePrefix(),
 		sinceTime,
 		cursorUpdatedAt,
 		cursorID,
@@ -1027,7 +1035,7 @@ func runListEngineeringOrder(ctx context.Context, req *inventory.ListEngineering
 			return nil, err
 		}
 	}
-	orders, hasMore, err := model.NewEngineeringOrderQuery(ctx, db).List(pageSize, req.GetLeaderUserId(), itemID, processID, int32(req.GetStatus()), req.GetNamePrefix(), sinceTime, cursorUpdatedAt, cursorID)
+	orders, hasMore, err := model.NewEngineeringOrderQuery(ctx, db).List(pageSize, req.GetLeaderUserId(), itemID, processID, int32(req.GetStatus()), req.GetNamePrefix(), req.GetItemNamePrefix(), sinceTime, cursorUpdatedAt, cursorID)
 	if err != nil {
 		return nil, err
 	}

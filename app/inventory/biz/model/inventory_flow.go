@@ -82,7 +82,7 @@ func (q *InventoryFlowQuery) List(pageSize int, userID int64, isTo bool, filterU
 	}
 	if itemNamePrefix != "" {
 		itemNameLike := itemNamePrefix + "%"
-		db = db.Where(`EXISTS (
+		db = db.Where(`(EXISTS (
 			SELECT 1
 			FROM inventory_flow_items
 			JOIN items ON items.id = inventory_flow_items.item_id AND items.deleted_at IS NULL
@@ -96,7 +96,7 @@ func (q *InventoryFlowQuery) List(pageSize int, userID int64, isTo bool, filterU
 			JOIN items ON items.id = item_units.item_id AND items.deleted_at IS NULL
 			WHERE inventory_flow_item_units.inventory_flow_id = inventory_flows.id
 				AND items.name LIKE ?
-		)`, itemNameLike, itemNameLike)
+		))`, itemNameLike, itemNameLike)
 	}
 	if sinceTime != nil {
 		db = db.Where("inventory_flows.updated_at > ?", *sinceTime)

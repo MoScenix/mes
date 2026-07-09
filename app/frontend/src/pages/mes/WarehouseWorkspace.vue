@@ -14,8 +14,8 @@
       </a-button>
     </div>
 
-    <!-- 待审批 -->
-    <template v-if="selectedType === 'audit'">
+    <!-- 流转单 -->
+    <template v-if="selectedType === 'audit' || selectedType === 'flows'">
       <a-table
         row-key="id"
         :columns="auditColumns"
@@ -44,8 +44,10 @@
           <template v-else-if="column.key === 'action'">
             <a-space>
               <a-button type="link" size="small" @click="viewDetail(record)">详情</a-button>
-              <a-button type="primary" size="small" @click="approveFlow(record)">批准</a-button>
-              <a-button danger size="small" @click="rejectFlow(record)">拒绝</a-button>
+              <template v-if="selectedType === 'audit'">
+                <a-button type="primary" size="small" @click="approveFlow(record)">批准</a-button>
+                <a-button danger size="small" @click="rejectFlow(record)">拒绝</a-button>
+              </template>
             </a-space>
           </template>
         </template>
@@ -122,10 +124,10 @@ import WorkOrderMailList from '@/components/mes/WorkOrderMailList.vue'
 const router = useRouter()
 const route = useRoute()
 
-type DataType = 'audit' | 'inventory' | 'workOrders'
+type DataType = 'audit' | 'flows' | 'inventory' | 'workOrders'
 const panelFromRoute = () => {
   const panel = String(route.query.panel || 'audit')
-  return ['audit', 'inventory', 'workOrders'].includes(panel) ? (panel as DataType) : 'audit'
+  return ['audit', 'flows', 'inventory', 'workOrders'].includes(panel) ? (panel as DataType) : 'audit'
 }
 const selectedType = ref<DataType>(panelFromRoute())
 
@@ -207,6 +209,14 @@ const fetchData = async (next = false) => {
         flowStatus: FLOW_STATUS_SUBMITTED,
         itemNamePrefix: searchText.value.trim() || undefined,
         scope: MesListScope.Audit,
+        cursorUpdatedAt: next ? listPage.nextCursorUpdatedAt : undefined,
+        cursorId: next ? listPage.nextCursorId : undefined,
+      })
+    } else if (selectedType.value === 'flows') {
+      res = await listInventoryFlow({
+        ...p,
+        itemNamePrefix: searchText.value.trim() || undefined,
+        scope: MesListScope.All,
         cursorUpdatedAt: next ? listPage.nextCursorUpdatedAt : undefined,
         cursorId: next ? listPage.nextCursorId : undefined,
       })

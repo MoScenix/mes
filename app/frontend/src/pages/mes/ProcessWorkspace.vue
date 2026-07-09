@@ -77,6 +77,7 @@ import { PlusOutlined } from '@ant-design/icons-vue'
 import dayjs from 'dayjs'
 import {
   DraftStatus,
+  MesListScope,
   deleteProcessDraft,
   listProcess,
   submitProcess,
@@ -131,7 +132,8 @@ const queryStatus = async (status: DraftStatus, next: boolean) => {
   const res = await listProcess({
     status,
     itemId: searchItemId.value,
-    namePrefix: searchText.value.trim() || undefined,
+    itemNamePrefix: searchItemId.value ? undefined : searchText.value.trim() || undefined,
+    scope: MesListScope.Mine,
     pageSize,
     recentSeconds: 30 * 24 * 60 * 60,
     cursorUpdatedAt: next ? page.nextCursorUpdatedAt : undefined,
