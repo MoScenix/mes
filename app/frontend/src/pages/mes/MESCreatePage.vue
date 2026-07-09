@@ -23,6 +23,14 @@
           <a-form-item label="物品" required>
             <MesItemPicker v-model="unitForm.itemId" placeholder="输入物品名或 ID" />
           </a-form-item>
+          <a-form-item label="绑定工程单">
+            <MesEngineeringOrderPicker
+              v-model="unitForm.engineeringOrderId"
+              :item-id="unitForm.itemId"
+              placeholder="可选，输入工程单名或 ID"
+              @select-order="selectUnitEngineeringOrder"
+            />
+          </a-form-item>
           <div class="form-row">
             <a-form-item label="库存状态">
               <a-select v-model:value="unitForm.stockStatus" :options="stockOptions" />
@@ -232,8 +240,10 @@ import {
   updateInventoryFlowDraft,
   updateProcessDraft,
   updateWorkOrderDraft,
+  type EngineeringOrderVO,
   type ItemVO,
 } from '@/api/mesController'
+import MesEngineeringOrderPicker from '@/components/mes/MesEngineeringOrderPicker.vue'
 import MesItemName from '@/components/mes/MesItemName.vue'
 import MesItemPicker from '@/components/mes/MesItemPicker.vue'
 import MesUserPicker from '@/components/mes/MesUserPicker.vue'
@@ -268,6 +278,7 @@ const unitForm = reactive({
   stockStatus: initialStockStatus,
   qualityStatus: initialQualityStatus,
   description: '',
+  engineeringOrderId: Number(route.query.engineeringOrderId || 0) || undefined as number | undefined,
 })
 const flowForm = reactive({
   name: '',
@@ -309,6 +320,7 @@ const flowTypeOptions = [
 const processLoading = ref(false)
 const processOptions = ref<{ label: string; value: number }[]>([])
 const selectedEngineeringItem = ref<ItemVO>()
+const selectedUnitEngineeringOrder = ref<EngineeringOrderVO>()
 const engineeringStep = computed(() => {
   if (!engineeringForm.itemId) return 0
   if (!engineeringForm.processId) return 1
@@ -317,6 +329,46 @@ const engineeringStep = computed(() => {
 
 const selectEngineeringItem = (item: ItemVO) => {
   selectedEngineeringItem.value = item
+}
+
+const selectUnitEngineeringOrder = (order: EngineeringOrderVO) => {
+  selectedUnitEngineeringOrder.value = order
+  if (!order.itemId) return
+  if (!unitForm.itemId) {
+    unitForm.itemId = order.itemId
+    return
+  }
+  if (unitForm.itemId !== order.itemId) {
+    message.error('单体物品与工程单生产物品不一致')
+    unitForm.engineeringOrderId = undefined
+    selectedUnitEngineeringOrder.value = undefined
+  }
+}
+
+const validateUnitEngineeringOrder = async () => {
+  if (!unitForm.engineeringOrderId) return true
+  let order = selectedUnitEngineeringOrder.value
+  if (!order || order.id !== unitForm.engineeringOrderId) {
+    const res = await getEngineeringOrder({ id: unitForm.engineeringOrderId })
+    if (res.data.code !== 0 || !res.data.data) {
+      message.error(res.data.message || '工程单不存在')
+      return false
+    }
+    order = res.data.data
+    selectedUnitEngineeringOrder.value = order
+  }
+  if (order.status !== DraftStatus.Submitted) {
+    message.error('只能绑定已提交工程单')
+    return false
+  }
+  if (unitForm.itemId && order.itemId && unitForm.itemId !== order.itemId) {
+    message.error('单体物品与工程单生产物品不一致')
+    return false
+  }
+  if (!unitForm.itemId && order.itemId) {
+    unitForm.itemId = order.itemId
+  }
+  return true
 }
 
 const loadEngineeringProcesses = async () => {
@@ -729,6 +781,9 @@ const submit = async () => {
         message.warning('请选择物品')
         return
       }
+      if (!(await validateUnitEngineeringOrder())) {
+        return
+      }
       const res = await addItemUnit(unitForm)
       id = res.data.data
     } else if (type.value === 'engineering') {
@@ -785,6 +840,17 @@ watch(
   },
 )
 
+watch(
+  () => unitForm.itemId,
+  (itemId) => {
+    if (!selectedUnitEngineeringOrder.value || !itemId) return
+    if (selectedUnitEngineeringOrder.value.itemId && selectedUnitEngineeringOrder.value.itemId !== itemId) {
+      unitForm.engineeringOrderId = undefined
+      selectedUnitEngineeringOrder.value = undefined
+    }
+  },
+)
+
 onMounted(async () => {
   await loadDraft()
   if (type.value === 'engineering') {
@@ -828,6 +894,10 @@ onMounted(async () => {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
+}
+
+.full-input {
+  width: 100%;
 }
 
 .create-steps {

@@ -196,9 +196,19 @@ const flowColumns = [
   { title: '类型', dataIndex: 'flowType', width: 80 },
   { title: '状态', dataIndex: 'flowStatus', width: 80 },
   { title: '描述', dataIndex: 'description', ellipsis: true },
+  { title: '进度', key: 'flowProgress', width: 120, customRender: ({ record }: any) => flowProgressText(record) },
   { title: '更新时间', dataIndex: 'updateTime', width: 160 },
   { title: '操作', key: 'action', width: 150 },
 ]
+
+const flowProgressText = (record: any) => {
+  const items = record.items || []
+  if (!items.length) return '-'
+  const finished = items.reduce((sum: number, item: any) => sum + (item.finishedQuantity || 0), 0)
+  const applied = items.reduce((sum: number, item: any) => sum + (item.applyQuantity || 0), 0)
+  return `${finished}/${applied}`
+}
+
 const engColumns = [
   { title: 'ID', key: 'id', width: 80 },
   { title: '名称', dataIndex: 'name', width: 180, ellipsis: true },

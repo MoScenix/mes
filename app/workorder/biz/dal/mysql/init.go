@@ -22,6 +22,7 @@ func Init() {
 	if strings.Contains(dsn, "%s") {
 		dsn = fmt.Sprintf(dsn, envOrDefault("MYSQL_USER", "root"), envOrDefault("MYSQL_PASSWORD", "YOUR_PASSWORD"), envOrDefault("MYSQL_HOST", "127.0.0.1"), envOrDefault("MYSQL_DATABASE", "YOU_DB"))
 	}
+	dsn = withMultiStatements(dsn)
 	DB, err = gorm.Open(mysql.Open(dsn),
 		&gorm.Config{
 			PrepareStmt:            true,
@@ -35,7 +36,27 @@ func Init() {
 	if err != nil {
 		panic(err)
 	}
-	dropWorkOrderLegacyIndexes()
+	runSQLFile()
+}
+
+func runSQLFile() {
+	sqlBytes, err := os.ReadFile("biz/dal/mysql/mes_indexes.sql")
+	if err != nil {
+		panic(err)
+	}
+	sqlDB, err := DB.DB()
+	if err != nil {
+		panic(err)
+	}
+	if _, err := sqlDB.Exec(string(sqlBytes)); err != nil {
+		if !isIndexExistsError(err) {
+			panic(err)
+		}
+	}
+}
+
+func isIndexExistsError(err error) bool {
+	return strings.Contains(err.Error(), "Duplicate key name")
 }
 
 func envOrDefault(key, fallback string) string {
@@ -46,18 +67,12 @@ func envOrDefault(key, fallback string) string {
 	return value
 }
 
-func dropWorkOrderLegacyIndexes() {
-	legacyIndexes := []string{
-		"idx_from_user_created_at",
-		"idx_to_user_created_at",
-		"idx_from_user_read_status_created_at",
-		"idx_to_user_read_status_created_at",
+func withMultiStatements(dsn string) string {
+	if strings.Contains(dsn, "multiStatements=") {
+		return dsn
 	}
-	for _, indexName := range legacyIndexes {
-		if DB.Migrator().HasIndex(&model.WorkOrder{}, indexName) {
-			if err := DB.Migrator().DropIndex(&model.WorkOrder{}, indexName); err != nil {
-				panic(err)
-			}
-		}
+	if strings.Contains(dsn, "?") {
+		return dsn + "&multiStatements=true"
 	}
+	return dsn + "?multiStatements=true"
 }

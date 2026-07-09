@@ -25,7 +25,10 @@ export const useInspectWorkflow = () => {
 
   const loadInspectOrder = async (value: string) => {
     const parsed = parseMesCode(value, 'ENGINEERING_ORDER')
-    if (!parsed.id) return
+    if (parsed.kind !== 'ENGINEERING_ORDER' || !parsed.id) {
+      message.warning('请输入有效的工程单码')
+      return
+    }
     const res = await getEngineeringOrder({ id: parsed.id })
     if (res.data.code !== 0 || !res.data.data) {
       message.error(res.data.message || '读取工程单失败')
@@ -51,7 +54,8 @@ export const useInspectWorkflow = () => {
       inspectOperationKey.value += 1
     }
     const parsed = parseMesCode(value, 'ITEM_UNIT')
-    if (!parsed.id) {
+    if (parsed.kind !== 'ITEM_UNIT' || !parsed.id) {
+      message.warning('请输入有效的库存单体码')
       reopenScanner()
       return
     }

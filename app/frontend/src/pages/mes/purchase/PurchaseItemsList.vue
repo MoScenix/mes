@@ -18,7 +18,7 @@
       <template v-else-if="column.key === 'action'">
         <a-space class="row-actions" size="small">
           <a-button type="link" size="small" @click="$emit('view-detail', record)">详情</a-button>
-          <a-button v-if="record.id" type="link" size="small" @click="$emit('add-unit', record)">添加单体</a-button>
+          <a-button v-if="showAddUnit && record.id" type="link" size="small" @click="$emit('add-unit', record)">添加单体</a-button>
         </a-space>
       </template>
     </template>
@@ -38,6 +38,7 @@ defineProps<{
   loading: boolean
   loadingMore: boolean
   hasMore: boolean
+  showAddUnit?: boolean
 }>()
 
 defineEmits<{

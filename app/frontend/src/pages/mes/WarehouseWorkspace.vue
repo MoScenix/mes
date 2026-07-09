@@ -157,9 +157,18 @@ const auditColumns = [
   { title: '类型', dataIndex: 'flowType', width: 80 },
   { title: '申请人', dataIndex: 'fromUserId', width: 150 },
   { title: '说明', dataIndex: 'description', ellipsis: true },
+  { title: '进度', key: 'flowProgress', width: 120, customRender: ({ record }: any) => flowProgressText(record) },
   { title: '创建时间', dataIndex: 'createTime', width: 160 },
   { title: '操作', key: 'action', width: 250 },
 ]
+
+const flowProgressText = (record: any) => {
+  const items = record.items || []
+  if (!items.length) return '-'
+  const finished = items.reduce((sum: number, item: any) => sum + (item.finishedQuantity || 0), 0)
+  const applied = items.reduce((sum: number, item: any) => sum + (item.applyQuantity || 0), 0)
+  return `${finished}/${applied}`
+}
 
 const inventoryColumns = [
   { title: 'ID', key: 'id', width: 80 },
@@ -188,12 +197,11 @@ const woColumns = [
 const dataList = ref<any[]>([])
 const loading = ref(false)
 const loadingMore = ref(false)
-const listPage = reactive({ pageSize: 20, hasMore: false, nextCursorUpdatedAt: '', nextCursorName: '', nextCursorId: 0 })
+const listPage = reactive({ pageSize: 20, hasMore: false, nextCursorUpdatedAt: '', nextCursorId: 0 })
 
-const syncCursor = (data?: { hasMore?: boolean; nextCursorUpdatedAt?: string; nextCursorName?: string; nextCursorId?: number }) => {
+const syncCursor = (data?: { hasMore?: boolean; nextCursorUpdatedAt?: string; nextCursorId?: number }) => {
   listPage.hasMore = Boolean(data?.hasMore)
   listPage.nextCursorUpdatedAt = data?.nextCursorUpdatedAt || ''
-  listPage.nextCursorName = data?.nextCursorName || ''
   listPage.nextCursorId = data?.nextCursorId || 0
 }
 
@@ -224,7 +232,7 @@ const fetchData = async (next = false) => {
       res = await listItems({
         ...p,
         namePrefix: searchText.value.trim() || undefined,
-        cursorName: next ? listPage.nextCursorName : undefined,
+        cursorUpdatedAt: next ? listPage.nextCursorUpdatedAt : undefined,
         cursorId: next ? listPage.nextCursorId : undefined,
       })
     } else {

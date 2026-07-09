@@ -14,17 +14,17 @@ const (
 )
 
 type Process struct {
-	ID        uint `gorm:"primarykey;index:idx_process_updated_id,priority:3;index:idx_process_owner_updated_id,priority:4;index:idx_process_owner_status_updated_id,priority:5;index:idx_process_status_updated_id,priority:4;index:idx_process_item_updated_id,priority:4;index:idx_process_item_status_updated_id,priority:5;index:idx_process_name_id,priority:3"`
+	ID        uint `gorm:"primarykey"`
 	CreatedAt time.Time
-	UpdatedAt time.Time      `gorm:"index:idx_process_updated_id,priority:2;index:idx_process_owner_updated_id,priority:3;index:idx_process_owner_status_updated_id,priority:4;index:idx_process_status_updated_id,priority:3;index:idx_process_item_updated_id,priority:3;index:idx_process_item_status_updated_id,priority:4"`
-	DeletedAt gorm.DeletedAt `gorm:"index;index:idx_process_updated_id,priority:1;index:idx_process_owner_updated_id,priority:1;index:idx_process_owner_status_updated_id,priority:1;index:idx_process_status_updated_id,priority:1;index:idx_process_item_updated_id,priority:1;index:idx_process_item_status_updated_id,priority:1;index:idx_process_name_id,priority:1"`
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt
 
-	ItemID      uint   `gorm:"not null;index:idx_process_item_updated_id,priority:2;index:idx_process_item_status_updated_id,priority:2"`
+	ItemID      uint   `gorm:"not null"`
 	Item        Item   `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;"`
-	OwnerUserID int64  `gorm:"not null;index:idx_process_owner_updated_id,priority:2;index:idx_process_owner_status_updated_id,priority:2"`
-	Name        string `gorm:"type:varchar(100);not null;index:idx_process_name_id,priority:2,length:64"`
+	OwnerUserID int64  `gorm:"not null"`
+	Name        string `gorm:"type:varchar(100);not null"`
 	Description string `gorm:"type:varchar(255);not null;default:''"`
-	Status      int32  `gorm:"not null;default:1;index:idx_process_owner_status_updated_id,priority:3;index:idx_process_status_updated_id,priority:2;index:idx_process_item_status_updated_id,priority:3"`
+	Status      int32  `gorm:"not null;default:1"`
 
 	Items []ProcessItem `gorm:"foreignKey:ProcessID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
@@ -33,11 +33,11 @@ type ProcessItem struct {
 	ID        uint `gorm:"primarykey"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt `gorm:"index"`
+	DeletedAt gorm.DeletedAt
 
-	ProcessID     uint `gorm:"not null;uniqueIndex:idx_process_item_consume,priority:1"`
+	ProcessID     uint `gorm:"not null"`
 	Process       Process
-	ConsumeItemID uint  `gorm:"not null;uniqueIndex:idx_process_item_consume,priority:2;index:idx_process_item_consume_reverse,priority:1"`
+	ConsumeItemID uint  `gorm:"not null"`
 	ConsumeItem   Item  `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;"`
 	Quantity      int64 `gorm:"not null;default:0"`
 }

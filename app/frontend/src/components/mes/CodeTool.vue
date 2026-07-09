@@ -188,7 +188,7 @@ const suggestions = computed(() => {
   const value = props.modelValue.trim()
   if (!value) return []
   const parsed = parseMesCode(value, props.kind)
-  if (parsed.kind && parsed.id) {
+  if (parsed.kind && parsed.id && (!props.kind || parsed.kind === props.kind)) {
     return [
       {
         label: `打开${kindLabel[parsed.kind]} #${parsed.id}`,

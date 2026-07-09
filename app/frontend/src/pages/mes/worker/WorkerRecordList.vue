@@ -50,7 +50,6 @@ import {
   QUALITY_STATUS_UNQUALIFIED,
   STOCK_STATUS_IN_STOCK,
   STOCK_STATUS_OUT_STOCK,
-  STOCK_STATUS_RESERVED,
 } from '@/api/mesController'
 import MesItemName from '@/components/mes/MesItemName.vue'
 import type { WorkerPanelType } from './types'
@@ -98,7 +97,7 @@ const viewDetail = (record: any) => {
 }
 
 const formatTime = (t?: string) => t ? dayjs(t).format('YYYY-MM-DD HH:mm') : '-'
-const stockLabel = (s?: number) => s === STOCK_STATUS_IN_STOCK ? '在库' : s === STOCK_STATUS_RESERVED ? '预留' : s === STOCK_STATUS_OUT_STOCK ? '出库' : '未知'
+const stockLabel = (s?: number) => s === STOCK_STATUS_IN_STOCK ? '在库' : s === STOCK_STATUS_OUT_STOCK ? '出库' : '未知'
 const qualityLabel = (s?: number) => s === QUALITY_STATUS_PENDING ? '待检测' : s === QUALITY_STATUS_QUALIFIED ? '合格' : s === QUALITY_STATUS_UNQUALIFIED ? '不合格' : '未知'
 const flowStatusColor = (s?: number) => s === 1 ? 'default' : s === 2 ? 'blue' : s === 3 ? 'green' : 'red'
 const flowStatusLabel = (s?: number) => s === 1 ? '草稿' : s === 2 ? '待处理' : s === 3 ? '已通过' : '已拒绝'

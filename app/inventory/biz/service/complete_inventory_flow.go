@@ -1,10 +1,6 @@
 package service
 
-import (
-	"context"
-
-	inventory "github.com/MoScenix/mes/rpc_gen/kitex_gen/inventory"
-)
+import "context"
 
 type CompleteInventoryFlowService struct {
 	ctx context.Context
@@ -12,8 +8,4 @@ type CompleteInventoryFlowService struct {
 
 func NewCompleteInventoryFlowService(ctx context.Context) *CompleteInventoryFlowService {
 	return &CompleteInventoryFlowService{ctx: ctx}
-}
-
-func (s *CompleteInventoryFlowService) Run(req *inventory.CompleteInventoryFlowReq) (resp *inventory.CompleteInventoryFlowResp, err error) {
-	return runCompleteInventoryFlow(s.ctx, req)
 }

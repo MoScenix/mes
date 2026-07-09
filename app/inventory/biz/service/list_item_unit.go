@@ -1,9 +1,6 @@
 package service
 
-import (
-	"context"
-	inventory "github.com/MoScenix/mes/rpc_gen/kitex_gen/inventory"
-)
+import "context"
 
 type ListItemUnitService struct {
 	ctx context.Context
@@ -13,6 +10,3 @@ func NewListItemUnitService(ctx context.Context) *ListItemUnitService {
 }
 
 // Run create note info
-func (s *ListItemUnitService) Run(req *inventory.ListItemUnitReq) (resp *inventory.ListItemUnitResp, err error) {
-	return runListItemUnit(s.ctx, req)
-}

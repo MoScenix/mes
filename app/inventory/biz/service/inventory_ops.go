@@ -20,7 +20,8 @@ const (
 	maxPageSize     = 100
 )
 
-func runAddItem(ctx context.Context, req *inventory.AddItemReq) (*inventory.AddItemResp, error) {
+func (s *AddItemService) Run(req *inventory.AddItemReq) (resp *inventory.AddItemResp, err error) {
+	ctx := s.ctx
 	db, err := inventoryDB()
 	if err != nil {
 		return nil, err
@@ -36,7 +37,8 @@ func runAddItem(ctx context.Context, req *inventory.AddItemReq) (*inventory.AddI
 	return &inventory.AddItemResp{Id: int64(item.ID)}, nil
 }
 
-func runUpdateItem(ctx context.Context, req *inventory.UpdateItemReq) (*inventory.UpdateItemResp, error) {
+func (s *UpdateItemService) Run(req *inventory.UpdateItemReq) (resp *inventory.UpdateItemResp, err error) {
+	ctx := s.ctx
 	db, err := inventoryDB()
 	if err != nil {
 		return nil, err
@@ -59,7 +61,8 @@ func runUpdateItem(ctx context.Context, req *inventory.UpdateItemReq) (*inventor
 	return &inventory.UpdateItemResp{Success: true}, nil
 }
 
-func runGetItem(ctx context.Context, req *inventory.GetItemReq) (*inventory.GetItemResp, error) {
+func (s *GetItemService) Run(req *inventory.GetItemReq) (resp *inventory.GetItemResp, err error) {
+	ctx := s.ctx
 	db, err := inventoryDB()
 	if err != nil {
 		return nil, err
@@ -75,7 +78,8 @@ func runGetItem(ctx context.Context, req *inventory.GetItemReq) (*inventory.GetI
 	return &inventory.GetItemResp{Item: itemInfo(item)}, nil
 }
 
-func runListItem(ctx context.Context, req *inventory.ListItemReq) (*inventory.ListItemResp, error) {
+func (s *ListItemService) Run(req *inventory.ListItemReq) (resp *inventory.ListItemResp, err error) {
+	ctx := s.ctx
 	db, err := inventoryDB()
 	if err != nil {
 		return nil, err
@@ -88,23 +92,28 @@ func runListItem(ctx context.Context, req *inventory.ListItemReq) (*inventory.Li
 			return nil, err
 		}
 	}
-	items, hasMore, err := model.NewItemQuery(ctx, db).List(pageSize, req.GetNamePrefix(), req.GetCursorName(), cursorID)
+	cursorUpdatedAt, err := parseCursorTime(req.GetCursorUpdatedAt())
 	if err != nil {
 		return nil, err
 	}
-	resp := &inventory.ListItemResp{Total: int64(len(items)), HasMore: hasMore, ItemList: make([]*inventory.ItemInfo, 0, len(items))}
+	items, hasMore, err := model.NewItemQuery(ctx, db).List(pageSize, req.GetNamePrefix(), cursorUpdatedAt, cursorID)
+	if err != nil {
+		return nil, err
+	}
+	resp = &inventory.ListItemResp{Total: int64(len(items)), HasMore: hasMore, ItemList: make([]*inventory.ItemInfo, 0, len(items))}
 	for _, item := range items {
 		resp.ItemList = append(resp.ItemList, itemInfo(item))
 	}
 	if len(items) > 0 {
 		last := items[len(items)-1]
-		resp.NextCursorName = last.Name
+		resp.NextCursorUpdatedAt = formatTime(last.UpdatedAt)
 		resp.NextCursorId = int64(last.ID)
 	}
 	return resp, nil
 }
 
-func runCreateProcessDraft(ctx context.Context, req *inventory.CreateProcessDraftReq) (*inventory.CreateProcessDraftResp, error) {
+func (s *CreateProcessDraftService) Run(req *inventory.CreateProcessDraftReq) (resp *inventory.CreateProcessDraftResp, err error) {
+	ctx := s.ctx
 	db, err := inventoryDB()
 	if err != nil {
 		return nil, err
@@ -146,7 +155,8 @@ func runCreateProcessDraft(ctx context.Context, req *inventory.CreateProcessDraf
 	return &inventory.CreateProcessDraftResp{Id: int64(process.ID)}, nil
 }
 
-func runUpdateProcessDraft(ctx context.Context, req *inventory.UpdateProcessDraftReq) (*inventory.UpdateProcessDraftResp, error) {
+func (s *UpdateProcessDraftService) Run(req *inventory.UpdateProcessDraftReq) (resp *inventory.UpdateProcessDraftResp, err error) {
+	ctx := s.ctx
 	db, err := inventoryDB()
 	if err != nil {
 		return nil, err
@@ -206,7 +216,8 @@ func runUpdateProcessDraft(ctx context.Context, req *inventory.UpdateProcessDraf
 	return &inventory.UpdateProcessDraftResp{Success: true}, nil
 }
 
-func runDeleteProcessDraft(ctx context.Context, req *inventory.DeleteProcessDraftReq) (*inventory.DeleteProcessDraftResp, error) {
+func (s *DeleteProcessDraftService) Run(req *inventory.DeleteProcessDraftReq) (resp *inventory.DeleteProcessDraftResp, err error) {
+	ctx := s.ctx
 	db, err := inventoryDB()
 	if err != nil {
 		return nil, err
@@ -234,7 +245,8 @@ func runDeleteProcessDraft(ctx context.Context, req *inventory.DeleteProcessDraf
 	return &inventory.DeleteProcessDraftResp{Success: true}, nil
 }
 
-func runSubmitProcess(ctx context.Context, req *inventory.SubmitProcessReq) (*inventory.SubmitProcessResp, error) {
+func (s *SubmitProcessService) Run(req *inventory.SubmitProcessReq) (resp *inventory.SubmitProcessResp, err error) {
+	ctx := s.ctx
 	db, err := inventoryDB()
 	if err != nil {
 		return nil, err
@@ -259,7 +271,8 @@ func runSubmitProcess(ctx context.Context, req *inventory.SubmitProcessReq) (*in
 	return &inventory.SubmitProcessResp{Success: true}, nil
 }
 
-func runGetProcess(ctx context.Context, req *inventory.GetProcessReq) (*inventory.GetProcessResp, error) {
+func (s *GetProcessService) Run(req *inventory.GetProcessReq) (resp *inventory.GetProcessResp, err error) {
+	ctx := s.ctx
 	db, err := inventoryDB()
 	if err != nil {
 		return nil, err
@@ -275,7 +288,8 @@ func runGetProcess(ctx context.Context, req *inventory.GetProcessReq) (*inventor
 	return &inventory.GetProcessResp{Process: processInfo(process, true)}, nil
 }
 
-func runListProcess(ctx context.Context, req *inventory.ListProcessReq) (*inventory.ListProcessResp, error) {
+func (s *ListProcessService) Run(req *inventory.ListProcessReq) (resp *inventory.ListProcessResp, err error) {
+	ctx := s.ctx
 	db, err := inventoryDB()
 	if err != nil {
 		return nil, err
@@ -307,7 +321,7 @@ func runListProcess(ctx context.Context, req *inventory.ListProcessReq) (*invent
 	if err != nil {
 		return nil, err
 	}
-	resp := &inventory.ListProcessResp{Total: int64(len(processes)), HasMore: hasMore, ProcessList: make([]*inventory.ProcessInfo, 0, len(processes))}
+	resp = &inventory.ListProcessResp{Total: int64(len(processes)), HasMore: hasMore, ProcessList: make([]*inventory.ProcessInfo, 0, len(processes))}
 	for _, process := range processes {
 		resp.ProcessList = append(resp.ProcessList, processInfo(process, false))
 	}
@@ -319,7 +333,8 @@ func runListProcess(ctx context.Context, req *inventory.ListProcessReq) (*invent
 	return resp, nil
 }
 
-func runAddItemUnit(ctx context.Context, req *inventory.AddItemUnitReq) (*inventory.AddItemUnitResp, error) {
+func (s *AddItemUnitService) Run(req *inventory.AddItemUnitReq) (resp *inventory.AddItemUnitResp, err error) {
+	ctx := s.ctx
 	db, err := inventoryDB()
 	if err != nil {
 		return nil, err
@@ -368,7 +383,8 @@ func runAddItemUnit(ctx context.Context, req *inventory.AddItemUnitReq) (*invent
 	return &inventory.AddItemUnitResp{Id: int64(unit.ID)}, nil
 }
 
-func runUpdateItemUnitStatus(ctx context.Context, req *inventory.UpdateItemUnitStatusReq) (*inventory.UpdateItemUnitStatusResp, error) {
+func (s *UpdateItemUnitStatusService) Run(req *inventory.UpdateItemUnitStatusReq) (resp *inventory.UpdateItemUnitStatusResp, err error) {
+	ctx := s.ctx
 	db, err := inventoryDB()
 	if err != nil {
 		return nil, err
@@ -402,7 +418,8 @@ func runUpdateItemUnitStatus(ctx context.Context, req *inventory.UpdateItemUnitS
 	return &inventory.UpdateItemUnitStatusResp{Success: true}, nil
 }
 
-func runGetItemUnit(ctx context.Context, req *inventory.GetItemUnitReq) (*inventory.GetItemUnitResp, error) {
+func (s *GetItemUnitService) Run(req *inventory.GetItemUnitReq) (resp *inventory.GetItemUnitResp, err error) {
+	ctx := s.ctx
 	db, err := inventoryDB()
 	if err != nil {
 		return nil, err
@@ -418,7 +435,8 @@ func runGetItemUnit(ctx context.Context, req *inventory.GetItemUnitReq) (*invent
 	return &inventory.GetItemUnitResp{ItemUnit: itemUnitInfo(unit)}, nil
 }
 
-func runListItemUnit(ctx context.Context, req *inventory.ListItemUnitReq) (*inventory.ListItemUnitResp, error) {
+func (s *ListItemUnitService) Run(req *inventory.ListItemUnitReq) (resp *inventory.ListItemUnitResp, err error) {
+	ctx := s.ctx
 	db, err := inventoryDB()
 	if err != nil {
 		return nil, err
@@ -438,6 +456,13 @@ func runListItemUnit(ctx context.Context, req *inventory.ListItemUnitReq) (*inve
 			return nil, err
 		}
 	}
+	var inventoryFlowID uint
+	if req.GetInventoryFlowId() > 0 {
+		inventoryFlowID, err = uintID(req.GetInventoryFlowId(), "inventory flow id")
+		if err != nil {
+			return nil, err
+		}
+	}
 	var cursorID uint
 	if req.GetCursorId() > 0 {
 		cursorID, err = uintID(req.GetCursorId(), "cursor id")
@@ -445,21 +470,28 @@ func runListItemUnit(ctx context.Context, req *inventory.ListItemUnitReq) (*inve
 			return nil, err
 		}
 	}
-	units, hasMore, err := model.NewItemUnitQuery(ctx, db).List(pageSize, itemID, engineeringOrderID, int32(req.GetStockStatus()), int32(req.GetQualityStatus()), req.GetItemNamePrefix(), cursorID)
+	cursorUpdatedAt, err := parseCursorTime(req.GetCursorUpdatedAt())
 	if err != nil {
 		return nil, err
 	}
-	resp := &inventory.ListItemUnitResp{Total: int64(len(units)), HasMore: hasMore, ItemUnitList: make([]*inventory.ItemUnitInfo, 0, len(units))}
+	units, hasMore, err := model.NewItemUnitQuery(ctx, db).List(pageSize, itemID, engineeringOrderID, inventoryFlowID, int32(req.GetStockStatus()), int32(req.GetQualityStatus()), req.GetItemNamePrefix(), cursorUpdatedAt, cursorID)
+	if err != nil {
+		return nil, err
+	}
+	resp = &inventory.ListItemUnitResp{Total: int64(len(units)), HasMore: hasMore, ItemUnitList: make([]*inventory.ItemUnitInfo, 0, len(units))}
 	for _, unit := range units {
 		resp.ItemUnitList = append(resp.ItemUnitList, itemUnitInfo(unit))
 	}
 	if len(units) > 0 {
-		resp.NextCursorId = int64(units[len(units)-1].ID)
+		last := units[len(units)-1]
+		resp.NextCursorUpdatedAt = formatTime(last.UpdatedAt)
+		resp.NextCursorId = int64(last.ID)
 	}
 	return resp, nil
 }
 
-func runCreateInventoryFlow(ctx context.Context, req *inventory.CreateInventoryFlowReq) (*inventory.CreateInventoryFlowResp, error) {
+func (s *CreateInventoryFlowService) Run(req *inventory.CreateInventoryFlowReq) (resp *inventory.CreateInventoryFlowResp, err error) {
+	ctx := s.ctx
 	db, err := inventoryDB()
 	if err != nil {
 		return nil, err
@@ -510,7 +542,8 @@ func runCreateInventoryFlow(ctx context.Context, req *inventory.CreateInventoryF
 	return &inventory.CreateInventoryFlowResp{Id: int64(flowID)}, nil
 }
 
-func runUpdateInventoryFlowDraft(ctx context.Context, req *inventory.UpdateInventoryFlowDraftReq) (*inventory.UpdateInventoryFlowDraftResp, error) {
+func (s *UpdateInventoryFlowDraftService) Run(req *inventory.UpdateInventoryFlowDraftReq) (resp *inventory.UpdateInventoryFlowDraftResp, err error) {
+	ctx := s.ctx
 	db, err := inventoryDB()
 	if err != nil {
 		return nil, err
@@ -571,7 +604,8 @@ func runUpdateInventoryFlowDraft(ctx context.Context, req *inventory.UpdateInven
 	return &inventory.UpdateInventoryFlowDraftResp{Success: true}, nil
 }
 
-func runDeleteInventoryFlowDraft(ctx context.Context, req *inventory.DeleteInventoryFlowDraftReq) (*inventory.DeleteInventoryFlowDraftResp, error) {
+func (s *DeleteInventoryFlowDraftService) Run(req *inventory.DeleteInventoryFlowDraftReq) (resp *inventory.DeleteInventoryFlowDraftResp, err error) {
+	ctx := s.ctx
 	db, err := inventoryDB()
 	if err != nil {
 		return nil, err
@@ -602,7 +636,8 @@ func runDeleteInventoryFlowDraft(ctx context.Context, req *inventory.DeleteInven
 	return &inventory.DeleteInventoryFlowDraftResp{Success: true}, nil
 }
 
-func runSubmitInventoryFlow(ctx context.Context, req *inventory.SubmitInventoryFlowReq) (*inventory.SubmitInventoryFlowResp, error) {
+func (s *SubmitInventoryFlowService) Run(req *inventory.SubmitInventoryFlowReq) (resp *inventory.SubmitInventoryFlowResp, err error) {
+	ctx := s.ctx
 	db, err := inventoryDB()
 	if err != nil {
 		return nil, err
@@ -627,7 +662,8 @@ func runSubmitInventoryFlow(ctx context.Context, req *inventory.SubmitInventoryF
 	return &inventory.SubmitInventoryFlowResp{Success: true}, nil
 }
 
-func runCompleteInventoryFlow(ctx context.Context, req *inventory.CompleteInventoryFlowReq) (*inventory.CompleteInventoryFlowResp, error) {
+func (s *CompleteInventoryFlowService) Run(req *inventory.CompleteInventoryFlowReq) (resp *inventory.CompleteInventoryFlowResp, err error) {
+	ctx := s.ctx
 	db, err := inventoryDB()
 	if err != nil {
 		return nil, err
@@ -654,6 +690,21 @@ func runCompleteInventoryFlow(ctx context.Context, req *inventory.CompleteInvent
 		units, err := findUnitsByIDsForUpdate(ctx, tx, req.GetItemUnitIds())
 		if err != nil {
 			return err
+		}
+		unitByID := make(map[uint]model.ItemUnit, len(units))
+		unitIDs := make([]uint, 0, len(units))
+		for _, unit := range units {
+			unitByID[unit.ID] = unit
+			unitIDs = append(unitIDs, unit.ID)
+		}
+		var existingJoins []model.InventoryFlowItemUnit
+		if err := tx.WithContext(ctx).
+			Where("inventory_flow_id = ? AND item_unit_id IN ?", flow.ID, unitIDs).
+			Find(&existingJoins).Error; err != nil {
+			return err
+		}
+		if len(existingJoins) > 0 {
+			return fmt.Errorf("item unit %d has already been completed in this flow", existingJoins[0].ItemUnitID)
 		}
 		detailByItem := make(map[uint]model.InventoryFlowItem, len(details))
 		for _, detail := range details {
@@ -689,9 +740,12 @@ func runCompleteInventoryFlow(ctx context.Context, req *inventory.CompleteInvent
 		}
 		joins := make([]model.InventoryFlowItemUnit, 0, len(units))
 		for _, unit := range units {
+			if _, ok := unitByID[unit.ID]; !ok {
+				return fmt.Errorf("item unit %d is invalid", unit.ID)
+			}
 			joins = append(joins, model.InventoryFlowItemUnit{InventoryFlowID: flow.ID, ItemUnitID: unit.ID})
 		}
-		if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&joins).Error; err != nil {
+		if err := tx.Create(&joins).Error; err != nil {
 			return err
 		}
 		for itemID, quantity := range finishedByItem {
@@ -719,7 +773,8 @@ func runCompleteInventoryFlow(ctx context.Context, req *inventory.CompleteInvent
 	return &inventory.CompleteInventoryFlowResp{Success: true}, nil
 }
 
-func runAuditInventoryFlow(ctx context.Context, req *inventory.AuditInventoryFlowReq) (*inventory.AuditInventoryFlowResp, error) {
+func (s *AuditInventoryFlowService) Run(req *inventory.AuditInventoryFlowReq) (resp *inventory.AuditInventoryFlowResp, err error) {
+	ctx := s.ctx
 	db, err := inventoryDB()
 	if err != nil {
 		return nil, err
@@ -767,7 +822,8 @@ func runAuditInventoryFlow(ctx context.Context, req *inventory.AuditInventoryFlo
 	return &inventory.AuditInventoryFlowResp{Success: true}, nil
 }
 
-func runGetInventoryFlow(ctx context.Context, req *inventory.GetInventoryFlowReq) (*inventory.GetInventoryFlowResp, error) {
+func (s *GetInventoryFlowService) Run(req *inventory.GetInventoryFlowReq) (resp *inventory.GetInventoryFlowResp, err error) {
+	ctx := s.ctx
 	db, err := inventoryDB()
 	if err != nil {
 		return nil, err
@@ -783,7 +839,8 @@ func runGetInventoryFlow(ctx context.Context, req *inventory.GetInventoryFlowReq
 	return &inventory.GetInventoryFlowResp{InventoryFlow: flowInfo(flow)}, nil
 }
 
-func runListInventoryFlow(ctx context.Context, req *inventory.ListInventoryFlowReq) (*inventory.ListInventoryFlowResp, error) {
+func (s *ListInventoryFlowService) Run(req *inventory.ListInventoryFlowReq) (resp *inventory.ListInventoryFlowResp, err error) {
+	ctx := s.ctx
 	db, err := inventoryDB()
 	if err != nil {
 		return nil, err
@@ -809,6 +866,13 @@ func runListInventoryFlow(ctx context.Context, req *inventory.ListInventoryFlowR
 			return nil, err
 		}
 	}
+	var itemUnitID uint
+	if req.GetItemUnitId() > 0 {
+		itemUnitID, err = uintID(req.GetItemUnitId(), "item unit id")
+		if err != nil {
+			return nil, err
+		}
+	}
 	flowStatus := int32(req.GetFlowStatus())
 	if scope == inventory.ListScope_LIST_SCOPE_AUDIT && flowStatus <= 0 {
 		flowStatus = int32(inventory.FlowStatus_FLOW_STATUS_SUBMITTED)
@@ -821,6 +885,7 @@ func runListInventoryFlow(ctx context.Context, req *inventory.ListInventoryFlowR
 		flowStatus,
 		req.GetNamePrefix(),
 		req.GetItemNamePrefix(),
+		itemUnitID,
 		sinceTime,
 		cursorUpdatedAt,
 		cursorID,
@@ -828,7 +893,7 @@ func runListInventoryFlow(ctx context.Context, req *inventory.ListInventoryFlowR
 	if err != nil {
 		return nil, err
 	}
-	resp := &inventory.ListInventoryFlowResp{Total: int64(len(flows)), HasMore: hasMore, InventoryFlowList: make([]*inventory.InventoryFlowInfo, 0, len(flows))}
+	resp = &inventory.ListInventoryFlowResp{Total: int64(len(flows)), HasMore: hasMore, InventoryFlowList: make([]*inventory.InventoryFlowInfo, 0, len(flows))}
 	for _, flow := range flows {
 		resp.InventoryFlowList = append(resp.InventoryFlowList, flowInfo(flow))
 	}
@@ -840,7 +905,8 @@ func runListInventoryFlow(ctx context.Context, req *inventory.ListInventoryFlowR
 	return resp, nil
 }
 
-func runCreateEngineeringOrderDraft(ctx context.Context, req *inventory.CreateEngineeringOrderDraftReq) (*inventory.CreateEngineeringOrderDraftResp, error) {
+func (s *CreateEngineeringOrderDraftService) Run(req *inventory.CreateEngineeringOrderDraftReq) (resp *inventory.CreateEngineeringOrderDraftResp, err error) {
+	ctx := s.ctx
 	db, err := inventoryDB()
 	if err != nil {
 		return nil, err
@@ -881,7 +947,8 @@ func runCreateEngineeringOrderDraft(ctx context.Context, req *inventory.CreateEn
 	return &inventory.CreateEngineeringOrderDraftResp{Id: int64(order.ID)}, nil
 }
 
-func runUpdateEngineeringOrderDraft(ctx context.Context, req *inventory.UpdateEngineeringOrderDraftReq) (*inventory.UpdateEngineeringOrderDraftResp, error) {
+func (s *UpdateEngineeringOrderDraftService) Run(req *inventory.UpdateEngineeringOrderDraftReq) (resp *inventory.UpdateEngineeringOrderDraftResp, err error) {
+	ctx := s.ctx
 	db, err := inventoryDB()
 	if err != nil {
 		return nil, err
@@ -931,7 +998,8 @@ func runUpdateEngineeringOrderDraft(ctx context.Context, req *inventory.UpdateEn
 	return &inventory.UpdateEngineeringOrderDraftResp{Success: true}, nil
 }
 
-func runDeleteEngineeringOrderDraft(ctx context.Context, req *inventory.DeleteEngineeringOrderDraftReq) (*inventory.DeleteEngineeringOrderDraftResp, error) {
+func (s *DeleteEngineeringOrderDraftService) Run(req *inventory.DeleteEngineeringOrderDraftReq) (resp *inventory.DeleteEngineeringOrderDraftResp, err error) {
+	ctx := s.ctx
 	db, err := inventoryDB()
 	if err != nil {
 		return nil, err
@@ -956,7 +1024,8 @@ func runDeleteEngineeringOrderDraft(ctx context.Context, req *inventory.DeleteEn
 	return &inventory.DeleteEngineeringOrderDraftResp{Success: true}, nil
 }
 
-func runSubmitEngineeringOrder(ctx context.Context, req *inventory.SubmitEngineeringOrderReq) (*inventory.SubmitEngineeringOrderResp, error) {
+func (s *SubmitEngineeringOrderService) Run(req *inventory.SubmitEngineeringOrderReq) (resp *inventory.SubmitEngineeringOrderResp, err error) {
+	ctx := s.ctx
 	db, err := inventoryDB()
 	if err != nil {
 		return nil, err
@@ -979,76 +1048,6 @@ func runSubmitEngineeringOrder(ctx context.Context, req *inventory.SubmitEnginee
 		return nil, err
 	}
 	return &inventory.SubmitEngineeringOrderResp{Success: true}, nil
-}
-
-func runGetEngineeringOrder(ctx context.Context, req *inventory.GetEngineeringOrderReq) (*inventory.GetEngineeringOrderResp, error) {
-	db, err := inventoryDB()
-	if err != nil {
-		return nil, err
-	}
-	id, err := uintID(req.GetId(), "engineering order id")
-	if err != nil {
-		return nil, err
-	}
-	if err := model.RecalculateEngineeringOrderProducedQuantity(ctx, db, id); err != nil {
-		return nil, err
-	}
-	order, err := model.NewEngineeringOrderQuery(ctx, db).Get(id, true)
-	if err != nil {
-		return nil, err
-	}
-	return &inventory.GetEngineeringOrderResp{EngineeringOrder: engineeringOrderInfo(order, false)}, nil
-}
-
-func runListEngineeringOrder(ctx context.Context, req *inventory.ListEngineeringOrderReq) (*inventory.ListEngineeringOrderResp, error) {
-	db, err := inventoryDB()
-	if err != nil {
-		return nil, err
-	}
-	_, pageSize := normalizePage(req.GetPageNum(), req.GetPageSize())
-	var itemID uint
-	if req.GetItemId() > 0 {
-		itemID, err = uintID(req.GetItemId(), "item id")
-		if err != nil {
-			return nil, err
-		}
-	}
-	var processID uint
-	if req.GetProcessId() > 0 {
-		processID, err = uintID(req.GetProcessId(), "process id")
-		if err != nil {
-			return nil, err
-		}
-	}
-	sinceTime, err := parseSinceTime(req.GetSinceTime(), req.GetRecentSeconds())
-	if err != nil {
-		return nil, err
-	}
-	cursorUpdatedAt, err := parseCursorTime(req.GetCursorUpdatedAt())
-	if err != nil {
-		return nil, err
-	}
-	var cursorID uint
-	if req.GetCursorId() > 0 {
-		cursorID, err = uintID(req.GetCursorId(), "cursor id")
-		if err != nil {
-			return nil, err
-		}
-	}
-	orders, hasMore, err := model.NewEngineeringOrderQuery(ctx, db).List(pageSize, req.GetLeaderUserId(), itemID, processID, int32(req.GetStatus()), req.GetNamePrefix(), req.GetItemNamePrefix(), sinceTime, cursorUpdatedAt, cursorID)
-	if err != nil {
-		return nil, err
-	}
-	resp := &inventory.ListEngineeringOrderResp{Total: int64(len(orders)), HasMore: hasMore, EngineeringOrderList: make([]*inventory.EngineeringOrderInfo, 0, len(orders))}
-	for _, order := range orders {
-		resp.EngineeringOrderList = append(resp.EngineeringOrderList, engineeringOrderInfo(order, false))
-	}
-	if len(orders) > 0 {
-		last := orders[len(orders)-1]
-		resp.NextCursorUpdatedAt = formatTime(last.UpdatedAt)
-		resp.NextCursorId = int64(last.ID)
-	}
-	return resp, nil
 }
 
 func inventoryDB() (*gorm.DB, error) {
@@ -1353,7 +1352,6 @@ func validStockStatus(status inventory.StockStatus) bool {
 	switch status {
 	case inventory.StockStatus_STOCK_STATUS_UNKNOWN,
 		inventory.StockStatus_STOCK_STATUS_IN_STOCK,
-		inventory.StockStatus_STOCK_STATUS_RESERVED,
 		inventory.StockStatus_STOCK_STATUS_OUT_STOCK:
 		return true
 	default:

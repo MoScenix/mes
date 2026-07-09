@@ -4,6 +4,8 @@ import (
 	"context"
 
 	mes "github.com/MoScenix/mes/app/bff/hertz_gen/bff/mes"
+	"github.com/MoScenix/mes/app/bff/infra/rpc"
+	rpcinventory "github.com/MoScenix/mes/rpc_gen/kitex_gen/inventory"
 	"github.com/cloudwego/hertz/pkg/app"
 )
 
@@ -17,5 +19,14 @@ func NewUpdateItemService(Context context.Context, RequestContext *app.RequestCo
 }
 
 func (h *UpdateItemService) Run(req *mes.UpdateItemRequest) (resp *mes.BaseResponseBoolean, err error) {
-	return runUpdateItem(h.Context, req)
+	res, err := rpc.InventoryClient.UpdateItem(mesCtx(h.Context), &rpcinventory.UpdateItemReq{
+		Id:          req.GetId(),
+		Name:        req.GetName(),
+		Unit:        req.GetUnit(),
+		Description: req.GetDescription(),
+	})
+	if err != nil {
+		return mesBoolErr(err), nil
+	}
+	return mesBool(res.GetSuccess()), nil
 }

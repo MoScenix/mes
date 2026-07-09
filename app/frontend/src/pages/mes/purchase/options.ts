@@ -5,7 +5,6 @@ import {
   QUALITY_STATUS_UNQUALIFIED,
   STOCK_STATUS_IN_STOCK,
   STOCK_STATUS_OUT_STOCK,
-  STOCK_STATUS_RESERVED,
 } from '@/api/mesController'
 
 export const flowStatusOptions = [
@@ -17,7 +16,6 @@ export const flowStatusOptions = [
 
 export const stockOptions = [
   { label: '在库', value: STOCK_STATUS_IN_STOCK },
-  { label: '预留', value: STOCK_STATUS_RESERVED },
   { label: '不在库', value: STOCK_STATUS_OUT_STOCK },
 ]
 

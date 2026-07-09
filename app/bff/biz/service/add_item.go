@@ -4,6 +4,8 @@ import (
 	"context"
 
 	mes "github.com/MoScenix/mes/app/bff/hertz_gen/bff/mes"
+	"github.com/MoScenix/mes/app/bff/infra/rpc"
+	rpcinventory "github.com/MoScenix/mes/rpc_gen/kitex_gen/inventory"
 	"github.com/cloudwego/hertz/pkg/app"
 )
 
@@ -17,5 +19,13 @@ func NewAddItemService(Context context.Context, RequestContext *app.RequestConte
 }
 
 func (h *AddItemService) Run(req *mes.AddItemRequest) (resp *mes.BaseResponseLong, err error) {
-	return runAddItem(h.Context, req)
+	res, err := rpc.InventoryClient.AddItem(mesCtx(h.Context), &rpcinventory.AddItemReq{
+		Name:        req.GetName(),
+		Unit:        req.GetUnit(),
+		Description: req.GetDescription(),
+	})
+	if err != nil {
+		return mesLongErr(err), nil
+	}
+	return mesLong(res.GetId()), nil
 }

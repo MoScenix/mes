@@ -15,6 +15,8 @@ type UsePurchaseListOptions = {
   flowStatusFilter: Ref<number | undefined>
   stockStatusFilter: Ref<number | undefined>
   qualityStatusFilter: Ref<number | undefined>
+  engineeringOrderId: Ref<number | undefined>
+  flowId: Ref<number | undefined>
 }
 
 export function usePurchaseList(options: UsePurchaseListOptions) {
@@ -25,14 +27,12 @@ export function usePurchaseList(options: UsePurchaseListOptions) {
     pageSize: 20,
     hasMore: false,
     nextCursorUpdatedAt: '',
-    nextCursorName: '',
     nextCursorId: 0,
   })
 
-  const syncCursor = (data?: { hasMore?: boolean; nextCursorUpdatedAt?: string; nextCursorName?: string; nextCursorId?: number }) => {
+  const syncCursor = (data?: { hasMore?: boolean; nextCursorUpdatedAt?: string; nextCursorId?: number }) => {
     listPage.hasMore = Boolean(data?.hasMore)
     listPage.nextCursorUpdatedAt = data?.nextCursorUpdatedAt || ''
-    listPage.nextCursorName = data?.nextCursorName || ''
     listPage.nextCursorId = data?.nextCursorId || 0
   }
 
@@ -60,7 +60,7 @@ export function usePurchaseList(options: UsePurchaseListOptions) {
         res = await listItems({
           ...params,
           namePrefix,
-          cursorName: next ? listPage.nextCursorName : undefined,
+          cursorUpdatedAt: next ? listPage.nextCursorUpdatedAt : undefined,
           cursorId: next ? listPage.nextCursorId : undefined,
         })
       } else {
@@ -70,6 +70,9 @@ export function usePurchaseList(options: UsePurchaseListOptions) {
           itemNamePrefix: options.searchItemId.value ? undefined : options.searchText.value.trim() || undefined,
           stockStatus: options.stockStatusFilter.value,
           qualityStatus: options.qualityStatusFilter.value,
+          engineeringOrderId: options.engineeringOrderId.value,
+          inventoryFlowId: options.flowId.value,
+          cursorUpdatedAt: next ? listPage.nextCursorUpdatedAt : undefined,
           cursorId: next ? listPage.nextCursorId : undefined,
         })
       }

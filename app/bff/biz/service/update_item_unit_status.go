@@ -4,6 +4,8 @@ import (
 	"context"
 
 	mes "github.com/MoScenix/mes/app/bff/hertz_gen/bff/mes"
+	"github.com/MoScenix/mes/app/bff/infra/rpc"
+	rpcinventory "github.com/MoScenix/mes/rpc_gen/kitex_gen/inventory"
 	"github.com/cloudwego/hertz/pkg/app"
 )
 
@@ -17,5 +19,13 @@ func NewUpdateItemUnitStatusService(Context context.Context, RequestContext *app
 }
 
 func (h *UpdateItemUnitStatusService) Run(req *mes.UpdateItemUnitStatusRequest) (resp *mes.BaseResponseBoolean, err error) {
-	return runUpdateItemUnitStatus(h.Context, req)
+	res, err := rpc.InventoryClient.UpdateItemUnitStatus(mesCtx(h.Context), &rpcinventory.UpdateItemUnitStatusReq{
+		Id:            req.GetId(),
+		StockStatus:   rpcinventory.StockStatus(req.GetStockStatus()),
+		QualityStatus: rpcinventory.QualityStatus(req.GetQualityStatus()),
+	})
+	if err != nil {
+		return mesBoolErr(err), nil
+	}
+	return mesBool(res.GetSuccess()), nil
 }

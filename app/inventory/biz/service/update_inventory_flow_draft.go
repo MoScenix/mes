@@ -1,9 +1,6 @@
 package service
 
-import (
-	"context"
-	inventory "github.com/MoScenix/mes/rpc_gen/kitex_gen/inventory"
-)
+import "context"
 
 type UpdateInventoryFlowDraftService struct {
 	ctx context.Context
@@ -13,6 +10,3 @@ func NewUpdateInventoryFlowDraftService(ctx context.Context) *UpdateInventoryFlo
 }
 
 // Run create note info
-func (s *UpdateInventoryFlowDraftService) Run(req *inventory.UpdateInventoryFlowDraftReq) (resp *inventory.UpdateInventoryFlowDraftResp, err error) {
-	return runUpdateInventoryFlowDraft(s.ctx, req)
-}

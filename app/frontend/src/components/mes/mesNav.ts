@@ -27,10 +27,20 @@ export type MesNavItem = {
 export const mesNavItems: MesNavItem[] = [
   {
     key: 'purchase-add',
-    target: { path: '/mes/purchase', panel: 'items', view: 'catalog' },
+    target: (role) => {
+      if (role === 'process_engineer') return { path: '/mes/processes', panel: 'items', view: 'catalog' }
+      return { path: '/mes/purchase', panel: 'items', view: 'catalog' }
+    },
     label: '物料',
-    roles: ['purchase'],
+    roles: ['purchase', 'process_engineer'],
     icon: ShoppingCartOutlined,
+  },
+  {
+    key: 'purchase-units',
+    target: { path: '/mes/purchase', panel: 'itemUnits', view: 'units' },
+    label: '库存单体',
+    roles: ['purchase'],
+    icon: DatabaseOutlined,
   },
   {
     key: 'purchase-scan',

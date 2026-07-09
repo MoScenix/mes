@@ -2,8 +2,8 @@ package service
 
 import (
 	"context"
-	"testing"
 	inventory "github.com/MoScenix/mes/rpc_gen/kitex_gen/inventory"
+	"testing"
 )
 
 func TestCompleteInventoryFlow_Run(t *testing.T) {

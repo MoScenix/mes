@@ -56,7 +56,7 @@ const openDetail = async (kind: MesCodeKind, id: number) => {
 
 const openCode = async (value: string) => {
   const parsed = parseMesCode(value, expectedKind.value)
-  if (!parsed.kind || !parsed.id) {
+  if (!parsed.kind || !parsed.id || (expectedKind.value && parsed.kind !== expectedKind.value)) {
     message.warning('请输入有效的 MES 对象码')
     return
   }

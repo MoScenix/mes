@@ -3,18 +3,30 @@
     <div class="workspace-header">
       <MesListSearchPicker
         v-model="searchText"
-        placeholder="搜索工艺、物品名或输入码"
+        :placeholder="isItemsPanel ? '搜索物料或输入码' : '搜索工艺、物品名或输入码'"
         class="search-input"
         @search="onSearch"
         @select-item="selectSearchItem"
         @clear="clearSearch"
       />
       <a-button type="primary" @click="openCreate">
-        <PlusOutlined /> 新建工艺
+        <PlusOutlined /> {{ isItemsPanel ? '新增物料' : '新建工艺' }}
       </a-button>
     </div>
 
+    <PurchaseItemsList
+      v-if="isItemsPanel"
+      :items="itemRows"
+      :loading="loading"
+      :loading-more="loadingMore"
+      :has-more="itemPage.hasMore"
+      @view-detail="viewItemDetail"
+      @add-unit="() => undefined"
+      @load-more="loadMoreItems"
+    />
+
     <a-table
+      v-else
       row-key="rowKey"
       :columns="columns"
       :data-source="dataList"
@@ -62,7 +74,7 @@
       </template>
     </a-table>
 
-    <div v-if="dataList.length" class="list-more">
+    <div v-if="!isItemsPanel && dataList.length" class="list-more">
       <a-button v-if="hasMore" :loading="loadingMore" @click="loadMore">加载更多</a-button>
       <span v-else class="muted-text">没有更多了</span>
     </div>
@@ -70,8 +82,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { PlusOutlined } from '@ant-design/icons-vue'
 import dayjs from 'dayjs'
@@ -79,6 +91,7 @@ import {
   DraftStatus,
   MesListScope,
   deleteProcessDraft,
+  listItems,
   listProcess,
   submitProcess,
   type ItemVO,
@@ -88,19 +101,24 @@ import {
 import MesItemName from '@/components/mes/MesItemName.vue'
 import MesListSearchPicker from '@/components/mes/MesListSearchPicker.vue'
 import { parseMesCode } from '@/utils/mesCode'
+import PurchaseItemsList from './purchase/PurchaseItemsList.vue'
 
 type ProcessRow = ProcessVO & { rowKey: string }
 
 const router = useRouter()
+const route = useRoute()
 const searchText = ref('')
 const searchItemId = ref<number>()
 const dataList = ref<ProcessRow[]>([])
+const itemRows = ref<ItemVO[]>([])
 const loading = ref(false)
 const loadingMore = ref(false)
 
 const draftPage = reactive({ hasMore: false, nextCursorUpdatedAt: '', nextCursorId: 0 })
 const submittedPage = reactive({ hasMore: false, nextCursorUpdatedAt: '', nextCursorId: 0 })
+const itemPage = reactive({ hasMore: false, nextCursorUpdatedAt: '', nextCursorId: 0 })
 const pageSize = 20
+const isItemsPanel = computed(() => String(route.query.panel || 'processes') === 'items')
 
 const columns = [
   { title: 'ID', key: 'id', width: 72 },
@@ -161,6 +179,10 @@ const sortRows = (rows: ProcessRow[]) =>
   })
 
 const fetchData = async (next = false) => {
+  if (isItemsPanel.value) {
+    await fetchItems(next)
+    return
+  }
   if (next) loadingMore.value = true
   else loading.value = true
   try {
@@ -178,9 +200,40 @@ const fetchData = async (next = false) => {
   }
 }
 
+const fetchItems = async (next = false) => {
+  if (next) loadingMore.value = true
+  else loading.value = true
+  try {
+    const res = await listItems({
+      pageSize,
+      namePrefix: searchText.value.trim() || undefined,
+      cursorUpdatedAt: next ? itemPage.nextCursorUpdatedAt : undefined,
+      cursorId: next ? itemPage.nextCursorId : undefined,
+    })
+    if (res.data.code !== 0) {
+      throw new Error(res.data.message || '读取物料失败')
+    }
+    const records = res.data.data?.records || []
+    itemRows.value = next ? [...itemRows.value, ...records] : records
+    itemPage.hasMore = Boolean(res.data.data?.hasMore)
+    itemPage.nextCursorUpdatedAt = res.data.data?.nextCursorUpdatedAt || ''
+    itemPage.nextCursorId = res.data.data?.nextCursorId || 0
+  } catch (error) {
+    message.error(error instanceof Error ? error.message : '读取物料失败')
+  } finally {
+    loading.value = false
+    loadingMore.value = false
+  }
+}
+
 const loadMore = () => {
   if (!hasMore.value) return
   fetchData(true)
+}
+
+const loadMoreItems = () => {
+  if (!itemPage.hasMore) return
+  fetchItems(true)
 }
 
 const onSearch = (value: string) => {
@@ -205,6 +258,10 @@ const clearSearch = () => {
   fetchData()
 }
 
+const viewItemDetail = (record: ItemVO) => {
+  router.push({ path: '/mes/detail', query: { kind: 'ITEM', id: String(record.id) } })
+}
+
 const viewDetail = (record: ProcessVO) => {
   router.push({ path: '/mes/detail', query: { kind: 'PROCESS', id: String(record.id) } })
 }
@@ -214,7 +271,7 @@ const jumpToEngOrders = (record: ProcessVO) => {
 }
 
 const openCreate = () => {
-  router.push({ path: '/mes/create', query: { type: 'process' } })
+  router.push({ path: '/mes/create', query: { type: isItemsPanel.value ? 'item' : 'process' } })
 }
 
 const editDraft = (record: ProcessVO) => {
@@ -267,6 +324,12 @@ const statusColor = (status?: DraftStatus) => {
 }
 
 const formatTime = (t?: string) => t ? dayjs(t).format('YYYY-MM-DD HH:mm') : '-'
+
+watch(() => route.query.panel, () => {
+  searchText.value = ''
+  searchItemId.value = undefined
+  fetchData()
+})
 
 onMounted(() => fetchData())
 </script>

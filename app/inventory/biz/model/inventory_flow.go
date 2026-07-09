@@ -8,16 +8,16 @@ import (
 )
 
 type InventoryFlow struct {
-	ID        uint `gorm:"primarykey;index:idx_inventory_flow_updated_id,priority:3;index:idx_inventory_flow_status_updated_id,priority:4;index:idx_inventory_flow_from_updated_id,priority:4;index:idx_inventory_flow_to_updated_id,priority:4;index:idx_inventory_flow_from_status_updated_id,priority:5;index:idx_inventory_flow_to_status_updated_id,priority:5;index:idx_inventory_flow_name_id,priority:3"`
+	ID        uint `gorm:"primarykey"`
 	CreatedAt time.Time
-	UpdatedAt time.Time      `gorm:"index:idx_inventory_flow_updated_id,priority:2;index:idx_inventory_flow_status_updated_id,priority:3;index:idx_inventory_flow_from_updated_id,priority:3;index:idx_inventory_flow_to_updated_id,priority:3;index:idx_inventory_flow_from_status_updated_id,priority:4;index:idx_inventory_flow_to_status_updated_id,priority:4"`
-	DeletedAt gorm.DeletedAt `gorm:"index;index:idx_inventory_flow_updated_id,priority:1;index:idx_inventory_flow_status_updated_id,priority:1;index:idx_inventory_flow_from_updated_id,priority:1;index:idx_inventory_flow_to_updated_id,priority:1;index:idx_inventory_flow_from_status_updated_id,priority:1;index:idx_inventory_flow_to_status_updated_id,priority:1;index:idx_inventory_flow_name_id,priority:1"`
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt
 
-	FromUserID  int64      `gorm:"not null;index:idx_inventory_flow_from_updated_id,priority:2;index:idx_inventory_flow_from_status_updated_id,priority:2"`
-	ToUserID    int64      `gorm:"not null;index:idx_inventory_flow_to_updated_id,priority:2;index:idx_inventory_flow_to_status_updated_id,priority:2"`
+	FromUserID  int64      `gorm:"not null"`
+	ToUserID    int64      `gorm:"not null"`
 	FlowType    int32      `gorm:"not null"`
-	FlowStatus  int32      `gorm:"not null;index:idx_inventory_flow_status_updated_id,priority:2;index:idx_inventory_flow_from_status_updated_id,priority:3;index:idx_inventory_flow_to_status_updated_id,priority:3"`
-	Name        string     `gorm:"type:varchar(100);not null;default:'';index:idx_inventory_flow_name_id,priority:2,length:64"`
+	FlowStatus  int32      `gorm:"not null"`
+	Name        string     `gorm:"type:varchar(100);not null;default:''"`
 	Description string     `gorm:"type:varchar(255);not null;default:''"`
 	ApprovedBy  int64      `gorm:"not null;default:0"`
 	ApprovedAt  *time.Time `gorm:"default:null"`
@@ -30,18 +30,18 @@ type InventoryFlowItem struct {
 	ID        uint `gorm:"primarykey"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt `gorm:"index"`
+	DeletedAt gorm.DeletedAt
 
-	InventoryFlowID  uint  `gorm:"not null;uniqueIndex:idx_inventory_flow_item,priority:1;index:idx_inventory_flow_item_reverse,priority:2"`
-	ItemID           uint  `gorm:"not null;uniqueIndex:idx_inventory_flow_item,priority:2;index:idx_inventory_flow_item_reverse,priority:1"`
+	InventoryFlowID  uint  `gorm:"not null"`
+	ItemID           uint  `gorm:"not null"`
 	Item             Item  `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;"`
 	ApplyQuantity    int64 `gorm:"not null;default:0"`
 	FinishedQuantity int64 `gorm:"not null;default:0"`
 }
 
 type InventoryFlowItemUnit struct {
-	InventoryFlowID uint `gorm:"primaryKey;autoIncrement:false;uniqueIndex:idx_inventory_flow_unit,priority:1;index:idx_inventory_flow_unit_reverse,priority:2"`
-	ItemUnitID      uint `gorm:"primaryKey;autoIncrement:false;uniqueIndex:idx_inventory_flow_unit,priority:2;index:idx_inventory_flow_unit_reverse,priority:1"`
+	InventoryFlowID uint `gorm:"primaryKey;autoIncrement:false"`
+	ItemUnitID      uint `gorm:"primaryKey;autoIncrement:false"`
 }
 
 type InventoryFlowQuery struct {
@@ -62,7 +62,7 @@ func (q *InventoryFlowQuery) Get(id uint) (InventoryFlow, error) {
 	return flow, err
 }
 
-func (q *InventoryFlowQuery) List(pageSize int, userID int64, isTo bool, filterUser bool, flowStatus int32, namePrefix string, itemNamePrefix string, sinceTime *time.Time, cursorUpdatedAt *time.Time, cursorID uint) ([]InventoryFlow, bool, error) {
+func (q *InventoryFlowQuery) List(pageSize int, userID int64, isTo bool, filterUser bool, flowStatus int32, namePrefix string, itemNamePrefix string, itemUnitID uint, sinceTime *time.Time, cursorUpdatedAt *time.Time, cursorID uint) ([]InventoryFlow, bool, error) {
 	var flows []InventoryFlow
 	db := q.db.WithContext(q.ctx).Model(&InventoryFlow{})
 	if filterUser {
@@ -97,6 +97,14 @@ func (q *InventoryFlowQuery) List(pageSize int, userID int64, isTo bool, filterU
 			WHERE inventory_flow_item_units.inventory_flow_id = inventory_flows.id
 				AND items.name LIKE ?
 		))`, itemNameLike, itemNameLike)
+	}
+	if itemUnitID > 0 {
+		db = db.Where(`EXISTS (
+			SELECT 1
+			FROM inventory_flow_item_units
+			WHERE inventory_flow_item_units.inventory_flow_id = inventory_flows.id
+				AND inventory_flow_item_units.item_unit_id = ?
+		)`, itemUnitID)
 	}
 	if sinceTime != nil {
 		db = db.Where("inventory_flows.updated_at > ?", *sinceTime)

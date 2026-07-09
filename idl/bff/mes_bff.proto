@@ -418,7 +418,7 @@ message ListItemRequest {
   int64 pageNum = 1;
   int64 pageSize = 2;
   string namePrefix = 3;
-  string cursorName = 4;
+  string cursorUpdatedAt = 4;
   int64 cursorId = 5;
 }
 
@@ -426,7 +426,7 @@ message SearchItemsRequest {
   string namePrefix = 1 [(api.query) = "namePrefix"];
   int64 pageNum = 2 [(api.query) = "pageNum"];
   int64 pageSize = 3 [(api.query) = "pageSize"];
-  string cursorName = 4 [(api.query) = "cursorName"];
+  string cursorUpdatedAt = 4 [(api.query) = "cursorUpdatedAt"];
   int64 cursorId = 5 [(api.query) = "cursorId"];
 }
 
@@ -454,6 +454,8 @@ message ListItemUnitRequest {
   int64 cursorId = 7;
   string itemNamePrefix = 8;
   MesListScope scope = 9;
+  int64 inventoryFlowId = 10;
+  string cursorUpdatedAt = 11;
 }
 
 message InventoryFlowItemRequest {
@@ -503,6 +505,7 @@ message ListInventoryFlowRequest {
   string namePrefix = 10;
   string itemNamePrefix = 11;
   MesListScope scope = 12;
+  int64 itemUnitId = 13;
 }
 
 message WorkOrderVO {
@@ -630,7 +633,7 @@ message PageItemVO {
   int64 totalRow = 5;
   bool optimizeCountQuery = 6;
   bool hasMore = 7;
-  string nextCursorName = 8;
+  string nextCursorUpdatedAt = 8;
   int64 nextCursorId = 9;
 }
 
@@ -642,7 +645,8 @@ message PageItemUnitVO {
   int64 totalRow = 5;
   bool optimizeCountQuery = 6;
   bool hasMore = 7;
-  int64 nextCursorId = 8;
+  string nextCursorUpdatedAt = 8;
+  int64 nextCursorId = 9;
 }
 
 message PageProcessVO {

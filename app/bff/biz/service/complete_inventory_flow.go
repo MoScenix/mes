@@ -5,8 +5,8 @@ import (
 
 	mes "github.com/MoScenix/mes/app/bff/hertz_gen/bff/mes"
 	"github.com/MoScenix/mes/app/bff/infra/rpc"
-	"github.com/cloudwego/hertz/pkg/app"
 	rpcinventory "github.com/MoScenix/mes/rpc_gen/kitex_gen/inventory"
+	"github.com/cloudwego/hertz/pkg/app"
 )
 
 type CompleteInventoryFlowService struct {

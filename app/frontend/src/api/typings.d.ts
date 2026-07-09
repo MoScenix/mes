@@ -441,12 +441,12 @@ declare namespace API {
 
   type ListItemRequest = MESListRequest & {
     namePrefix?: string
-    cursorName?: string
+    cursorUpdatedAt?: string
   }
 
   type SearchItemsRequest = MESListRequest & {
     namePrefix?: string
-    cursorName?: string
+    cursorUpdatedAt?: string
   }
 
   type ItemVO = {
@@ -474,7 +474,7 @@ declare namespace API {
     totalRow?: number
     optimizeCountQuery?: boolean
     hasMore?: boolean
-    nextCursorName?: string
+    nextCursorUpdatedAt?: string
     nextCursorId?: number
   }
 
@@ -499,6 +499,8 @@ declare namespace API {
     stockStatus?: StockStatus
     qualityStatus?: QualityStatus
     engineeringOrderId?: number
+    inventoryFlowId?: number
+    cursorUpdatedAt?: string
   }
 
   type ItemUnitVO = {
@@ -520,6 +522,7 @@ declare namespace API {
     totalRow?: number
     optimizeCountQuery?: boolean
     hasMore?: boolean
+    nextCursorUpdatedAt?: string
     nextCursorId?: number
   }
 
@@ -667,6 +670,7 @@ declare namespace API {
     namePrefix?: string
     itemNamePrefix?: string
     scope?: MesListScope
+    itemUnitId?: number
   }
 
   type InventoryFlowItemVO = {

@@ -75,7 +75,6 @@ export type PageResult<T> = {
   totalPage?: number
   totalRow?: number
   hasMore?: boolean
-  nextCursorName?: string
   nextCursorUpdatedAt?: string
   nextCursorId?: number
 }
@@ -220,6 +219,7 @@ export type ListInventoryFlowRequest = {
   namePrefix?: string
   itemNamePrefix?: string
   scope?: MesListScope
+  itemUnitId?: number
   pageNum?: number
   pageSize?: number
   sinceTime?: string
@@ -327,7 +327,7 @@ export type ListItemRequest = {
   pageSize?: number
   limit?: number
   namePrefix?: string
-  cursorName?: string
+  cursorUpdatedAt?: string
   cursorId?: number
 }
 
@@ -343,6 +343,8 @@ export type ListItemUnitRequest = {
   stockStatus?: StockStatus
   qualityStatus?: QualityStatus
   engineeringOrderId?: number
+  inventoryFlowId?: number
+  cursorUpdatedAt?: string
   cursorId?: number
 }
 

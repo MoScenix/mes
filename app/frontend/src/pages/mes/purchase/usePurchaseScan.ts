@@ -44,7 +44,7 @@ export function usePurchaseScan(route: RouteLocationNormalizedLoadedGeneric, rou
 
   const loadScanFlow = async (value: string) => {
     const parsed = parseMesCode(value, 'FLOW')
-    if (!parsed.id) {
+    if (parsed.kind !== 'FLOW' || !parsed.id) {
       message.warning('请输入有效的流转单码')
       return
     }
@@ -65,7 +65,7 @@ export function usePurchaseScan(route: RouteLocationNormalizedLoadedGeneric, rou
       return
     }
     const parsed = parseMesCode(value, 'ITEM_UNIT')
-    if (!parsed.id) {
+    if (parsed.kind !== 'ITEM_UNIT' || !parsed.id) {
       message.warning('请输入有效的库存单体码')
       reopenScanner()
       return

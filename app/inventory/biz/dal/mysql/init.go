@@ -22,6 +22,7 @@ func Init() {
 	if strings.Contains(dsn, "%s") {
 		dsn = fmt.Sprintf(dsn, envOrDefault("MYSQL_USER", "root"), envOrDefault("MYSQL_PASSWORD", "YOUR_PASSWORD"), envOrDefault("MYSQL_HOST", "127.0.0.1"), envOrDefault("MYSQL_DATABASE", "YOU_DB"))
 	}
+	dsn = withMultiStatements(dsn)
 	DB, err = gorm.Open(mysql.Open(dsn),
 		&gorm.Config{
 			PrepareStmt:            true,
@@ -35,7 +36,27 @@ func Init() {
 	if err != nil {
 		panic(err)
 	}
-	dropInventoryFlowLegacyIndexes()
+	runSQLFile()
+}
+
+func runSQLFile() {
+	sqlBytes, err := os.ReadFile("biz/dal/mysql/mes_indexes.sql")
+	if err != nil {
+		panic(err)
+	}
+	sqlDB, err := DB.DB()
+	if err != nil {
+		panic(err)
+	}
+	if _, err := sqlDB.Exec(string(sqlBytes)); err != nil {
+		if !isIndexExistsError(err) {
+			panic(err)
+		}
+	}
+}
+
+func isIndexExistsError(err error) bool {
+	return strings.Contains(err.Error(), "Duplicate key name")
 }
 
 func envOrDefault(key, fallback string) string {
@@ -46,21 +67,12 @@ func envOrDefault(key, fallback string) string {
 	return value
 }
 
-func dropInventoryFlowLegacyIndexes() {
-	legacyIndexes := []string{
-		"idx_inventory_flow_filter",
-		"idx_inventory_flow_from_time",
-		"idx_inventory_flow_to_time",
-		"idx_inventory_flow_from_status_time",
-		"idx_inventory_flow_to_status_time",
-		"idx_inventory_flow_from_deleted_time",
-		"idx_inventory_flow_to_deleted_time",
+func withMultiStatements(dsn string) string {
+	if strings.Contains(dsn, "multiStatements=") {
+		return dsn
 	}
-	for _, indexName := range legacyIndexes {
-		if DB.Migrator().HasIndex(&model.InventoryFlow{}, indexName) {
-			if err := DB.Migrator().DropIndex(&model.InventoryFlow{}, indexName); err != nil {
-				panic(err)
-			}
-		}
+	if strings.Contains(dsn, "?") {
+		return dsn + "&multiStatements=true"
 	}
+	return dsn + "?multiStatements=true"
 }

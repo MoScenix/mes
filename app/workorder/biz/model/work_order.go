@@ -19,17 +19,17 @@ const (
 var ErrDraftRequired = errors.New("work order is not a draft or does not exist")
 
 type WorkOrder struct {
-	ID        uint `gorm:"primarykey;index:idx_from_user_updated_id,priority:4;index:idx_to_user_updated_id,priority:4;index:idx_from_user_status_updated_id,priority:5;index:idx_to_user_status_updated_id,priority:5;index:idx_from_user_read_status_updated_id,priority:5;index:idx_to_user_read_status_updated_id,priority:5;index:idx_work_order_name_id,priority:3;index:idx_work_order_from_name_id,priority:4;index:idx_work_order_to_name_id,priority:4;index:idx_from_user_status_read_updated_id,priority:6;index:idx_to_user_status_read_updated_id,priority:6;index:idx_work_order_from_status_name_id,priority:5;index:idx_work_order_to_status_name_id,priority:5"`
+	ID        uint `gorm:"primarykey"`
 	CreatedAt time.Time
-	UpdatedAt time.Time      `gorm:"index:idx_from_user_updated_id,priority:3;index:idx_to_user_updated_id,priority:3;index:idx_from_user_status_updated_id,priority:4;index:idx_to_user_status_updated_id,priority:4;index:idx_from_user_read_status_updated_id,priority:4;index:idx_to_user_read_status_updated_id,priority:4;index:idx_from_user_status_read_updated_id,priority:5;index:idx_to_user_status_read_updated_id,priority:5"`
-	DeletedAt gorm.DeletedAt `gorm:"index;index:idx_from_user_updated_id,priority:1;index:idx_to_user_updated_id,priority:1;index:idx_from_user_status_updated_id,priority:1;index:idx_to_user_status_updated_id,priority:1;index:idx_from_user_read_status_updated_id,priority:1;index:idx_to_user_read_status_updated_id,priority:1;index:idx_work_order_name_id,priority:1;index:idx_work_order_from_name_id,priority:1;index:idx_work_order_to_name_id,priority:1;index:idx_from_user_status_read_updated_id,priority:1;index:idx_to_user_status_read_updated_id,priority:1;index:idx_work_order_from_status_name_id,priority:1;index:idx_work_order_to_status_name_id,priority:1"`
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt
 
-	FromUserID  int64  `gorm:"column:from_user_id;not null;index:idx_from_user_id;index:idx_from_user_updated_id,priority:2;index:idx_from_user_status_updated_id,priority:2;index:idx_from_user_read_status_updated_id,priority:2;index:idx_work_order_from_name_id,priority:2;index:idx_from_user_status_read_updated_id,priority:2;index:idx_work_order_from_status_name_id,priority:2"`
-	ToUserID    int64  `gorm:"column:to_user_id;not null;index:idx_to_user_id;index:idx_to_user_updated_id,priority:2;index:idx_to_user_status_updated_id,priority:2;index:idx_to_user_read_status_updated_id,priority:2;index:idx_work_order_to_name_id,priority:2;index:idx_to_user_status_read_updated_id,priority:2;index:idx_work_order_to_status_name_id,priority:2"`
-	Name        string `gorm:"type:varchar(100);not null;default:'';index:idx_work_order_name_id,priority:2,length:64;index:idx_work_order_from_name_id,priority:3,length:64;index:idx_work_order_to_name_id,priority:3,length:64;index:idx_work_order_from_status_name_id,priority:4,length:64;index:idx_work_order_to_status_name_id,priority:4,length:64"`
+	FromUserID  int64  `gorm:"column:from_user_id;not null"`
+	ToUserID    int64  `gorm:"column:to_user_id;not null"`
+	Name        string `gorm:"type:varchar(100);not null;default:''"`
 	Description string `gorm:"type:text;not null"`
-	Status      int32  `gorm:"not null;index:idx_from_user_status_updated_id,priority:3;index:idx_to_user_status_updated_id,priority:3;index:idx_from_user_status_read_updated_id,priority:3;index:idx_to_user_status_read_updated_id,priority:3;index:idx_work_order_from_status_name_id,priority:3;index:idx_work_order_to_status_name_id,priority:3"`
-	ReadStatus  int32  `gorm:"column:read_status;not null;default:1;index:idx_from_user_read_status_updated_id,priority:3;index:idx_to_user_read_status_updated_id,priority:3;index:idx_from_user_status_read_updated_id,priority:4;index:idx_to_user_status_read_updated_id,priority:4"`
+	Status      int32  `gorm:"not null"`
+	ReadStatus  int32  `gorm:"column:read_status;not null;default:1"`
 }
 
 func (WorkOrder) TableName() string {

@@ -173,7 +173,7 @@ message ListItemReq {
   int64 pageNum = 1;
   int64 pageSize = 2;
   string namePrefix = 3;
-  string cursorName = 4;
+  string cursorUpdatedAt = 4;
   int64 cursorId = 5;
 }
 
@@ -181,7 +181,7 @@ message ListItemResp {
   repeated ItemInfo itemList = 1;
   int64 total = 2;
   bool hasMore = 3;
-  string nextCursorName = 4;
+  string nextCursorUpdatedAt = 4;
   int64 nextCursorId = 5;
 }
 
@@ -300,6 +300,8 @@ message ListItemUnitReq {
   int64 engineeringOrderId = 6;
   int64 cursorId = 7;
   string itemNamePrefix = 8;
+  int64 inventoryFlowId = 9;
+  string cursorUpdatedAt = 10;
 }
 
 message ListItemUnitResp {
@@ -307,6 +309,7 @@ message ListItemUnitResp {
   int64 total = 2;
   bool hasMore = 3;
   int64 nextCursorId = 4;
+  string nextCursorUpdatedAt = 5;
 }
 
 message InventoryFlowItemReq {
@@ -399,6 +402,7 @@ message ListInventoryFlowReq {
   string namePrefix = 10;
   string itemNamePrefix = 11;
   ListScope scope = 12;
+  int64 itemUnitId = 13;
 }
 
 message ListInventoryFlowResp {

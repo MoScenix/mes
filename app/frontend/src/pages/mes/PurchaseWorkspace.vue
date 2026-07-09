@@ -61,6 +61,7 @@
       :loading="loading"
       :loading-more="loadingMore"
       :has-more="listPage.hasMore"
+      show-add-unit
       @view-detail="viewDetail"
       @add-unit="addUnitForItem"
       @load-more="loadMore"
@@ -149,6 +150,8 @@ const searchItemId = ref<number>()
 const flowStatusFilter = ref<number>()
 const stockStatusFilter = ref<number>()
 const qualityStatusFilter = ref<number>()
+const engineeringOrderIdFilter = computed(() => Number(route.query.engineeringOrderId || 0) || undefined)
+const flowIdFilter = computed(() => Number(route.query.flowId || 0) || undefined)
 
 const {
   dataList,
@@ -164,6 +167,8 @@ const {
   flowStatusFilter,
   stockStatusFilter,
   qualityStatusFilter,
+  engineeringOrderId: engineeringOrderIdFilter,
+  flowId: flowIdFilter,
 })
 
 const {
@@ -313,7 +318,7 @@ const viewDetail = (record: InventoryFlowVO | ItemVO | ItemUnitVO) => {
   router.push({ path: '/mes/detail', query: { kind, id: String(record.id) } })
 }
 
-watch(() => route.query.panel, syncPanel)
+watch(() => [route.query.panel, route.query.engineeringOrderId, route.query.flowId], syncPanel)
 onMounted(async () => {
   if (selectedType.value === 'scan') {
     const flowId = Number(route.query.flowId || 0)

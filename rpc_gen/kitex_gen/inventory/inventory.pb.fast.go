@@ -1173,7 +1173,7 @@ func (x *ListItemReq) fastReadField3(buf []byte, _type int8) (offset int, err er
 }
 
 func (x *ListItemReq) fastReadField4(buf []byte, _type int8) (offset int, err error) {
-	x.CursorName, offset, err = fastpb.ReadString(buf, _type)
+	x.CursorUpdatedAt, offset, err = fastpb.ReadString(buf, _type)
 	return offset, err
 }
 
@@ -1243,7 +1243,7 @@ func (x *ListItemResp) fastReadField3(buf []byte, _type int8) (offset int, err e
 }
 
 func (x *ListItemResp) fastReadField4(buf []byte, _type int8) (offset int, err error) {
-	x.NextCursorName, offset, err = fastpb.ReadString(buf, _type)
+	x.NextCursorUpdatedAt, offset, err = fastpb.ReadString(buf, _type)
 	return offset, err
 }
 
@@ -2119,6 +2119,16 @@ func (x *ListItemUnitReq) FastRead(buf []byte, _type int8, number int32) (offset
 		if err != nil {
 			goto ReadFieldError
 		}
+	case 9:
+		offset, err = x.fastReadField9(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 10:
+		offset, err = x.fastReadField10(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
 	default:
 		offset, err = fastpb.Skip(buf, _type, number)
 		if err != nil {
@@ -2182,6 +2192,16 @@ func (x *ListItemUnitReq) fastReadField8(buf []byte, _type int8) (offset int, er
 	return offset, err
 }
 
+func (x *ListItemUnitReq) fastReadField9(buf []byte, _type int8) (offset int, err error) {
+	x.InventoryFlowId, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *ListItemUnitReq) fastReadField10(buf []byte, _type int8) (offset int, err error) {
+	x.CursorUpdatedAt, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
 func (x *ListItemUnitResp) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
 	switch number {
 	case 1:
@@ -2201,6 +2221,11 @@ func (x *ListItemUnitResp) FastRead(buf []byte, _type int8, number int32) (offse
 		}
 	case 4:
 		offset, err = x.fastReadField4(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 5:
+		offset, err = x.fastReadField5(buf, _type)
 		if err != nil {
 			goto ReadFieldError
 		}
@@ -2239,6 +2264,11 @@ func (x *ListItemUnitResp) fastReadField3(buf []byte, _type int8) (offset int, e
 
 func (x *ListItemUnitResp) fastReadField4(buf []byte, _type int8) (offset int, err error) {
 	x.NextCursorId, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
+}
+
+func (x *ListItemUnitResp) fastReadField5(buf []byte, _type int8) (offset int, err error) {
+	x.NextCursorUpdatedAt, offset, err = fastpb.ReadString(buf, _type)
 	return offset, err
 }
 
@@ -2901,6 +2931,11 @@ func (x *ListInventoryFlowReq) FastRead(buf []byte, _type int8, number int32) (o
 		if err != nil {
 			goto ReadFieldError
 		}
+	case 13:
+		offset, err = x.fastReadField13(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
 	default:
 		offset, err = fastpb.Skip(buf, _type, number)
 		if err != nil {
@@ -2982,6 +3017,11 @@ func (x *ListInventoryFlowReq) fastReadField12(buf []byte, _type int8) (offset i
 	}
 	x.Scope = ListScope(v)
 	return offset, nil
+}
+
+func (x *ListInventoryFlowReq) fastReadField13(buf []byte, _type int8) (offset int, err error) {
+	x.ItemUnitId, offset, err = fastpb.ReadInt64(buf, _type)
+	return offset, err
 }
 
 func (x *ListInventoryFlowResp) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
@@ -4532,10 +4572,10 @@ func (x *ListItemReq) fastWriteField3(buf []byte) (offset int) {
 }
 
 func (x *ListItemReq) fastWriteField4(buf []byte) (offset int) {
-	if x.CursorName == "" {
+	if x.CursorUpdatedAt == "" {
 		return offset
 	}
-	offset += fastpb.WriteString(buf[offset:], 4, x.GetCursorName())
+	offset += fastpb.WriteString(buf[offset:], 4, x.GetCursorUpdatedAt())
 	return offset
 }
 
@@ -4586,10 +4626,10 @@ func (x *ListItemResp) fastWriteField3(buf []byte) (offset int) {
 }
 
 func (x *ListItemResp) fastWriteField4(buf []byte) (offset int) {
-	if x.NextCursorName == "" {
+	if x.NextCursorUpdatedAt == "" {
 		return offset
 	}
-	offset += fastpb.WriteString(buf[offset:], 4, x.GetNextCursorName())
+	offset += fastpb.WriteString(buf[offset:], 4, x.GetNextCursorUpdatedAt())
 	return offset
 }
 
@@ -5193,6 +5233,8 @@ func (x *ListItemUnitReq) FastWrite(buf []byte) (offset int) {
 	offset += x.fastWriteField6(buf[offset:])
 	offset += x.fastWriteField7(buf[offset:])
 	offset += x.fastWriteField8(buf[offset:])
+	offset += x.fastWriteField9(buf[offset:])
+	offset += x.fastWriteField10(buf[offset:])
 	return offset
 }
 
@@ -5260,6 +5302,22 @@ func (x *ListItemUnitReq) fastWriteField8(buf []byte) (offset int) {
 	return offset
 }
 
+func (x *ListItemUnitReq) fastWriteField9(buf []byte) (offset int) {
+	if x.InventoryFlowId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 9, x.GetInventoryFlowId())
+	return offset
+}
+
+func (x *ListItemUnitReq) fastWriteField10(buf []byte) (offset int) {
+	if x.CursorUpdatedAt == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 10, x.GetCursorUpdatedAt())
+	return offset
+}
+
 func (x *ListItemUnitResp) FastWrite(buf []byte) (offset int) {
 	if x == nil {
 		return offset
@@ -5268,6 +5326,7 @@ func (x *ListItemUnitResp) FastWrite(buf []byte) (offset int) {
 	offset += x.fastWriteField2(buf[offset:])
 	offset += x.fastWriteField3(buf[offset:])
 	offset += x.fastWriteField4(buf[offset:])
+	offset += x.fastWriteField5(buf[offset:])
 	return offset
 }
 
@@ -5302,6 +5361,14 @@ func (x *ListItemUnitResp) fastWriteField4(buf []byte) (offset int) {
 		return offset
 	}
 	offset += fastpb.WriteInt64(buf[offset:], 4, x.GetNextCursorId())
+	return offset
+}
+
+func (x *ListItemUnitResp) fastWriteField5(buf []byte) (offset int) {
+	if x.NextCursorUpdatedAt == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 5, x.GetNextCursorUpdatedAt())
 	return offset
 }
 
@@ -5733,6 +5800,7 @@ func (x *ListInventoryFlowReq) FastWrite(buf []byte) (offset int) {
 	offset += x.fastWriteField10(buf[offset:])
 	offset += x.fastWriteField11(buf[offset:])
 	offset += x.fastWriteField12(buf[offset:])
+	offset += x.fastWriteField13(buf[offset:])
 	return offset
 }
 
@@ -5829,6 +5897,14 @@ func (x *ListInventoryFlowReq) fastWriteField12(buf []byte) (offset int) {
 		return offset
 	}
 	offset += fastpb.WriteInt32(buf[offset:], 12, int32(x.GetScope()))
+	return offset
+}
+
+func (x *ListInventoryFlowReq) fastWriteField13(buf []byte) (offset int) {
+	if x.ItemUnitId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt64(buf[offset:], 13, x.GetItemUnitId())
 	return offset
 }
 
@@ -7215,10 +7291,10 @@ func (x *ListItemReq) sizeField3() (n int) {
 }
 
 func (x *ListItemReq) sizeField4() (n int) {
-	if x.CursorName == "" {
+	if x.CursorUpdatedAt == "" {
 		return n
 	}
-	n += fastpb.SizeString(4, x.GetCursorName())
+	n += fastpb.SizeString(4, x.GetCursorUpdatedAt())
 	return n
 }
 
@@ -7269,10 +7345,10 @@ func (x *ListItemResp) sizeField3() (n int) {
 }
 
 func (x *ListItemResp) sizeField4() (n int) {
-	if x.NextCursorName == "" {
+	if x.NextCursorUpdatedAt == "" {
 		return n
 	}
-	n += fastpb.SizeString(4, x.GetNextCursorName())
+	n += fastpb.SizeString(4, x.GetNextCursorUpdatedAt())
 	return n
 }
 
@@ -7876,6 +7952,8 @@ func (x *ListItemUnitReq) Size() (n int) {
 	n += x.sizeField6()
 	n += x.sizeField7()
 	n += x.sizeField8()
+	n += x.sizeField9()
+	n += x.sizeField10()
 	return n
 }
 
@@ -7943,6 +8021,22 @@ func (x *ListItemUnitReq) sizeField8() (n int) {
 	return n
 }
 
+func (x *ListItemUnitReq) sizeField9() (n int) {
+	if x.InventoryFlowId == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(9, x.GetInventoryFlowId())
+	return n
+}
+
+func (x *ListItemUnitReq) sizeField10() (n int) {
+	if x.CursorUpdatedAt == "" {
+		return n
+	}
+	n += fastpb.SizeString(10, x.GetCursorUpdatedAt())
+	return n
+}
+
 func (x *ListItemUnitResp) Size() (n int) {
 	if x == nil {
 		return n
@@ -7951,6 +8045,7 @@ func (x *ListItemUnitResp) Size() (n int) {
 	n += x.sizeField2()
 	n += x.sizeField3()
 	n += x.sizeField4()
+	n += x.sizeField5()
 	return n
 }
 
@@ -7985,6 +8080,14 @@ func (x *ListItemUnitResp) sizeField4() (n int) {
 		return n
 	}
 	n += fastpb.SizeInt64(4, x.GetNextCursorId())
+	return n
+}
+
+func (x *ListItemUnitResp) sizeField5() (n int) {
+	if x.NextCursorUpdatedAt == "" {
+		return n
+	}
+	n += fastpb.SizeString(5, x.GetNextCursorUpdatedAt())
 	return n
 }
 
@@ -8416,6 +8519,7 @@ func (x *ListInventoryFlowReq) Size() (n int) {
 	n += x.sizeField10()
 	n += x.sizeField11()
 	n += x.sizeField12()
+	n += x.sizeField13()
 	return n
 }
 
@@ -8512,6 +8616,14 @@ func (x *ListInventoryFlowReq) sizeField12() (n int) {
 		return n
 	}
 	n += fastpb.SizeInt32(12, int32(x.GetScope()))
+	return n
+}
+
+func (x *ListInventoryFlowReq) sizeField13() (n int) {
+	if x.ItemUnitId == 0 {
+		return n
+	}
+	n += fastpb.SizeInt64(13, x.GetItemUnitId())
 	return n
 }
 
@@ -9141,7 +9253,7 @@ var fieldIDToName_ListItemReq = map[int32]string{
 	1: "PageNum",
 	2: "PageSize",
 	3: "NamePrefix",
-	4: "CursorName",
+	4: "CursorUpdatedAt",
 	5: "CursorId",
 }
 
@@ -9149,7 +9261,7 @@ var fieldIDToName_ListItemResp = map[int32]string{
 	1: "ItemList",
 	2: "Total",
 	3: "HasMore",
-	4: "NextCursorName",
+	4: "NextCursorUpdatedAt",
 	5: "NextCursorId",
 }
 
@@ -9260,14 +9372,16 @@ var fieldIDToName_GetItemUnitResp = map[int32]string{
 }
 
 var fieldIDToName_ListItemUnitReq = map[int32]string{
-	1: "PageNum",
-	2: "PageSize",
-	3: "ItemId",
-	4: "StockStatus",
-	5: "QualityStatus",
-	6: "EngineeringOrderId",
-	7: "CursorId",
-	8: "ItemNamePrefix",
+	1:  "PageNum",
+	2:  "PageSize",
+	3:  "ItemId",
+	4:  "StockStatus",
+	5:  "QualityStatus",
+	6:  "EngineeringOrderId",
+	7:  "CursorId",
+	8:  "ItemNamePrefix",
+	9:  "InventoryFlowId",
+	10: "CursorUpdatedAt",
 }
 
 var fieldIDToName_ListItemUnitResp = map[int32]string{
@@ -9275,6 +9389,7 @@ var fieldIDToName_ListItemUnitResp = map[int32]string{
 	2: "Total",
 	3: "HasMore",
 	4: "NextCursorId",
+	5: "NextCursorUpdatedAt",
 }
 
 var fieldIDToName_InventoryFlowItemReq = map[int32]string{
@@ -9367,6 +9482,7 @@ var fieldIDToName_ListInventoryFlowReq = map[int32]string{
 	10: "NamePrefix",
 	11: "ItemNamePrefix",
 	12: "Scope",
+	13: "ItemUnitId",
 }
 
 var fieldIDToName_ListInventoryFlowResp = map[int32]string{

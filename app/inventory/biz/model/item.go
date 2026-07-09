@@ -8,12 +8,12 @@ import (
 )
 
 type Item struct {
-	ID        uint `gorm:"primarykey;index:idx_item_deleted_name_id,priority:3;index:idx_item_deleted_id,priority:2"`
+	ID        uint `gorm:"primarykey"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt `gorm:"index;index:idx_item_deleted_name_id,priority:1;index:idx_item_deleted_id,priority:1"`
+	DeletedAt gorm.DeletedAt
 
-	Name        string `gorm:"type:varchar(100);not null;index:idx_item_deleted_name_id,priority:2,length:64"`
+	Name        string `gorm:"type:varchar(100);not null"`
 	Unit        string `gorm:"type:varchar(20);not null"`
 	Description string `gorm:"type:varchar(255);not null;default:''"`
 
@@ -50,16 +50,16 @@ func (q *ItemQuery) Get(id uint) (Item, error) {
 	return item, err
 }
 
-func (q *ItemQuery) List(pageSize int, namePrefix string, cursorName string, cursorID uint) ([]Item, bool, error) {
+func (q *ItemQuery) List(pageSize int, namePrefix string, cursorUpdatedAt *time.Time, cursorID uint) ([]Item, bool, error) {
 	var items []Item
 	db := q.db.WithContext(q.ctx).Model(&Item{})
 	if namePrefix != "" {
 		db = db.Where("name LIKE ?", namePrefix+"%")
 	}
-	if cursorName != "" && cursorID > 0 {
-		db = db.Where("(name > ? OR (name = ? AND id > ?))", cursorName, cursorName, cursorID)
+	if cursorUpdatedAt != nil && cursorID > 0 {
+		db = db.Where("(updated_at < ? OR (updated_at = ? AND id < ?))", *cursorUpdatedAt, *cursorUpdatedAt, cursorID)
 	}
-	err := db.Order("name ASC, id ASC").Limit(pageSize + 1).Find(&items).Error
+	err := db.Order("updated_at DESC, id DESC").Limit(pageSize + 1).Find(&items).Error
 	if err != nil {
 		return nil, false, err
 	}

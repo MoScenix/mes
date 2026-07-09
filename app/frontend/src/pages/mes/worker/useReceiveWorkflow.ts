@@ -48,7 +48,10 @@ export const useReceiveWorkflow = () => {
 
   const loadReceiveFlow = async (value: string) => {
     const parsed = parseMesCode(value, 'FLOW')
-    if (!parsed.id) return
+    if (parsed.kind !== 'FLOW' || !parsed.id) {
+      message.warning('请输入有效的流转单码')
+      return
+    }
     const res = await getInventoryFlow({ id: parsed.id })
     if (res.data.code !== 0 || !res.data.data) {
       message.error(res.data.message || '读取流转单失败')
@@ -83,7 +86,8 @@ export const useReceiveWorkflow = () => {
       receiveOperationKey.value += 1
     }
     const parsed = parseMesCode(value, 'ITEM_UNIT')
-    if (!parsed.id) {
+    if (parsed.kind !== 'ITEM_UNIT' || !parsed.id) {
+      message.warning('请输入有效的库存单体码')
       reopenScanner()
       return
     }

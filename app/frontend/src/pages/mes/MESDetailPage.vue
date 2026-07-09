@@ -6,8 +6,6 @@
         <h1>{{ title }}</h1>
       </div>
       <a-space>
-        <a-button v-if="kind === 'PROCESS'" @click="jumpToEngList">关联工程单</a-button>
-        <a-button v-if="hasUnitRows" @click="openUnitList">绑定单体</a-button>
         <ScanButton />
         <MesCodeMenu v-if="codeKind && id" :kind="codeKind" :id="id" />
       </a-space>
@@ -45,26 +43,63 @@
               <dd>
                 <MesUserName v-if="row.userId" :id="row.userId" />
                 <MesItemName v-else-if="row.itemId || row.item" :id="row.itemId" :item="row.item" />
+                <button v-else-if="row.action" type="button" class="detail-link" @click="runRowAction(row.action)">
+                  跳转
+                </button>
                 <span v-else>{{ row.value }}</span>
               </dd>
             </div>
           </dl>
 
-          <a-table
-            v-if="unitRows.length"
-            ref="unitTableRef"
-            :data-source="unitRows"
-            :columns="unitColumns"
-            :pagination="false"
-            size="small"
-            row-key="id"
-          >
-            <template #bodyCell="{ column, record }">
-              <template v-if="column.key === 'action'">
-                <a-button type="link" size="small" @click="viewUnit(record)">详情</a-button>
+          <section v-if="kind === 'FLOW'" class="flow-progress-panel">
+            <div class="trace-head">
+              <h2>物品进度</h2>
+              <span>{{ flowProgressRows.length }} 个物品</span>
+            </div>
+            <a-table
+              row-key="key"
+              :columns="flowProgressColumns"
+              :data-source="flowProgressRows"
+              :pagination="false"
+              size="small"
+            >
+              <template #bodyCell="{ column, record }">
+                <template v-if="column.key === 'item'">
+                  <MesItemName :id="record.itemId" :item="record.item" />
+                </template>
+                <template v-else-if="column.key === 'progress'">
+                  {{ record.finishedQuantity }}/{{ record.applyQuantity }}
+                </template>
               </template>
-            </template>
-          </a-table>
+            </a-table>
+          </section>
+
+          <section v-if="kind === 'ITEM_UNIT'" class="trace-panel">
+            <div class="trace-head">
+              <h2>单体追踪</h2>
+              <span v-if="traceLoading">读取中...</span>
+              <span v-else>{{ traceItems.length }} 条记录</span>
+            </div>
+            <a-empty v-if="!traceLoading && !traceItems.length" description="暂无追踪记录" />
+            <div v-else class="trace-list">
+              <button
+                v-for="item in traceItems"
+                :key="item.key"
+                class="trace-item"
+                :class="{ clickable: item.kind && item.id }"
+                type="button"
+                @click="openTraceItem(item)"
+              >
+                <span class="trace-dot"></span>
+                <span class="trace-time">{{ item.time || '-' }}</span>
+                <span class="trace-main">
+                  <strong>{{ item.title }}</strong>
+                  <small>{{ item.description }}</small>
+                </span>
+              </button>
+            </div>
+          </section>
+
         </template>
       </a-spin>
     </section>
@@ -89,12 +124,14 @@ import {
   getInventoryFlow,
   getItem,
   getItemUnit,
+  listInventoryFlow,
   getProcess,
   getWorkOrder,
   type EngineeringOrderVO,
   type InventoryFlowVO,
   type ItemVO,
   type ItemUnitVO,
+  MesListScope,
   type ProcessVO,
   type WorkOrderVO,
 } from '@/api/mesController'
@@ -108,15 +145,27 @@ type DetailRow = {
   userId?: number
   itemId?: number
   item?: ItemVO
+  action?: 'processOrders' | 'relatedUnits'
   fullWidth?: boolean
+}
+
+type TraceItem = {
+  key: string
+  title: string
+  description: string
+  time?: string
+  kind?: MesDetailKind
+  id?: number
 }
 
 const route = useRoute()
 const router = useRouter()
 const loading = ref(false)
 const error = ref('')
-const unitTableRef = ref()
 const detail = ref<InventoryFlowVO | ItemUnitVO | EngineeringOrderVO | WorkOrderVO | ItemVO | ProcessVO>()
+const traceLoading = ref(false)
+const traceOrder = ref<EngineeringOrderVO>()
+const traceFlows = ref<InventoryFlowVO[]>([])
 const detailKinds: MesDetailKind[] = ['FLOW', 'ITEM_UNIT', 'ENGINEERING_ORDER', 'WORK_ORDER', 'ITEM', 'PROCESS']
 const scannableKinds: MesCodeKind[] = ['FLOW', 'ITEM_UNIT', 'ENGINEERING_ORDER']
 
@@ -155,17 +204,8 @@ const copyCode = async () => {
   message.success('已复制')
 }
 
-const unitColumns = [
-  { title: '单体 ID', dataIndex: 'id', key: 'id', width: 120 },
-  { title: '物品 ID', dataIndex: 'itemId', key: 'itemId', width: 120 },
-  { title: '库存', dataIndex: 'stockStatusText', key: 'stockStatusText' },
-  { title: '质量', dataIndex: 'qualityStatusText', key: 'qualityStatusText' },
-  { title: '操作', key: 'action', width: 80 },
-]
-
 const stockText = (status?: StockStatus) => {
   if (status === StockStatus.InStock) return '在库'
-  if (status === StockStatus.Reserved) return '预留'
   if (status === StockStatus.OutStock) return '出库'
   return '未知'
 }
@@ -204,19 +244,6 @@ const processStatusText = (status?: DraftStatus) => {
   return '未知'
 }
 
-const unitRows = computed(() => {
-  const source = detail.value as InventoryFlowVO | EngineeringOrderVO | undefined
-  return (source?.itemUnits || []).map((unit) => ({
-    ...unit,
-    stockStatusText: stockText(unit.stockStatus),
-    qualityStatusText: qualityText(unit.qualityStatus),
-  }))
-})
-
-const hasUnitRows = computed(() => {
-  return (kind.value === 'ENGINEERING_ORDER' || kind.value === 'FLOW') && unitRows.value.length > 0
-})
-
 const updateTimeText = computed(() => {
   const current = detail.value as { updateTime?: string } | undefined
   return current?.updateTime || '-'
@@ -227,30 +254,104 @@ const bodyText = computed(() => {
   return current?.description?.trim() || '暂无正文内容。'
 })
 
-const viewUnit = (unit: any) => {
-  if (unit && unit.id) {
-    router.push({ path: '/mes/detail', query: { kind: 'ITEM_UNIT', id: String(unit.id) } })
-  }
+const openTraceItem = (item: TraceItem) => {
+  if (!item.kind || !item.id) return
+  router.push({ path: '/mes/detail', query: { kind: item.kind, id: String(item.id) } })
 }
 
-const jumpToEngList = () => {
+const traceItems = computed<TraceItem[]>(() => {
+  if (kind.value !== 'ITEM_UNIT') return []
+  const unit = detail.value as ItemUnitVO | undefined
+  if (!unit) return []
+  const items: TraceItem[] = []
+  if (unit.createTime) {
+    items.push({
+      key: 'unit-created',
+      title: '单体创建',
+      description: `库存状态：${stockText(unit.stockStatus)}，质量状态：${qualityText(unit.qualityStatus)}`,
+      time: unit.createTime,
+    })
+  }
+  if (traceOrder.value?.id) {
+    const order = traceOrder.value
+    items.push({
+      key: `engineering-${order.id}`,
+      title: `关联工程单 #${order.id}`,
+      description: order.name || order.description || '工程单',
+      time: order.updateTime || order.createTime,
+      kind: 'ENGINEERING_ORDER',
+      id: order.id,
+    })
+  }
+  for (const flow of traceFlows.value) {
+    if (!flow.id) continue
+    items.push({
+      key: `flow-${flow.id}`,
+      title: `${flowText(flow.flowType)}流转单 #${flow.id}`,
+      description: `${flowStatusText(flow.flowStatus)} · ${flow.name || flow.description || '流转单'}`,
+      time: flow.approvedAt || flow.updateTime || flow.createTime,
+      kind: 'FLOW',
+      id: flow.id,
+    })
+  }
+  return items.sort((a, b) => (b.time || '').localeCompare(a.time || ''))
+})
+
+const openProcessOrderList = () => {
   router.push({ path: '/mes/process-eng-orders', query: { processId: String(id.value) } })
 }
 
 const openUnitList = () => {
   if (kind.value === 'ENGINEERING_ORDER') {
     router.push({
-      path: '/mes/worker',
-      query: {
-        panel: 'itemUnits',
-        view: 'units',
-        engineeringOrderId: String(id.value),
-      },
+      path: '/mes/purchase',
+      query: { panel: 'itemUnits', view: 'units', engineeringOrderId: String(id.value) },
     })
     return
   }
-  const el = unitTableRef.value?.$el as HTMLElement | undefined
-  el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  if (kind.value === 'FLOW') {
+    router.push({
+      path: '/mes/purchase',
+      query: { panel: 'itemUnits', view: 'units', flowId: String(id.value) },
+    })
+  }
+}
+
+const runRowAction = (action: DetailRow['action']) => {
+  if (action === 'processOrders') {
+    openProcessOrderList()
+    return
+  }
+  if (action === 'relatedUnits') {
+    openUnitList()
+  }
+}
+
+const loadItemUnitTrace = async (unit: ItemUnitVO) => {
+  traceOrder.value = undefined
+  traceFlows.value = []
+  if (!unit.id) return
+  traceLoading.value = true
+  try {
+    const [orderRes, flowRes] = await Promise.all([
+      unit.engineeringOrderId ? getEngineeringOrder({ id: unit.engineeringOrderId }) : Promise.resolve(undefined),
+      listInventoryFlow({
+        itemUnitId: unit.id,
+        scope: MesListScope.All,
+        pageSize: 50,
+      }),
+    ])
+    if (orderRes?.data.code === 0) {
+      traceOrder.value = orderRes.data.data
+    }
+    if (flowRes.data.code === 0) {
+      traceFlows.value = flowRes.data.data?.records || []
+    }
+  } catch (err) {
+    message.error(err instanceof Error ? err.message : '读取单体追踪失败')
+  } finally {
+    traceLoading.value = false
+  }
 }
 
 const rows = computed<DetailRow[]>(() => {
@@ -266,6 +367,7 @@ const rows = computed<DetailRow[]>(() => {
       { label: '状态', value: flowStatusText(flow.flowStatus) },
       { label: '提交人', userId: flow.fromUserId },
       { label: '接收人', userId: flow.toUserId },
+      { label: '关联单体', action: 'relatedUnits' },
       { label: '更新时间', value: flow.updateTime || '-' },
     ]
   }
@@ -291,6 +393,7 @@ const rows = computed<DetailRow[]>(() => {
       { label: '预计数量', value: String(order.expectedQuantity ?? 0) },
       { label: '合格数量', value: String(order.qualifiedQuantity ?? 0) },
       { label: '已产出', value: String(order.producedQuantity ?? 0) },
+      { label: '关联单体', action: 'relatedUnits' },
       { label: '更新时间', value: order.updateTime || '-' },
     ]
   }
@@ -316,6 +419,7 @@ const rows = computed<DetailRow[]>(() => {
       { label: '关联物品', itemId: process.itemId, item: process.item },
       { label: '产出物品', value: process.item?.name || '-' },
       { label: '状态', value: processStatusText(process.status) },
+      { label: '关联工程单', action: 'processOrders' },
       { label: '更新时间', value: process.updateTime || '-' },
     ]
   }
@@ -331,9 +435,30 @@ const rows = computed<DetailRow[]>(() => {
   ]
 })
 
+const flowProgressColumns = [
+  { title: '物品', key: 'item' },
+  { title: '已操作', dataIndex: 'finishedQuantity', width: 100 },
+  { title: '申请数量', dataIndex: 'applyQuantity', width: 100 },
+  { title: '进度', key: 'progress', width: 100 },
+]
+
+const flowProgressRows = computed(() => {
+  if (kind.value !== 'FLOW') return []
+  const flow = detail.value as InventoryFlowVO | undefined
+  return (flow?.items || []).map((item, index) => ({
+    key: `${item.itemId || 'item'}-${index}`,
+    itemId: item.itemId,
+    item: item.item,
+    finishedQuantity: item.finishedQuantity || 0,
+    applyQuantity: item.applyQuantity || 0,
+  }))
+})
+
 const loadDetail = async () => {
   error.value = ''
   detail.value = undefined
+  traceOrder.value = undefined
+  traceFlows.value = []
   if (!kind.value || !id.value) {
     error.value = '缺少对象类型或 ID'
     return
@@ -359,6 +484,9 @@ const loadDetail = async () => {
       return
     }
     detail.value = res.data.data
+    if (kind.value === 'ITEM_UNIT') {
+      await loadItemUnitTrace(res.data.data as ItemUnitVO)
+    }
   } catch (err) {
     error.value = err instanceof Error ? err.message : '读取失败'
   } finally {
@@ -492,6 +620,128 @@ onMounted(loadDetail)
   grid-column: 1 / -1;
 }
 
+.flow-progress-panel,
+.trace-panel {
+  margin: 0 0 20px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.flow-progress-panel :deep(.ant-table-wrapper) {
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.trace-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.trace-head h2 {
+  margin: 0;
+  color: #1d1d1f;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.trace-head span {
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+.trace-list {
+  display: grid;
+  gap: 0;
+}
+
+.trace-item {
+  position: relative;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: 3px 10px;
+  border: 0;
+  margin: 0;
+  padding: 0 0 18px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+
+.trace-item::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 13px;
+  bottom: 0;
+  width: 1px;
+  background: #e5e7eb;
+}
+
+.trace-item:last-child::before {
+  display: none;
+}
+
+.trace-item:last-child {
+  padding-bottom: 0;
+}
+
+.trace-item.clickable {
+  cursor: pointer;
+}
+
+.trace-item.clickable:hover strong {
+  color: var(--primary);
+}
+
+.trace-dot {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  position: relative;
+  left: 0;
+  top: 3px;
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--primary);
+}
+
+.trace-time {
+  grid-column: 2;
+  min-width: 0;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.trace-main {
+  grid-column: 2;
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.trace-main strong {
+  color: #1d1d1f;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.trace-main small {
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
 dt {
   color: #7a7a7a;
 }
@@ -503,6 +753,20 @@ dd {
   overflow-wrap: anywhere;
 }
 
+.detail-link {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--primary);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.detail-link:hover {
+  text-decoration: underline;
+}
+
 @media (max-width: 768px) {
   .detail-head {
     align-items: flex-start;
@@ -510,6 +774,10 @@ dd {
 
   .detail-grid {
     grid-template-columns: 1fr;
+  }
+
+  .trace-item {
+    grid-template-columns: 18px minmax(0, 1fr);
   }
 
   .detail-surface {
