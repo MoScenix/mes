@@ -5,7 +5,7 @@
         <MesListSearchPicker
           v-if="selectedType !== 'scan'"
           v-model="searchText"
-          placeholder="输入码或物品名搜索"
+          placeholder="输入 MES 码或物品名搜索"
           class="search-input"
           @search="onSearch"
           @select-item="selectSearchItem"

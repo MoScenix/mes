@@ -3,7 +3,7 @@
     <div class="workspace-header">
       <MesListSearchPicker
         v-model="searchText"
-        :placeholder="isItemsPanel ? '搜索物料或输入码' : '搜索工艺、物品名或输入码'"
+        :placeholder="isItemsPanel ? '搜索物料或输入 MES 码' : '搜索工艺、物品名或输入 MES 码'"
         class="search-input"
         @search="onSearch"
         @select-item="selectSearchItem"

@@ -20,6 +20,9 @@ func NewListInventoryFlowService(Context context.Context, RequestContext *app.Re
 
 func (h *ListInventoryFlowService) Run(req *mes.ListInventoryFlowRequest) (resp *mes.BaseResponsePageInventoryFlowVO, err error) {
 	scope := req.GetScope()
+	if scope == mes.MesListScope_MES_LIST_SCOPE_UNSPECIFIED && bffIsAdmin(h.Context) {
+		scope = mes.MesListScope_MES_LIST_SCOPE_ALL
+	}
 	userID := req.GetUserId()
 	isTo := req.GetIsTo()
 	flowStatus := rpcinventory.FlowStatus(req.GetFlowStatus())
@@ -38,7 +41,7 @@ func (h *ListInventoryFlowService) Run(req *mes.ListInventoryFlowRequest) (resp 
 			return &mes.BaseResponsePageInventoryFlowVO{Code: 1, Message: errForbiddenAccess.Error()}, nil
 		}
 		var scopeErr error
-		userID, scopeErr = scopedUserID(h.Context, req.GetUserId())
+		userID, scopeErr = requireSameUserOrAdmin(h.Context, req.GetUserId())
 		if scopeErr != nil {
 			return &mes.BaseResponsePageInventoryFlowVO{Code: 1, Message: scopeErr.Error()}, nil
 		}

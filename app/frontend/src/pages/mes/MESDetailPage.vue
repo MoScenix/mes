@@ -5,10 +5,6 @@
         <p>详情</p>
         <h1>{{ title }}</h1>
       </div>
-      <a-space>
-        <ScanButton />
-        <MesCodeMenu v-if="codeKind && id" :kind="codeKind" :id="id" />
-      </a-space>
     </section>
 
     <section class="detail-surface">
@@ -110,8 +106,6 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
-import ScanButton from '@/components/ScanButton.vue'
-import MesCodeMenu from '@/components/mes/MesCodeMenu.vue'
 import MesQrCode from '@/components/mes/MesQrCode.vue'
 import {
   DraftStatus,
