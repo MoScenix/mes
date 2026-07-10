@@ -24,7 +24,7 @@ export function usePurchaseList(options: UsePurchaseListOptions) {
   const loading = ref(false)
   const loadingMore = ref(false)
   const listPage = reactive({
-    pageSize: 20,
+    pageSize: 30,
     hasMore: false,
     nextCursorUpdatedAt: '',
     nextCursorId: 0,
@@ -51,7 +51,6 @@ export function usePurchaseList(options: UsePurchaseListOptions) {
           itemNamePrefix: options.searchText.value.trim() || undefined,
           scope: MesListScope.Mine,
           flowStatus: options.flowStatusFilter.value,
-          recentSeconds: 30 * 24 * 60 * 60,
           cursorUpdatedAt: next ? listPage.nextCursorUpdatedAt : undefined,
           cursorId: next ? listPage.nextCursorId : undefined,
         })

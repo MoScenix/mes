@@ -237,7 +237,7 @@ const currentColumns = computed(() => {
 const dataList = ref<any[]>([])
 const loading = ref(false)
 const loadingMore = ref(false)
-const listPage = reactive({ pageSize: 20, hasMore: false, nextCursorUpdatedAt: '', nextCursorId: 0 })
+const listPage = reactive({ pageSize: 30, hasMore: false, nextCursorUpdatedAt: '', nextCursorId: 0 })
 
 const syncCursor = (data?: { hasMore?: boolean; nextCursorUpdatedAt?: string; nextCursorId?: number }) => {
   listPage.hasMore = Boolean(data?.hasMore)
@@ -265,7 +265,6 @@ const fetchData = async (next = false) => {
         itemId: searchItemId.value,
         itemNamePrefix: searchItemId.value ? undefined : searchText.value.trim() || undefined,
         scope: MesListScope.Mine,
-        recentSeconds: 30 * 24 * 60 * 60,
       })
     } else if (selectedType.value === 'workOrders') {
       res = await listWorkOrder({ ...entitySearchParams })
@@ -274,7 +273,6 @@ const fetchData = async (next = false) => {
         ...baseParams,
         itemNamePrefix: searchText.value.trim() || undefined,
         scope: MesListScope.Mine,
-        recentSeconds: 30 * 24 * 60 * 60,
       })
     }
     if (res.data.code === 0 && res.data.data) {

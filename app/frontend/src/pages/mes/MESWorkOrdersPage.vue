@@ -85,7 +85,7 @@ const requestParams = (next = false) => ({
   isTo: mode.value === 'inbox',
   isUnread: mode.value === 'inbox' ? unreadOnly.value : false,
   namePrefix: namePrefix.value.trim() || undefined,
-  pageSize: 20,
+  pageSize: 30,
   cursorUpdatedAt: next ? page.nextCursorUpdatedAt : undefined,
   cursorId: next ? page.nextCursorId : undefined,
 })

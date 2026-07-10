@@ -321,14 +321,20 @@ const createNewChat = async () => {
   stop()
 }
 
-const ensureAssistantApp = async () => {
+const chatTitleFromPrompt = (prompt: string) => {
+  const title = prompt.trim().replace(/\s+/g, ' ')
+  return title.length > 24 ? `${title.slice(0, 24)}...` : title || '新对话'
+}
+
+const ensureAssistantApp = async (initialPrompt = '') => {
   if (activeAppId.value) return true
   creating.value = true
   try {
-    const res = await addApp({ initPrompt: 'MES 助手' })
+    const prompt = initialPrompt.trim()
+    const res = await addApp({ initPrompt: prompt })
     if (res.data.code === 0 && res.data.data) {
       activeAppId.value = res.data.data
-      activeTitle.value = 'MES 助手'
+      activeTitle.value = chatTitleFromPrompt(prompt)
       await loadSessions()
       return true
     }
@@ -371,7 +377,7 @@ const loadHistory = async (appId: number) => {
 const handleSendMessage = async (rawMessage: string, rawFiles?: File[]) => {
   const content = rawMessage.trim()
   if ((!content && !rawFiles?.length) || sendingMessage.value) return
-  const ready = await ensureAssistantApp()
+  const ready = await ensureAssistantApp(content)
   if (!ready) return
 
   sendingMessage.value = true

@@ -8,7 +8,7 @@ function withLimit<T extends { pageNum?: number; pageSize?: number; limit?: numb
   const { limit, ...rest } = body
   return {
     pageNum: rest.pageNum ?? 1,
-    pageSize: rest.pageSize ?? limit ?? 20,
+    pageSize: rest.pageSize ?? limit ?? 30,
     ...rest,
   }
 }

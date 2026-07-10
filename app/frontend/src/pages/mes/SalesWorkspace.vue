@@ -136,7 +136,7 @@ const flowProgressText = (record: any) => {
 const dataList = ref<any[]>([])
 const loading = ref(false)
 const loadingMore = ref(false)
-const listPage = reactive({ pageSize: 20, hasMore: false, nextCursorUpdatedAt: '', nextCursorId: 0 })
+const listPage = reactive({ pageSize: 30, hasMore: false, nextCursorUpdatedAt: '', nextCursorId: 0 })
 
 const syncCursor = (data?: { hasMore?: boolean; nextCursorUpdatedAt?: string; nextCursorId?: number }) => {
   listPage.hasMore = Boolean(data?.hasMore)
@@ -152,7 +152,6 @@ const fetchData = async (next = false) => {
       pageSize: listPage.pageSize,
       itemNamePrefix: searchText.value.trim() || undefined,
       scope: MesListScope.Mine,
-      recentSeconds: 30 * 24 * 60 * 60,
       cursorUpdatedAt: next ? listPage.nextCursorUpdatedAt : undefined,
       cursorId: next ? listPage.nextCursorId : undefined,
     })

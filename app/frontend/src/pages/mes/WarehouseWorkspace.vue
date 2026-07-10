@@ -197,7 +197,7 @@ const woColumns = [
 const dataList = ref<any[]>([])
 const loading = ref(false)
 const loadingMore = ref(false)
-const listPage = reactive({ pageSize: 20, hasMore: false, nextCursorUpdatedAt: '', nextCursorId: 0 })
+const listPage = reactive({ pageSize: 30, hasMore: false, nextCursorUpdatedAt: '', nextCursorId: 0 })
 
 const syncCursor = (data?: { hasMore?: boolean; nextCursorUpdatedAt?: string; nextCursorId?: number }) => {
   listPage.hasMore = Boolean(data?.hasMore)

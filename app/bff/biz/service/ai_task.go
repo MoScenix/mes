@@ -98,17 +98,38 @@ func answerAIQuestion(ctx context.Context, appID int64, content string, targetID
 		return submitAI(ctx, appID)
 	}
 	if state.Status == aievent.ProjectStatusWaitingAnswer {
-		time.Sleep(300 * time.Millisecond)
+		return resumeIfAnswerTimedOut(ctx, appID, targetID)
+	}
+	return true, nil
+}
+
+func resumeIfAnswerTimedOut(ctx context.Context, appID int64, targetID string) (bool, error) {
+	deadline := time.Now().Add(5 * time.Second)
+	for {
+		time.Sleep(150 * time.Millisecond)
 		latest, ok, err := loadAIState(ctx, appID)
 		if err != nil {
 			return false, err
 		}
-		if ok && latest.Status == aievent.ProjectStatusInterrupted && hasPendingInterrupt(latest, targetID) {
-			klog.CtxInfof(ctx, "resume interrupted ai task: app_id=%d target_id=%s", appID, targetID)
-			return submitAI(ctx, appID)
+		if !ok {
+			return true, nil
+		}
+		switch latest.Status {
+		case aievent.ProjectStatusInterrupted:
+			if hasPendingInterrupt(latest, targetID) {
+				klog.CtxInfof(ctx, "resume interrupted ai task: app_id=%d target_id=%s", appID, targetID)
+				return submitAI(ctx, appID)
+			}
+			return true, nil
+		case aievent.ProjectStatusWaitingAnswer:
+			if time.Now().Before(deadline) {
+				continue
+			}
+			return true, nil
+		default:
+			return true, nil
 		}
 	}
-	return true, nil
 }
 
 func cancelAIEvent(ctx context.Context, appID int64, reason string) (string, error) {

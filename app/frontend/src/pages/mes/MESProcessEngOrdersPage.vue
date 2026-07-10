@@ -87,7 +87,7 @@ const loadEngOrders = async (next = false) => {
   try {
     const res = await listEngineeringOrder({
       processId: pid,
-      pageSize: 20,
+      pageSize: 30,
       cursorUpdatedAt: next ? cursorUpdatedAt : undefined,
       cursorId: next ? cursorId : undefined,
     })

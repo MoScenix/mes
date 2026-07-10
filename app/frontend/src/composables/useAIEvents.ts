@@ -1,4 +1,4 @@
-import { onUnmounted, ref, type Ref } from 'vue'
+import { onUnmounted, ref, watch, type Ref } from 'vue'
 import { answerAI, cancelAI, getAIState, listAIEvents, pushAI, submitAI } from '@/api/aiController'
 
 export interface AIMessage {
@@ -74,6 +74,17 @@ export function useAIEvents(appId: Ref<any>, options?: { onDone?: () => void }) 
   }
 
   onUnmounted(stop)
+
+  watch(
+    () => appId.value,
+    () => {
+      stopEventPolling()
+      lastEventId = '0'
+      aiState.value = null
+      currentQuestion.value = null
+      isGenerating.value = false
+    },
+  )
 
   function appendSystem(content: string) {
     if (!content) return
@@ -302,21 +313,24 @@ export function useAIEvents(appId: Ref<any>, options?: { onDone?: () => void }) 
 
   async function pollEvents(initialLastId?: string) {
     if (polling) return
+    const pollingAppId = Number(appId.value)
+    if (!pollingAppId) return
     polling = true
     lastEventId = initialLastId || lastEventId || '0'
 
-    while (polling && appId.value) {
+    while (polling && Number(appId.value) === pollingAppId) {
       try {
         abortController = new AbortController()
         const res = await listAIEvents(
           {
-            appId: Number(appId.value),
+            appId: pollingAppId,
             lastId: lastEventId,
             blockMs: 30000,
             count: 50,
           },
           { signal: abortController.signal },
         )
+        if (Number(appId.value) !== pollingAppId) break
         if (res.data.code === 0) {
           const events = res.data.data?.events || []
           for (const event of events) processEvent(event)

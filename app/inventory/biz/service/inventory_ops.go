@@ -1509,7 +1509,7 @@ func formatTime(t time.Time) string {
 	return t.Format(time.RFC3339)
 }
 
-func parseSinceTime(sinceTime string, recentSeconds int64) (*time.Time, error) {
+func parseSinceTime(sinceTime string, _ int64) (*time.Time, error) {
 	value := strings.TrimSpace(sinceTime)
 	if value != "" {
 		t, err := parseListTime(value)
@@ -1517,10 +1517,6 @@ func parseSinceTime(sinceTime string, recentSeconds int64) (*time.Time, error) {
 			return t, nil
 		}
 		return nil, errors.New("sinceTime must use format 2006-01-02 15:04:05")
-	}
-	if recentSeconds > 0 {
-		t := time.Now().Add(-time.Duration(recentSeconds) * time.Second)
-		return &t, nil
 	}
 	return nil, nil
 }

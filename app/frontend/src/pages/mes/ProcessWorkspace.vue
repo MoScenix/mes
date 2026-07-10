@@ -117,7 +117,7 @@ const loadingMore = ref(false)
 const draftPage = reactive({ hasMore: false, nextCursorUpdatedAt: '', nextCursorId: 0 })
 const submittedPage = reactive({ hasMore: false, nextCursorUpdatedAt: '', nextCursorId: 0 })
 const itemPage = reactive({ hasMore: false, nextCursorUpdatedAt: '', nextCursorId: 0 })
-const pageSize = 20
+const pageSize = 30
 const isItemsPanel = computed(() => String(route.query.panel || 'processes') === 'items')
 
 const columns = [
@@ -153,7 +153,6 @@ const queryStatus = async (status: DraftStatus, next: boolean) => {
     itemNamePrefix: searchItemId.value ? undefined : searchText.value.trim() || undefined,
     scope: MesListScope.Mine,
     pageSize,
-    recentSeconds: 30 * 24 * 60 * 60,
     cursorUpdatedAt: next ? page.nextCursorUpdatedAt : undefined,
     cursorId: next ? page.nextCursorId : undefined,
   })

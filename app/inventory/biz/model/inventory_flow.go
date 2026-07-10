@@ -74,7 +74,7 @@ func (q *InventoryFlowQuery) List(pageSize int, userID int64, isTo bool, filterU
 	}
 	if flowStatus > 0 {
 		db = db.Where("inventory_flows.flow_status = ?", flowStatus)
-	} else {
+	} else if !filterUser {
 		db = db.Where("inventory_flows.flow_status <> ?", int32(1))
 	}
 	if namePrefix != "" {

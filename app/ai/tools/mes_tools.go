@@ -7,7 +7,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/MoScenix/mes/app/ai/conf"
 	"github.com/MoScenix/mes/app/ai/infra"
@@ -22,7 +21,7 @@ import (
 )
 
 type ListWorkOrdersInput struct {
-	Limit      int64  `json:"limit,omitempty" jsonschema:"description=Maximum number of work orders to return, default 20."`
+	Limit      int64  `json:"limit,omitempty" jsonschema:"description=Maximum number of work orders to return, default 30."`
 	NamePrefix string `json:"name_prefix,omitempty" jsonschema:"description=Work order name prefix keyword."`
 	UserID     int64  `json:"user_id,omitempty" jsonschema:"description=Admin-only user id to query. Non-admin values are ignored and current operator is used."`
 	IsTo       bool   `json:"is_to,omitempty" jsonschema:"description=true lists work orders assigned to the user; false lists work orders submitted by the user."`
@@ -43,8 +42,8 @@ type CreateWorkOrderDraftInput struct {
 
 type SearchUsersInput struct {
 	ID       int64  `json:"id,omitempty" jsonschema:"description=Exact user id. If set, returns this user only."`
-	Name     string `json:"name,omitempty" jsonschema:"description=User name prefix or keyword."`
-	Account  string `json:"account,omitempty" jsonschema:"description=User account prefix or keyword."`
+	Name     string `json:"name,omitempty" jsonschema:"description=User name prefix or keyword. Use this before ask_user when the user gives a name such as root instead of a numeric id."`
+	Account  string `json:"account,omitempty" jsonschema:"description=User account prefix or keyword. Use this before ask_user when the user gives an account such as root instead of a numeric id."`
 	Role     string `json:"role,omitempty" jsonschema:"description=Optional role filter such as leader, purchase, worker, process_engineer, warehouse_admin, sales, admin."`
 	PageSize int64  `json:"page_size,omitempty" jsonschema:"description=Maximum users to return, default 10."`
 }
@@ -93,7 +92,7 @@ type UpdateEngineeringOrderDraftInput struct {
 
 type ListEngineeringOrdersInput struct {
 	PageNum      int64  `json:"page_num,omitempty" jsonschema:"description=Page number, default 1."`
-	PageSize     int64  `json:"page_size,omitempty" jsonschema:"description=Page size, default 20."`
+	PageSize     int64  `json:"page_size,omitempty" jsonschema:"description=Page size, default 30."`
 	NamePrefix   string `json:"name_prefix,omitempty" jsonschema:"description=Engineering order name prefix keyword."`
 	LeaderUserID int64  `json:"leader_user_id,omitempty" jsonschema:"description=Admin-only leader filter. Non-admin values are ignored and current operator is used."`
 	ItemID       int64  `json:"item_id,omitempty" jsonschema:"description=Produced item definition id filter."`
@@ -119,7 +118,7 @@ type CreateInventoryFlowDraftInput struct {
 }
 
 type ListInventoryFlowsInput struct {
-	Limit      int64  `json:"limit,omitempty" jsonschema:"description=Maximum number of inventory flows to return, default 20."`
+	Limit      int64  `json:"limit,omitempty" jsonschema:"description=Maximum number of inventory flows to return, default 30."`
 	NamePrefix string `json:"name_prefix,omitempty" jsonschema:"description=Inventory flow name prefix keyword."`
 	Scope      string `json:"scope,omitempty" jsonschema:"description=Scope: to_me, from_me, or submitted_by_me. Default submitted_by_me."`
 	FlowStatus string `json:"flow_status,omitempty" jsonschema:"description=Optional status: draft, submitted, approved, rejected."`
@@ -133,7 +132,7 @@ type GetInventoryFlowInput struct {
 type SearchItemsInput struct {
 	NamePrefix string `json:"name_prefix,omitempty" jsonschema:"description=Item name prefix keyword."`
 	PageNum    int64  `json:"page_num,omitempty" jsonschema:"description=Page number, default 1."`
-	PageSize   int64  `json:"page_size,omitempty" jsonschema:"description=Page size, default 20."`
+	PageSize   int64  `json:"page_size,omitempty" jsonschema:"description=Page size, default 30."`
 }
 
 type GetItemInput struct {
@@ -145,11 +144,11 @@ type ListItemUnitsInput struct {
 	StockStatus   string `json:"stock_status,omitempty" jsonschema:"description=Optional stock status: in_stock, reserved, out_stock."`
 	QualityStatus string `json:"quality_status,omitempty" jsonschema:"description=Optional quality status: pending, qualified, unqualified."`
 	PageNum       int64  `json:"page_num,omitempty" jsonschema:"description=Page number, default 1."`
-	PageSize      int64  `json:"page_size,omitempty" jsonschema:"description=Page size, default 20."`
+	PageSize      int64  `json:"page_size,omitempty" jsonschema:"description=Page size, default 30."`
 }
 
 type ListPendingInventoryFlowsInput struct {
-	Limit      int64  `json:"limit,omitempty" jsonschema:"description=Maximum number of pending inventory flows to return, default 20."`
+	Limit      int64  `json:"limit,omitempty" jsonschema:"description=Maximum number of pending inventory flows to return, default 30."`
 	NamePrefix string `json:"name_prefix,omitempty" jsonschema:"description=Inventory flow name prefix keyword."`
 	UserID     int64  `json:"user_id,omitempty" jsonschema:"description=Admin-only warehouse user id. Non-admin values are ignored and current operator is used."`
 }
@@ -160,14 +159,7 @@ type InventoryCheckInput struct {
 	StockStatus   string `json:"stock_status,omitempty" jsonschema:"description=Optional item unit stock status: in_stock, reserved, out_stock."`
 	QualityStatus string `json:"quality_status,omitempty" jsonschema:"description=Optional item unit quality status: pending, qualified, unqualified."`
 	PageNum       int64  `json:"page_num,omitempty" jsonschema:"description=Page number, default 1."`
-	PageSize      int64  `json:"page_size,omitempty" jsonschema:"description=Page size, default 20."`
-}
-
-var mesIncrementalState = struct {
-	sync.Mutex
-	latest map[string]string
-}{
-	latest: map[string]string{},
+	PageSize      int64  `json:"page_size,omitempty" jsonschema:"description=Page size, default 30."`
 }
 
 var nonAIToolNames = map[string]bool{
@@ -251,13 +243,13 @@ func mesToolBuilders(baseTools ...tool.BaseTool) map[string]toolBuilder {
 		builders[info.Name] = func() (tool.BaseTool, error) { return baseTool, nil }
 	}
 	builders["list_work_orders"] = func() (tool.BaseTool, error) {
-		return toolutils.InferTool[ListWorkOrdersInput, string]("list_work_orders", "Get recent unread or relevant work orders. The system automatically continues incrementally from the last fetched update time.", runListWorkOrders)
+		return toolutils.InferTool[ListWorkOrdersInput, string]("list_work_orders", "Get the latest time-ordered work orders as dropdown/list data. Use limit for the number of records, default 30.", runListWorkOrders)
 	}
 	builders["mark_work_order_read"] = func() (tool.BaseTool, error) {
 		return toolutils.InferTool[MarkWorkOrderReadInput, string]("mark_work_order_read", "Mark a work order as read.", runMarkWorkOrderRead)
 	}
 	builders["search_users"] = func() (tool.BaseTool, error) {
-		return toolutils.InferTool[SearchUsersInput, string]("search_users", "Search assignable MES users by id, name, account, or role. Returns only safe fields: id, account, name, role.", runSearchUsers)
+		return toolutils.InferTool[SearchUsersInput, string]("search_users", "Search assignable MES users by id, name, account, or role. If the user provides a username/account like root but not a numeric id, call this tool before asking the user for an id. Returns only safe fields: id, account, name, role.", runSearchUsers)
 	}
 	builders["create_work_order_draft"] = func() (tool.BaseTool, error) {
 		return toolutils.InferTool[CreateWorkOrderDraftInput, string]("create_work_order_draft", "Create a work order draft.", runCreateWorkOrderDraft)
@@ -281,13 +273,13 @@ func mesToolBuilders(baseTools ...tool.BaseTool) map[string]toolBuilder {
 		return toolutils.InferTool[CreateInventoryFlowDraftInput, string]("create_inventory_flow_draft", "Create an inbound or outbound inventory flow draft.", runCreateInventoryFlowDraft)
 	}
 	builders["list_inventory_flows"] = func() (tool.BaseTool, error) {
-		return toolutils.InferTool[ListInventoryFlowsInput, string]("list_inventory_flows", "Get recent relevant inventory flows by scope/status. The system automatically continues incrementally from the last fetched update time.", runListInventoryFlows)
+		return toolutils.InferTool[ListInventoryFlowsInput, string]("list_inventory_flows", "Get the latest time-ordered inventory flows as dropdown/list data by scope/status. Use limit for the number of records, default 30.", runListInventoryFlows)
 	}
 	builders["get_inventory_flow"] = func() (tool.BaseTool, error) {
 		return toolutils.InferTool[GetInventoryFlowInput, string]("get_inventory_flow", "Get inventory flow details.", runGetInventoryFlow)
 	}
 	builders["search_items"] = func() (tool.BaseTool, error) {
-		return toolutils.InferTool[SearchItemsInput, string]("search_items", "Search item definitions/material types.", runSearchItems)
+		return toolutils.InferTool[SearchItemsInput, string]("search_items", "Search item definitions/material types. Count fields describe concrete item units: total_count is all units of this item type, in_stock_count is physically in stock, reserved_count is reserved, out_stock_count is already out of stock, pending/qualified/unqualified are quality counts, and available_count is usable stock for new outbound requests. Do not treat total_count as available stock.", runSearchItems)
 	}
 	builders["get_item"] = func() (tool.BaseTool, error) {
 		return toolutils.InferTool[GetItemInput, string]("get_item", "Get item definition/material type details.", runGetItem)
@@ -296,7 +288,7 @@ func mesToolBuilders(baseTools ...tool.BaseTool) map[string]toolBuilder {
 		return toolutils.InferTool[ListItemUnitsInput, string]("list_item_units", "List concrete item units in inventory.", runListItemUnits)
 	}
 	builders["list_pending_inventory_flows"] = func() (tool.BaseTool, error) {
-		return toolutils.InferTool[ListPendingInventoryFlowsInput, string]("list_pending_inventory_flows", "Get recent submitted inventory flows pending warehouse processing. The system automatically continues incrementally from the last fetched update time.", runListPendingInventoryFlows)
+		return toolutils.InferTool[ListPendingInventoryFlowsInput, string]("list_pending_inventory_flows", "Get the latest time-ordered submitted inventory flows pending warehouse processing. Use limit for the number of records, default 30.", runListPendingInventoryFlows)
 	}
 	builders["inventory_check"] = func() (tool.BaseTool, error) {
 		return toolutils.InferTool[InventoryCheckInput, string]("inventory_check", "Read-only inventory check for item stock and item unit details.", runInventoryCheck)
@@ -313,17 +305,11 @@ func runListWorkOrders(ctx context.Context, input ListWorkOrdersInput) (string, 
 	if err != nil {
 		return "", err
 	}
-	operatorID, err := operatorID(ctx)
-	if err != nil {
-		return "", err
-	}
 	status := parseWorkOrderStatus(input.Status)
 	isTo := input.IsTo
 	if status == workorderpb.WorkOrderStatus_WORK_ORDER_STATUS_DRAFT {
 		isTo = false
 	}
-	stateKey := incrementalStateKey("list_work_orders", operatorID, userID, isTo, input.Unread, status.String(), strings.TrimSpace(input.NamePrefix))
-	sinceTime := incrementalSinceTime(stateKey)
 	resp, err := client.ListWorkOrder(ctx, &workorderpb.ListWorkOrderReq{
 		PageNum:    1,
 		PageSize:   pageSize(input.Limit),
@@ -331,14 +317,12 @@ func runListWorkOrders(ctx context.Context, input ListWorkOrdersInput) (string, 
 		IsTo:       isTo,
 		IsUnread:   input.Unread,
 		NamePrefix: strings.TrimSpace(input.NamePrefix),
-		SinceTime:  sinceTime,
 		Status:     status,
 	})
 	if err != nil {
 		return "", err
 	}
-	latestUpdateTime := updateIncrementalState(stateKey, latestWorkOrderUpdate(resp))
-	return marshalProtoWithLatestUpdate(resp, latestUpdateTime)
+	return marshalProto(resp)
 }
 
 func runMarkWorkOrderRead(ctx context.Context, input MarkWorkOrderReadInput) (string, error) {
@@ -588,14 +572,8 @@ func runListInventoryFlows(ctx context.Context, input ListInventoryFlowsInput) (
 	if err != nil {
 		return "", err
 	}
-	operatorID, err := operatorID(ctx)
-	if err != nil {
-		return "", err
-	}
 	isTo := isInventoryFlowToScope(input.Scope)
 	flowStatus := parseFlowStatus(input.FlowStatus)
-	stateKey := incrementalStateKey("list_inventory_flows", operatorID, userID, isTo, flowStatus.String(), strings.TrimSpace(input.NamePrefix))
-	sinceTime := incrementalSinceTime(stateKey)
 	resp, err := client.ListInventoryFlow(ctx, &inventorypb.ListInventoryFlowReq{
 		UserId:     userID,
 		IsTo:       isTo,
@@ -603,13 +581,11 @@ func runListInventoryFlows(ctx context.Context, input ListInventoryFlowsInput) (
 		NamePrefix: strings.TrimSpace(input.NamePrefix),
 		PageNum:    1,
 		PageSize:   pageSize(input.Limit),
-		SinceTime:  sinceTime,
 	})
 	if err != nil {
 		return "", err
 	}
-	latestUpdateTime := updateIncrementalState(stateKey, latestInventoryFlowUpdate(resp))
-	return marshalProtoWithLatestUpdate(resp, latestUpdateTime)
+	return marshalProto(resp)
 }
 
 func runGetInventoryFlow(ctx context.Context, input GetInventoryFlowInput) (string, error) {
@@ -682,12 +658,6 @@ func runListPendingInventoryFlows(ctx context.Context, input ListPendingInventor
 	if err != nil {
 		return "", err
 	}
-	operatorID, err := operatorID(ctx)
-	if err != nil {
-		return "", err
-	}
-	stateKey := incrementalStateKey("list_pending_inventory_flows", operatorID, userID, strings.TrimSpace(input.NamePrefix))
-	sinceTime := incrementalSinceTime(stateKey)
 	resp, err := client.ListInventoryFlow(ctx, &inventorypb.ListInventoryFlowReq{
 		UserId:     userID,
 		IsTo:       true,
@@ -695,13 +665,11 @@ func runListPendingInventoryFlows(ctx context.Context, input ListPendingInventor
 		NamePrefix: strings.TrimSpace(input.NamePrefix),
 		PageNum:    1,
 		PageSize:   pageSize(input.Limit),
-		SinceTime:  sinceTime,
 	})
 	if err != nil {
 		return "", err
 	}
-	latestUpdateTime := updateIncrementalState(stateKey, latestInventoryFlowUpdate(resp))
-	return marshalProtoWithLatestUpdate(resp, latestUpdateTime)
+	return marshalProto(resp)
 }
 
 func runInventoryCheck(ctx context.Context, input InventoryCheckInput) (string, error) {
@@ -731,31 +699,11 @@ func runInventoryCheck(ctx context.Context, input InventoryCheckInput) (string, 
 }
 
 func marshalProto(msg proto.Message) (string, error) {
-	data, err := protojson.MarshalOptions{UseProtoNames: true, EmitUnpopulated: false}.Marshal(msg)
+	data, err := protojson.MarshalOptions{UseProtoNames: true, EmitUnpopulated: true}.Marshal(msg)
 	if err != nil {
 		return "", err
 	}
 	return string(data), nil
-}
-
-func marshalProtoWithLatestUpdate(msg proto.Message, latestUpdateTime string) (string, error) {
-	data, err := protojson.MarshalOptions{UseProtoNames: true, EmitUnpopulated: false}.Marshal(msg)
-	if err != nil {
-		return "", err
-	}
-	if latestUpdateTime == "" {
-		return string(data), nil
-	}
-	var payload map[string]any
-	if err := json.Unmarshal(data, &payload); err != nil {
-		return "", err
-	}
-	payload["latest_update_time"] = latestUpdateTime
-	enriched, err := json.Marshal(payload)
-	if err != nil {
-		return "", err
-	}
-	return string(enriched), nil
 }
 
 func marshalJSON(value any) (string, error) {
@@ -794,58 +742,6 @@ func roleMatches(filter string, userRole string) bool {
 		return true
 	}
 	return rpcmeta.NormalizeRole(userRole, conf.GetConf().AITools.RoleAliases) == normalized
-}
-
-func latestWorkOrderUpdate(resp *workorderpb.ListWorkOrderResp) string {
-	latest := ""
-	for _, order := range resp.GetWorkOrderList() {
-		latest = maxTimeString(latest, order.GetUpdateTime())
-	}
-	return latest
-}
-
-func latestInventoryFlowUpdate(resp *inventorypb.ListInventoryFlowResp) string {
-	latest := ""
-	for _, flow := range resp.GetInventoryFlowList() {
-		latest = maxTimeString(latest, flow.GetUpdateTime())
-	}
-	return latest
-}
-
-func maxTimeString(current string, candidate string) string {
-	if candidate == "" {
-		return current
-	}
-	if current == "" || candidate > current {
-		return candidate
-	}
-	return current
-}
-
-func incrementalStateKey(toolName string, operatorID int64, parts ...any) string {
-	values := make([]string, 0, len(parts)+2)
-	values = append(values, toolName, strconv.FormatInt(operatorID, 10))
-	for _, part := range parts {
-		values = append(values, fmt.Sprint(part))
-	}
-	return strings.Join(values, "|")
-}
-
-func incrementalSinceTime(key string) string {
-	mesIncrementalState.Lock()
-	defer mesIncrementalState.Unlock()
-	return mesIncrementalState.latest[key]
-}
-
-func updateIncrementalState(key string, latestUpdateTime string) string {
-	mesIncrementalState.Lock()
-	defer mesIncrementalState.Unlock()
-	current := mesIncrementalState.latest[key]
-	next := maxTimeString(current, latestUpdateTime)
-	if next != "" {
-		mesIncrementalState.latest[key] = next
-	}
-	return next
 }
 
 func mustMarshalProto(msg proto.Message) string {
@@ -990,7 +886,7 @@ func pageNum(v int64) int64 {
 
 func pageSize(v int64) int64 {
 	if v <= 0 {
-		return 20
+		return 30
 	}
 	if v > 100 {
 		return 100
