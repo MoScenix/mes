@@ -39,14 +39,15 @@ func publishAgentEvents(ctx context.Context, store redisstream.Store, projectID 
 			continue
 		}
 		if event.Action != nil && event.Action.Interrupted != nil {
+			payload := map[string]any{
+				"agent": event.AgentName,
+			}
 			id, _ := publishTaskEvent(ctx, store, aievent.TaskEvent{
 				ProjectID: projectID,
 				Type:      aievent.EventQuestion,
 				Agent:     event.AgentName,
 				Content:   fmt.Sprint(event.Action.Interrupted.Data),
-				Payload: map[string]any{
-					"interrupt_contexts": event.Action.Interrupted.InterruptContexts,
-				},
+				Payload:   payload,
 				CreatedAt: time.Now().UnixMilli(),
 			})
 			if lastID != nil && id != "" {
