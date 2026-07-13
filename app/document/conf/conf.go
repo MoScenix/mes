@@ -23,6 +23,7 @@ type Config struct {
 	MySQL    MySQL    `yaml:"mysql"`
 	Redis    Redis    `yaml:"redis"`
 	Registry Registry `yaml:"registry"`
+	OTel     OTel     `yaml:"otel"`
 	ES       ES       `yaml:"es"`
 	Milvus   Milvus   `yaml:"milvus"`
 	Index    Index    `yaml:"index"`
@@ -53,6 +54,10 @@ type Registry struct {
 	RegistryAddress []string `yaml:"registry_address"`
 	Username        string   `yaml:"username"`
 	Password        string   `yaml:"password"`
+}
+
+type OTel struct {
+	ExportEndpoint string `yaml:"export_endpoint"`
 }
 
 type ES struct {

@@ -23,6 +23,7 @@ type Config struct {
 	MySQL  MySQL  `yaml:"mysql"`
 	Redis  Redis  `yaml:"redis"`
 	Consul Consul `yaml:"consul"`
+	OTel   OTel   `yaml:"otel"`
 	Static Static `yaml:"static"`
 	Deploy Deploy `yaml:"deploy"`
 	File   File   `yaml:"file"`
@@ -30,6 +31,10 @@ type Config struct {
 
 type Consul struct {
 	Address string `yaml:"address"`
+}
+
+type OTel struct {
+	ExportEndpoint string `yaml:"export_endpoint"`
 }
 
 type MySQL struct {

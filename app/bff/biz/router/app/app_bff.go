@@ -80,6 +80,7 @@ func Register(r *server.Hertz) {
 		_chathistory := root.Group("/chatHistory", _chathistoryMw()...)
 		{
 			_admin0 := _chathistory.Group("/admin", _admin0Mw()...)
+			_admin0.POST("/delete", append(_deletechathistorybyadminMw(), app.DeleteChatHistoryByAdmin)...)
 			{
 				_list2 := _admin0.Group("/list", _list2Mw()...)
 				{

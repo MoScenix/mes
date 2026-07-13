@@ -9,6 +9,7 @@
 **/coverage
 **/.cache
 **/.vite
+**/target
 
 app/*/.env
 app/*/server

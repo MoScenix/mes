@@ -24,6 +24,7 @@ type Config struct {
 	MySQL    MySQL    `yaml:"mysql"`
 	Redis    Redis    `yaml:"redis"`
 	Registry Registry `yaml:"registry"`
+	OTel     OTel     `yaml:"otel"`
 	LLM      LLM      `yaml:"llm"`
 	ShareDir ShareDir `yaml:"ShareDir"`
 	WorkPool WorkPool `yaml:"workpool"`
@@ -56,6 +57,10 @@ type Registry struct {
 	RegistryAddress []string `yaml:"registry_address"`
 	Username        string   `yaml:"username"`
 	Password        string   `yaml:"password"`
+}
+
+type OTel struct {
+	ExportEndpoint string `yaml:"export_endpoint"`
 }
 
 type LLM struct {
@@ -184,7 +189,9 @@ func normalizeAIToolsConfig(aiTools *AITools) {
 	for group, tools := range defaultGroups {
 		if len(aiTools.ToolGroups[group]) == 0 {
 			aiTools.ToolGroups[group] = tools
+			continue
 		}
+		aiTools.ToolGroups[group] = appendMissing(aiTools.ToolGroups[group], tools...)
 	}
 	if aiTools.RoleGroups == nil {
 		aiTools.RoleGroups = map[string][]string{}
@@ -192,7 +199,9 @@ func normalizeAIToolsConfig(aiTools *AITools) {
 	for role, groups := range defaultRoleGroups {
 		if len(aiTools.RoleGroups[role]) == 0 {
 			aiTools.RoleGroups[role] = groups
+			continue
 		}
+		aiTools.RoleGroups[role] = appendMissing(aiTools.RoleGroups[role], groups...)
 	}
 	if aiTools.RoleAliases == nil {
 		aiTools.RoleAliases = map[string]string{}
@@ -202,6 +211,21 @@ func normalizeAIToolsConfig(aiTools *AITools) {
 			aiTools.RoleAliases[alias] = role
 		}
 	}
+}
+
+func appendMissing(values []string, defaults ...string) []string {
+	seen := map[string]bool{}
+	for _, value := range values {
+		seen[value] = true
+	}
+	for _, value := range defaults {
+		if value == "" || seen[value] {
+			continue
+		}
+		values = append(values, value)
+		seen[value] = true
+	}
+	return values
 }
 
 func findConfFile() (string, error) {

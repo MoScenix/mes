@@ -50,17 +50,32 @@
           </div>
           <div class="history-cards custom-scrollbar">
             <template v-if="sessions.length">
-              <button
+              <div
                 v-for="session in sessions"
                 :key="session.id"
                 class="history-card-item"
                 :class="{ active: Number(activeAppId) === session.id }"
-                type="button"
-                @click="selectSession(session)"
               >
-                <span class="history-card-title">{{ session.appName || '未命名对话' }}</span>
-                <time class="history-card-time">{{ session.updateTime || session.createTime || '' }}</time>
-              </button>
+                <button class="history-card-main" type="button" @click="selectSession(session)">
+                  <span class="history-card-title">{{ session.appName || '未命名对话' }}</span>
+                  <time class="history-card-time">{{ session.updateTime || session.createTime || '' }}</time>
+                </button>
+                <a-popconfirm title="确定要删除这条对话吗？" @confirm="deleteSession(session)">
+                  <a-tooltip title="删除">
+                    <a-button
+                      class="history-delete"
+                      danger
+                      type="text"
+                      shape="circle"
+                      size="small"
+                      :loading="deletingSessionId === session.id"
+                      @click.stop
+                    >
+                      <DeleteOutlined />
+                    </a-button>
+                  </a-tooltip>
+                </a-popconfirm>
+              </div>
             </template>
             <a-empty v-else-if="!loadingSessions" description="暂无历史" />
             <a-spin v-else class="loading-spin" />
@@ -207,8 +222,14 @@
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
-import { CloseOutlined, EditOutlined, FileTextOutlined, HistoryOutlined } from '@ant-design/icons-vue'
-import { addApp, listMyAppVoByPage } from '@/api/appController'
+import {
+  CloseOutlined,
+  DeleteOutlined,
+  EditOutlined,
+  FileTextOutlined,
+  HistoryOutlined,
+} from '@ant-design/icons-vue'
+import { addApp, deleteApp, listMyAppVoByPage } from '@/api/appController'
 import { listAppChatHistory } from '@/api/chatHistoryController'
 import { cancelAI } from '@/api/aiController'
 import request from '@/request'
@@ -231,6 +252,7 @@ const activeTitle = ref('选择历史记录或直接提问')
 const sessions = ref<API.AppVO[]>([])
 const historyOpen = ref(false)
 const loadingSessions = ref(false)
+const deletingSessionId = ref<number>()
 const messagesContainer = ref<HTMLElement>()
 const currentQuestionIndex = ref(0)
 const answerInput = ref('')
@@ -310,6 +332,33 @@ const selectSession = async (idOrSession: number | API.AppVO) => {
   await loadHistory(sessionId)
   await loadInitialState()
   await nextTick(scrollToBottom)
+}
+
+const deleteSession = async (session: API.AppVO) => {
+  if (!session.id || deletingSessionId.value) return
+  deletingSessionId.value = session.id
+  try {
+    const res = await deleteApp({ id: session.id })
+    if (res.data.code !== 0 || !res.data.data) {
+      message.error(res.data.message || '删除失败')
+      return
+    }
+    message.success('删除成功')
+    sessions.value = sessions.value.filter((item) => item.id !== session.id)
+    if (activeAppId.value === session.id) {
+      activeAppId.value = undefined
+      activeTitle.value = '选择历史记录或直接提问'
+      messages.value = []
+      currentQuestion.value = null
+      stop()
+    }
+    await loadSessions()
+  } catch (error) {
+    console.error('删除对话失败：', error)
+    message.error('删除失败')
+  } finally {
+    deletingSessionId.value = undefined
+  }
 }
 
 const createNewChat = async () => {
@@ -691,16 +740,14 @@ onMounted(async () => {
   width: 100%;
   min-height: 46px;
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
+  align-items: center;
   justify-content: center;
-  gap: 2px;
-  padding: 7px 10px;
+  gap: 6px;
+  padding: 4px 6px 4px 10px;
   border: 0;
   border-radius: 8px;
   background: transparent;
   text-align: left;
-  cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
 }
 
@@ -710,6 +757,31 @@ onMounted(async () => {
 
 .history-card-item.active {
   background: #ececf1;
+}
+
+.history-card-main {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  padding: 3px 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.history-delete {
+  flex: 0 0 auto;
+  opacity: 0;
+  transition: opacity 0.15s ease, background 0.15s ease;
+}
+
+.history-card-item:hover .history-delete,
+.history-delete:focus-visible {
+  opacity: 1;
 }
 
 .history-card-title {

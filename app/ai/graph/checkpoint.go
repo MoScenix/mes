@@ -2,6 +2,7 @@ package graph
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -66,6 +67,10 @@ func Resume(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	targets, err := resumeTargets(state.PendingInterrupts, answer)
+	if err != nil {
+		return err
+	}
 	if buffer, ok := utils.StringBufferFromContext(ctx); ok {
 		buffer.SetString(state.Buffer)
 	}
@@ -74,7 +79,7 @@ func Resume(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	resumeCtx := compose.ResumeWithData(ctx, state.PendingInterrupts[0].ID, answer)
+	resumeCtx := compose.BatchResumeWithData(ctx, targets)
 	_, err = r.Invoke(resumeCtx, map[string]any{}, compose.WithCheckPointID(state.CheckpointID))
 	return handleGraphResult(ctx, err)
 }
@@ -106,15 +111,72 @@ func loadResumeAnswer(ctx context.Context, state aievent.ProjectState, targetID 
 		if err != nil || event.Type != aievent.EventAnswer {
 			continue
 		}
-		if len(targetIDs) > 0 && !targetIDs[strings.TrimSpace(event.TargetID)] {
-			continue
-		}
-		return agent.AssistantAnswer{
+		answer := agent.AssistantAnswer{
 			Content: event.Content,
 			Payload: event.Payload,
-		}, nil
+			Answers: parseAnswerMap(event.Payload),
+		}
+		if len(targetIDs) > 0 && !answerMatchesTargets(answer, targetIDs) {
+			continue
+		}
+		return answer, nil
 	}
 	return agent.AssistantAnswer{}, ErrResumeAnswerNotFound
+}
+
+func answerMatchesTargets(answer agent.AssistantAnswer, targetIDs map[string]bool) bool {
+	for id := range answer.Answers {
+		if targetIDs[id] {
+			return true
+		}
+	}
+	return false
+}
+
+func resumeTargets(interrupts []aievent.PendingInterrupt, answer agent.AssistantAnswer) (map[string]any, error) {
+	if len(interrupts) == 0 {
+		return nil, ErrNoInterruptedCheckpoint
+	}
+	if len(answer.Answers) == 0 {
+		return nil, ErrResumeAnswerNotFound
+	}
+	targets := make(map[string]any, len(interrupts))
+	for _, interrupt := range interrupts {
+		if strings.TrimSpace(interrupt.ID) == "" {
+			return nil, ErrNoInterruptedCheckpoint
+		}
+		value, ok := answerForPendingInterrupt(interrupt, answer.Answers)
+		if !ok {
+			return nil, ErrResumeAnswerNotFound
+		}
+		targets[interrupt.ID] = value
+	}
+	return targets, nil
+}
+
+func answerForPendingInterrupt(interrupt aievent.PendingInterrupt, answers map[string]agent.AssistantAnswer) (agent.AssistantAnswer, bool) {
+	for id := range aievent.PendingInterruptTargetIDs(interrupt) {
+		if answer, ok := answers[id]; ok {
+			return answer, true
+		}
+	}
+	return agent.AssistantAnswer{}, false
+}
+
+func parseAnswerMap(payload map[string]any) map[string]agent.AssistantAnswer {
+	raw, ok := payload["answers"]
+	if !ok || raw == nil {
+		return nil
+	}
+	data, err := json.Marshal(raw)
+	if err != nil {
+		return nil
+	}
+	var answers map[string]agent.AssistantAnswer
+	if err := json.Unmarshal(data, &answers); err != nil {
+		return nil
+	}
+	return answers
 }
 
 func resumeTargetIDs(state aievent.ProjectState, targetID string) map[string]bool {
@@ -122,11 +184,10 @@ func resumeTargetIDs(state aievent.ProjectState, targetID string) map[string]boo
 	if targetID = strings.TrimSpace(targetID); targetID != "" {
 		ids[targetID] = true
 	}
-	if len(state.PendingInterrupts) == 0 {
-		return ids
-	}
-	for id := range aievent.PendingInterruptTargetIDs(state.PendingInterrupts[0]) {
-		ids[id] = true
+	for _, interrupt := range state.PendingInterrupts {
+		for id := range aievent.PendingInterruptTargetIDs(interrupt) {
+			ids[id] = true
+		}
 	}
 	return ids
 }
@@ -164,7 +225,7 @@ func persistGraphInterrupted(ctx context.Context, info *compose.InterruptInfo) e
 			"is_root_cause":     interruptCtx.IsRootCause,
 		}
 		infoPayload, _ := interruptCtx.Info.(map[string]any)
-		if assistantLastID := aievent.DesignerLastID(infoPayload); assistantLastID != "" {
+		if assistantLastID := aievent.PayloadString(infoPayload, aievent.PayloadLastEventID); assistantLastID != "" {
 			payload[aievent.PayloadLastEventID] = assistantLastID
 		}
 		if adkInterruptID := aievent.ADKInterruptID(infoPayload); adkInterruptID != "" {
@@ -209,10 +270,7 @@ func resumeEventCursor(state aievent.ProjectState) string {
 		if value := aievent.PayloadString(payload, aievent.PayloadLastEventID); value != "" {
 			return value
 		}
-		if value := aievent.PayloadString(payload, aievent.PayloadDesignerLastID); value != "" {
-			return value
-		}
-		if value := aievent.DesignerLastID(aievent.NestedPayload(payload, aievent.PayloadInfo)); value != "" {
+		if value := aievent.PayloadString(aievent.NestedPayload(payload, aievent.PayloadInfo), aievent.PayloadLastEventID); value != "" {
 			return value
 		}
 	}

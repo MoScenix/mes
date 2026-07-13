@@ -17,8 +17,12 @@ import (
 	"github.com/MoScenix/mes/common/redisstream"
 	rpcai "github.com/MoScenix/mes/rpc_gen/kitex_gen/ai"
 	rpcapp "github.com/MoScenix/mes/rpc_gen/kitex_gen/app"
-	"github.com/cloudwego/kitex/pkg/klog"
 )
+
+type aiAnswerPayload struct {
+	Content string         `json:"content,omitempty"`
+	Payload map[string]any `json:"payload,omitempty"`
+}
 
 func submitAITask(ctx context.Context, appID int64, message string) (bool, error) {
 	if appID <= 0 {
@@ -54,7 +58,7 @@ func pushAIEvent(ctx context.Context, appID int64, content string) (string, erro
 	})
 }
 
-func answerAIQuestion(ctx context.Context, appID int64, content string, targetID string) (bool, error) {
+func answerAIQuestion(ctx context.Context, appID int64, answers map[string]aiAnswerPayload) (bool, error) {
 	if appID <= 0 {
 		return false, fmt.Errorf("appId is required")
 	}
@@ -62,9 +66,9 @@ func answerAIQuestion(ctx context.Context, appID int64, content string, targetID
 		return false, err
 	}
 	ctx = utils.WithIdentityMeta(ctx)
-	content = strings.TrimSpace(content)
-	if content == "" {
-		return false, fmt.Errorf("content is required")
+	answers = normalizeAnswerPayloads(answers)
+	if len(answers) == 0 {
+		return false, fmt.Errorf("answers are required")
 	}
 
 	state, ok, err := loadAIState(ctx, appID)
@@ -74,25 +78,23 @@ func answerAIQuestion(ctx context.Context, appID int64, content string, targetID
 	if !ok {
 		return false, fmt.Errorf("ai task state not found")
 	}
-	targetID = strings.TrimSpace(targetID)
-	if targetID == "" && len(state.PendingInterrupts) > 0 {
-		targetID = state.PendingInterrupts[0].ID
-	}
-	if targetID == "" {
-		return false, fmt.Errorf("pending interrupt target not found")
-	}
-
-	eventID, err := addTaskEvent(ctx, appID, aievent.TaskEvent{
-		ProjectID: projectID(appID),
-		Type:      aievent.EventAnswer,
-		Content:   content,
-		TargetID:  targetID,
-	})
+	expandedAnswers, err := expandAnswersForPendingInterrupts(state.PendingInterrupts, answers)
 	if err != nil {
-		klog.CtxErrorf(ctx, "submit ai answer failed: app_id=%d target_id=%s err=%v", appID, targetID, err)
 		return false, err
 	}
-	klog.CtxInfof(ctx, "ai answer submitted: app_id=%d target_id=%s event_id=%s", appID, targetID, eventID)
+	targetID := firstAnswerTarget(expandedAnswers)
+
+	_, err = addTaskEvent(ctx, appID, aievent.TaskEvent{
+		ProjectID: projectID(appID),
+		Type:      aievent.EventAnswer,
+		TargetID:  targetID,
+		Payload: map[string]any{
+			"answers": expandedAnswers,
+		},
+	})
+	if err != nil {
+		return false, err
+	}
 
 	if state.Status == aievent.ProjectStatusInterrupted {
 		return submitAI(ctx, appID)
@@ -117,7 +119,6 @@ func resumeIfAnswerTimedOut(ctx context.Context, appID int64, targetID string) (
 		switch latest.Status {
 		case aievent.ProjectStatusInterrupted:
 			if hasPendingInterrupt(latest, targetID) {
-				klog.CtxInfof(ctx, "resume interrupted ai task: app_id=%d target_id=%s", appID, targetID)
 				return submitAI(ctx, appID)
 			}
 			return true, nil
@@ -221,10 +222,8 @@ func submitAI(ctx context.Context, appID int64) (bool, error) {
 	ctx = utils.WithIdentityMeta(ctx)
 	resp, err := rpc.AiClient.Chat(ctx, &rpcai.AiReq{ProjectId: projectID(appID)})
 	if err != nil {
-		klog.CtxErrorf(ctx, "submit ai task failed: app_id=%d err=%v", appID, err)
 		return false, err
 	}
-	klog.CtxInfof(ctx, "ai task submitted: app_id=%d", appID)
 	return resp.GetAnswer() == "true", nil
 }
 
@@ -260,6 +259,54 @@ func hasPendingInterrupt(state aievent.ProjectState, targetID string) bool {
 		return false
 	}
 	return aievent.PendingInterruptsMatch(state.PendingInterrupts, targetID)
+}
+
+func normalizeAnswerPayloads(answers map[string]aiAnswerPayload) map[string]aiAnswerPayload {
+	normalized := make(map[string]aiAnswerPayload, len(answers))
+	for id, answer := range answers {
+		id = strings.TrimSpace(id)
+		answer.Content = strings.TrimSpace(answer.Content)
+		if id == "" || (answer.Content == "" && len(answer.Payload) == 0) {
+			continue
+		}
+		normalized[id] = answer
+	}
+	return normalized
+}
+
+func expandAnswersForPendingInterrupts(interrupts []aievent.PendingInterrupt, answers map[string]aiAnswerPayload) (map[string]aiAnswerPayload, error) {
+	if len(interrupts) == 0 {
+		return nil, fmt.Errorf("pending interrupt target not found")
+	}
+	expanded := make(map[string]aiAnswerPayload, len(answers))
+	for answerID, answer := range answers {
+		matched := false
+		for _, interrupt := range interrupts {
+			targetIDs := aievent.PendingInterruptTargetIDs(interrupt)
+			if !targetIDs[answerID] {
+				continue
+			}
+			for id := range targetIDs {
+				expanded[id] = answer
+			}
+			matched = true
+			break
+		}
+		if !matched {
+			return nil, fmt.Errorf("answer target %s does not match pending interrupts", answerID)
+		}
+	}
+	if len(expanded) == 0 {
+		return nil, fmt.Errorf("answers are required")
+	}
+	return expanded, nil
+}
+
+func firstAnswerTarget(answers map[string]aiAnswerPayload) string {
+	for id := range answers {
+		return id
+	}
+	return ""
 }
 
 func toAIState(exists bool, state aievent.ProjectState) *lapp.AIState {

@@ -36,7 +36,7 @@ import (
 func main() {
 	// init dal
 	godotenv.Load()
-	tp := mtl.TraceInit(conf.GetConf().Hertz.Service)
+	tp := mtl.TraceInit(conf.GetConf().Hertz.Service, conf.GetConf().OTel.ExportEndpoint)
 	defer tp.Shutdown(context.Background())
 	dal.Init()
 	address := conf.GetConf().Hertz.Address

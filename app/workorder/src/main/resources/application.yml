@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: mes-workorder-service
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:test}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: Asia/Shanghai
+
+grpc:
+  server:
+    service-name: workorder
+
+management:
+  endpoints:
+    web:
+      base-path: /
+      exposure:
+        include: health,prometheus
+      path-mapping:
+        prometheus: metrics
+  metrics:
+    tags:
+      application: ${spring.application.name}
+      service: ${grpc.server.service-name}
+  tracing:
+    sampling:
+      probability: 1.0
+
+observability:
+  prometheus:
+    service-name: prometheus
+    consul-registration-enabled: ${PROMETHEUS_CONSUL_REGISTRATION_ENABLED:true}

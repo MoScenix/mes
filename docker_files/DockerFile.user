@@ -1,23 +1,20 @@
-# docker_files/DockerFile.user
-FROM golang:1.25.5
+FROM maven:3.9.9-eclipse-temurin-17 AS builder
 
-WORKDIR /usr/src/gomall
+WORKDIR /workspace
 
-ENV GOPROXY=https://goproxy.cn,direct
-ENV GOSUMDB=sum.golang.google.cn
-ENV GOTOOLCHAIN=local
-ENV GOWORK=off
-
-COPY app/user/go.mod app/user/go.sum ./app/user/
-COPY rpc_gen ./rpc_gen
+COPY java ./java
 COPY common ./common
-
-RUN cd app/user && go mod download && go mod verify
-
 COPY app/user ./app/user
+COPY app/workorder ./app/workorder
+COPY app/inventory ./app/inventory
 
-RUN cd app/user && go build -mod=readonly -v -o server
+RUN mvn -Dmaven.repo.local=.m2/repository -f java/pom.xml -pl :mes-user-service -am package -DskipTests
 
-WORKDIR /usr/src/gomall/app/user
-EXPOSE 8888
-CMD ["./server"]
+FROM eclipse-temurin:17-jre
+
+WORKDIR /app
+
+COPY --from=builder /workspace/app/user/target/mes-user-service-0.0.1-SNAPSHOT.jar app.jar
+
+EXPOSE 9091 9995
+CMD ["java", "-jar", "app.jar"]

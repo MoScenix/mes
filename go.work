@@ -5,9 +5,6 @@ use (
 	./app/app
 	./app/bff
 	./app/document
-	./app/inventory
-	./app/user
-	./app/workorder
 	./common
 	./rpc_gen
 )

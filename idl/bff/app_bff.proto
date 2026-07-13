@@ -65,6 +65,11 @@ service AppService {
     option (api.post) = "/chatHistory/admin/list/page/vo";
   }
 
+  // 管理员删除聊天记录
+  rpc DeleteChatHistoryByAdmin(DeleteRequest) returns (BaseResponseBoolean) {
+    option (api.post) = "/chatHistory/admin/delete";
+  }
+
   // 按应用分页查询聊天记录
   rpc ListAppChatHistory(ListAppChatHistoryRequest) returns (BaseResponsePageChatHistory) {
     option (api.get) = "/chatHistory/app/:appId";
@@ -170,7 +175,12 @@ message AIControlRequest {
   int64 appId = 1;
   string content = 2;
   string reason = 3;
-  string targetId = 4;
+  map<string, AIAnswer> answers = 5;
+}
+
+message AIAnswer {
+  string content = 1;
+  string payloadJson = 2;
 }
 
 message AIStateRequest {

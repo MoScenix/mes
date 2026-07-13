@@ -86,7 +86,6 @@ const (
 	PayloadInfo           = "info"
 	PayloadADKInterruptID = "adk_interrupt_id"
 	PayloadControlCursor  = "control_cursor"
-	PayloadDesignerLastID = "designer_last_id"
 	PayloadLastEventID    = "last_event_id"
 )
 
@@ -174,13 +173,6 @@ func ADKInterruptID(payload map[string]any) string {
 
 func ControlCursor(payload map[string]any) string {
 	return PayloadString(payload, PayloadControlCursor)
-}
-
-func DesignerLastID(payload map[string]any) string {
-	if value := PayloadString(payload, PayloadDesignerLastID); value != "" {
-		return value
-	}
-	return PayloadString(payload, PayloadLastEventID)
 }
 
 func PendingInterruptTargetIDs(interrupt PendingInterrupt) map[string]bool {

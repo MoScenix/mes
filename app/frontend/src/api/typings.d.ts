@@ -61,7 +61,12 @@ declare namespace API {
     appId?: number
     content?: string
     reason?: string
-    targetId?: string
+    answers?: Record<string, AIAnswer>
+  }
+
+  type AIAnswer = {
+    content?: string
+    payload?: Record<string, any>
   }
 
   type AIStateRequest = {

@@ -12,7 +12,7 @@ func TestToolNamesForRoleSkipsFinalEffectTools(t *testing.T) {
 	cfg := conf.AITools{
 		ToolGroups: map[string][]string{
 			"workorder":         {"list_work_orders", "submit_work_order"},
-			"engineering_order": {"create_engineering_order", "create_engineering_order_draft", "update_engineering_order_draft", "list_engineering_orders"},
+			"engineering_order": {"create_engineering_order_draft", "update_engineering_order_draft", "list_engineering_orders"},
 			"warehouse_admin":   {"list_pending_inventory_flows", "audit_inventory_flow"},
 		},
 		RoleGroups: map[string][]string{
@@ -21,7 +21,7 @@ func TestToolNamesForRoleSkipsFinalEffectTools(t *testing.T) {
 	}
 
 	names := toolNamesForRole(rpcmeta.RoleAdmin, cfg)
-	for _, forbidden := range []string{"submit_work_order", "create_engineering_order", "audit_inventory_flow"} {
+	for _, forbidden := range []string{"submit_work_order", "audit_inventory_flow"} {
 		for _, name := range names {
 			if name == forbidden {
 				t.Fatalf("toolNamesForRole injected forbidden tool %q in %v", forbidden, names)

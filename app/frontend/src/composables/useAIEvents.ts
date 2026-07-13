@@ -421,8 +421,11 @@ export function useAIEvents(appId: Ref<any>, options?: { onDone?: () => void }) 
     if (!appId.value || !currentQuestion.value || !content.trim()) return false
     const res = await answerAI({
       appId: Number(appId.value),
-      content: content.trim(),
-      targetId: currentQuestion.value.id,
+      answers: {
+        [currentQuestion.value.id]: {
+          content: content.trim(),
+        },
+      },
     })
     if (res.data.code !== 0) return false
     await refreshState()

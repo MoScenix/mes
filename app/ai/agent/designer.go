@@ -19,8 +19,7 @@ import (
 	"github.com/cloudwego/eino/schema"
 )
 
-// Keep the legacy prompt path to avoid moving deployed config/assets during the assistant rename.
-const assistantInstructionPath = "prompt/designer/instruction.prompt"
+const assistantInstructionPath = "prompt/assistant/instruction.prompt"
 
 type AskUserInput struct {
 	Questions []AskUserQuestion `json:"questions" jsonschema:"description=Questions that must be answered by the user before the assistant can continue."`
@@ -38,15 +37,16 @@ type AssistantInterruptState struct {
 }
 
 type AssistantAnswer struct {
-	Content string         `json:"content,omitempty"`
-	Payload map[string]any `json:"payload,omitempty"`
+	Content string                     `json:"content,omitempty"`
+	Payload map[string]any             `json:"payload,omitempty"`
+	Answers map[string]AssistantAnswer `json:"answers,omitempty"`
 }
 
 func init() {
 	schema.RegisterName[AskUserInput]("ai_ask_user_input_v1")
 	schema.RegisterName[AskUserQuestion]("ai_ask_user_question_v1")
-	schema.RegisterName[AssistantInterruptState]("ai_designer_interrupt_state_v1")
-	schema.RegisterName[AssistantAnswer]("ai_designer_answer_v1")
+	schema.RegisterName[AssistantInterruptState]("ai_assistant_interrupt_state_v1")
+	schema.RegisterName[AssistantAnswer]("ai_assistant_answer_v1")
 }
 
 func NewAssistant(ctx context.Context) (*adk.ChatModelAgent, error) {

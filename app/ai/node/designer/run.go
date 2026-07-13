@@ -28,6 +28,7 @@ type AssistantInterruptedState struct {
 	Checkpoint        []byte
 	PendingInterrupts []aievent.PendingInterrupt
 	Buffer            string
+	Output            string
 	LastEventID       string
 	ControlCursor     string
 }
@@ -52,7 +53,7 @@ type assistantSession struct {
 }
 
 func init() {
-	schema.RegisterName[AssistantInterruptedState]("ai_designer_interrupted_state_v1")
+	schema.RegisterName[AssistantInterruptedState]("ai_assistant_interrupted_state_v1")
 }
 
 func Run(ctx context.Context) (map[string]any, error) {
@@ -126,6 +127,7 @@ func runResumed(ctx context.Context, interrupted AssistantInterruptedState, answ
 		return nil, err
 	}
 	defer session.close()
+	session.output.WriteString(interrupted.Output)
 
 	session.lastEventID, _ = publishTaskEvent(ctx, session.streamStore, aievent.TaskEvent{
 		ProjectID: session.projectID,
@@ -143,9 +145,11 @@ func runResumed(ctx context.Context, interrupted AssistantInterruptedState, answ
 		IsCancelled:  utils.IsCancelled(ctx),
 		UpdatedAt:    time.Now().UnixMilli(),
 	})
-	return session.run(nil, &adk.ResumeParams{
-		Targets: resumeTargets(interrupted.PendingInterrupts, answer),
-	})
+	targets, err := resumeTargets(interrupted.PendingInterrupts, answer)
+	if err != nil {
+		return nil, err
+	}
+	return session.run(nil, &adk.ResumeParams{Targets: targets})
 }
 
 func newAssistantSession(ctx context.Context, checkpointID string, checkpoints *memoryCheckpointStore) (*assistantSession, error) {
@@ -196,7 +200,7 @@ func (s *assistantSession) run(initialMessages []*schema.Message, resumeParams *
 			return nil, taskrunner.FinishError(s.ctx, s.streamStore, s.stateStore, s.projectID, agentName, err)
 		}
 		if !ok {
-			interrupted, err := buildInterruptedState(s.ctx, s.checkpoints, s.checkpointID, s.lastEventID, interrupt, s.buffer)
+			interrupted, err := buildInterruptedState(s, interrupt)
 			if err != nil {
 				return nil, taskrunner.FinishError(s.ctx, s.streamStore, s.stateStore, s.projectID, agentName, err)
 			}
@@ -338,19 +342,19 @@ func stringBuffer(ctx context.Context) *utils.StringBuffer {
 	return buffer
 }
 
-func buildInterruptedState(ctx context.Context, checkpoints *memoryCheckpointStore, checkpointID string, lastEventID string, interrupt *interruptEvent, buffer *utils.StringBuffer) (AssistantInterruptedState, error) {
-	data, existed, err := checkpoints.Get(ctx, checkpointID)
+func buildInterruptedState(s *assistantSession, interrupt *interruptEvent) (AssistantInterruptedState, error) {
+	data, existed, err := s.checkpoints.Get(s.ctx, s.checkpointID)
 	if err != nil {
 		return AssistantInterruptedState{}, err
 	}
 	if !existed {
-		return AssistantInterruptedState{}, fmt.Errorf("assistant checkpoint %q not found", checkpointID)
+		return AssistantInterruptedState{}, fmt.Errorf("assistant checkpoint %q not found", s.checkpointID)
 	}
 	return AssistantInterruptedState{
-		CheckpointID:  checkpointID,
+		CheckpointID:  s.checkpointID,
 		Checkpoint:    data,
-		LastEventID:   lastEventID,
-		ControlCursor: utils.ControlCursor(ctx),
+		LastEventID:   s.lastEventID,
+		ControlCursor: utils.ControlCursor(s.ctx),
 		PendingInterrupts: []aievent.PendingInterrupt{
 			{
 				ID:      interrupt.ID,
@@ -359,7 +363,8 @@ func buildInterruptedState(ctx context.Context, checkpoints *memoryCheckpointSto
 				Payload: interrupt.Payload,
 			},
 		},
-		Buffer: bufferValue(buffer),
+		Buffer: bufferValue(s.buffer),
+		Output: bufferValue(s.output),
 	}, nil
 }
 
@@ -380,7 +385,7 @@ func historyMessages(ctx context.Context) []*schema.Message {
 	}
 	if buffer, ok := utils.StringBufferFromContext(ctx); ok {
 		if extra := strings.TrimSpace(buffer.String()); extra != "" {
-			messages = append(messages, schema.SystemMessage("Pending assistant input:\n"+extra))
+			messages = append(messages, schema.UserMessage("Pending assistant input:\n"+extra))
 		}
 	}
 	return messages
@@ -393,14 +398,34 @@ func bufferValue(buffer *utils.StringBuffer) string {
 	return buffer.String()
 }
 
-func resumeTargets(interrupts []aievent.PendingInterrupt, answer agent.AssistantAnswer) map[string]any {
+func resumeTargets(interrupts []aievent.PendingInterrupt, answer agent.AssistantAnswer) (map[string]any, error) {
+	if len(interrupts) == 0 {
+		return nil, fmt.Errorf("assistant expects at least one interrupt")
+	}
+	if len(answer.Answers) == 0 {
+		return nil, fmt.Errorf("assistant resume answers are required")
+	}
 	targets := make(map[string]any, len(interrupts))
 	for _, interrupt := range interrupts {
-		if interrupt.ID != "" {
-			targets[interrupt.ID] = answer
+		if strings.TrimSpace(interrupt.ID) == "" {
+			return nil, fmt.Errorf("assistant interrupt ID is empty")
+		}
+		value, ok := answerForPendingInterrupt(interrupt, answer.Answers)
+		if !ok {
+			return nil, fmt.Errorf("assistant answer for interrupt %s not found", interrupt.ID)
+		}
+		targets[interrupt.ID] = value
+	}
+	return targets, nil
+}
+
+func answerForPendingInterrupt(interrupt aievent.PendingInterrupt, answers map[string]agent.AssistantAnswer) (agent.AssistantAnswer, bool) {
+	for id := range aievent.PendingInterruptTargetIDs(interrupt) {
+		if answer, ok := answers[id]; ok {
+			return answer, true
 		}
 	}
-	return targets
+	return agent.AssistantAnswer{}, false
 }
 
 func graphInterruptInfo(interrupted AssistantInterruptedState) any {
@@ -416,11 +441,8 @@ func graphInterruptInfo(interrupted AssistantInterruptedState) any {
 		"payload":                     pending.Payload,
 		aievent.PayloadADKInterruptID: pending.ID,
 		"adk_checkpoint_id":           interrupted.CheckpointID,
-		// Keep the legacy key so already persisted graph interrupts can resume.
-		aievent.PayloadDesignerLastID: interrupted.LastEventID,
+		aievent.PayloadLastEventID:    interrupted.LastEventID,
 		aievent.PayloadControlCursor:  interrupted.ControlCursor,
 		"assistant_has_state":         len(interrupted.Checkpoint) > 0,
-		// Keep the legacy flag for older frontend/control consumers.
-		"designer_has_state": len(interrupted.Checkpoint) > 0,
 	}
 }

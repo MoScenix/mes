@@ -23,6 +23,7 @@ type Config struct {
 	MySQL    MySQL    `yaml:"mysql"`
 	Redis    Redis    `yaml:"redis"`
 	Registry Registry `yaml:"registry"`
+	OTel     OTel     `yaml:"otel"`
 	ShareDir ShareDir `yaml:"ShareDir"`
 }
 
@@ -54,6 +55,10 @@ type Registry struct {
 	RegistryAddress []string `yaml:"registry_address"`
 	Username        string   `yaml:"username"`
 	Password        string   `yaml:"password"`
+}
+
+type OTel struct {
+	ExportEndpoint string `yaml:"export_endpoint"`
 }
 
 // GetConf gets configuration instance

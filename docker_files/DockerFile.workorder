@@ -1,0 +1,20 @@
+FROM maven:3.9.9-eclipse-temurin-17 AS builder
+
+WORKDIR /workspace
+
+COPY java ./java
+COPY common ./common
+COPY app/user ./app/user
+COPY app/workorder ./app/workorder
+COPY app/inventory ./app/inventory
+
+RUN mvn -Dmaven.repo.local=.m2/repository -f java/pom.xml -pl :mes-workorder-service -am package -DskipTests
+
+FROM eclipse-temurin:17-jre
+
+WORKDIR /app
+
+COPY --from=builder /workspace/app/workorder/target/mes-workorder-service-0.0.1-SNAPSHOT.jar app.jar
+
+EXPOSE 9092 9998
+CMD ["java", "-jar", "app.jar"]

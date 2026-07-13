@@ -177,9 +177,6 @@ var nonAIToolNames = map[string]bool{
 	"delete_engineering_order_draft": true,
 	"delete_inventory_flow":          true,
 	"delete_inventory_flow_draft":    true,
-
-	// Keep the legacy final-write RPC out of AI even if an old config names it.
-	"create_engineering_order": true,
 }
 
 func NewMESTools(ctx context.Context, baseTools ...tool.BaseTool) ([]tool.BaseTool, error) {

@@ -1,0 +1,26 @@
+spring:
+  datasource:
+    url: ${MYSQL_DSN:jdbc:mysql://mysql:3306/YOU_DB?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false}
+    username: ${MYSQL_USER:root}
+    password: ${MYSQL_PASSWORD:YOUR_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+server:
+  port: ${WORKORDER_METRICS_PORT:9998}
+
+grpc:
+  server:
+    port: ${WORKORDER_GRPC_PORT:9092}
+    advertise-host: ${CONSUL_SERVICE_HOST:workorder}
+
+consul:
+  address: ${CONSUL_ADDRESS:consul:8500}
+
+observability:
+  prometheus:
+    advertise-host: ${CONSUL_SERVICE_HOST:workorder}
+
+management:
+  otlp:
+    tracing:
+      endpoint: http://jaeger:4318/v1/traces

@@ -176,6 +176,11 @@ func _listallchathistorybypageforadminMw() []app.HandlerFunc {
 	return nil
 }
 
+func _deletechathistorybyadminMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
 func _app0Mw() []app.HandlerFunc {
 	// your code...
 	return nil

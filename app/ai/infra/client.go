@@ -47,21 +47,21 @@ func DocumentClient() (documentservice.Client, error) {
 
 func InventoryClient() (inventoryservice.Client, error) {
 	inventoryClientOnce.Do(func() {
-		inventoryClient, inventoryClientErr = inventoryservice.NewClient("inventory", newCommonClientOptions(false)...)
+		inventoryClient, inventoryClientErr = inventoryservice.NewClient("inventory", newCommonClientOptions(true)...)
 	})
 	return inventoryClient, inventoryClientErr
 }
 
 func UserClient() (userservice.Client, error) {
 	userClientOnce.Do(func() {
-		userClient, userClientErr = userservice.NewClient("user", newCommonClientOptions(false)...)
+		userClient, userClientErr = userservice.NewClient("user", newCommonClientOptions(true)...)
 	})
 	return userClient, userClientErr
 }
 
 func WorkOrderClient() (workorderservice.Client, error) {
 	workOrderClientOnce.Do(func() {
-		workOrderClient, workOrderClientErr = workorderservice.NewClient("workorder", newCommonClientOptions(false)...)
+		workOrderClient, workOrderClientErr = workorderservice.NewClient("workorder", newCommonClientOptions(true)...)
 	})
 	return workOrderClient, workOrderClientErr
 }

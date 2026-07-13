@@ -34,10 +34,16 @@ const router = useRouter()
 const unreadCount = ref(0)
 
 const loadUnreadCount = async () => {
-  const res = await listWorkOrder({ isTo: true, isUnread: true, limit: 30 })
-  if (res.data.code === 0) {
-    unreadCount.value = res.data.data?.totalRow ?? res.data.data?.records?.length ?? 0
+  try {
+    const res = await listWorkOrder({ isTo: true, isUnread: true, limit: 30 })
+    if (res.data.code === 0) {
+      unreadCount.value = res.data.data?.totalRow ?? res.data.data?.records?.length ?? 0
+      return
+    }
+  } catch (error) {
+    console.warn('加载工单未读数失败', error)
   }
+  unreadCount.value = 0
 }
 
 onMounted(loadUnreadCount)

@@ -131,21 +131,20 @@ services:
       - "4317:4317"
       - "4318:4318"
   user:
-    # image: app-user:dev
     build:
       context: .
       dockerfile: docker_files/DockerFile.user
     ports:
-      - "8888:8888"
-    volumes:
-      - static:/static
+      - "19091:9091"
     environment:
-      - GO_ENV=online
+      - SPRING_PROFILES_ACTIVE=online
+      - MYSQL_DSN=jdbc:mysql://mysql:3306/YOU_DB?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
       - MYSQL_USER=root
       - MYSQL_PASSWORD=YOUR_PASSWORD
-      - MYSQL_DATABASE=YOU_DB
-      - MYSQL_HOST=mysql
-      - OTEL_EXPORTER_OTLP_ENDPOINT=jaeger:4317
+      - USER_GRPC_PORT=9091
+      - USER_METRICS_PORT=9995
+      - CONSUL_ADDRESS=consul:8500
+      - CONSUL_SERVICE_HOST=user
     depends_on:
       jaeger:
         condition: service_started
@@ -153,7 +152,49 @@ services:
         condition: service_healthy
       mysql:
         condition: service_healthy
-      redis:
+  workorder:
+    build:
+      context: .
+      dockerfile: docker_files/DockerFile.workorder
+    ports:
+      - "19092:9092"
+    environment:
+      - SPRING_PROFILES_ACTIVE=online
+      - MYSQL_DSN=jdbc:mysql://mysql:3306/YOU_DB?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=YOUR_PASSWORD
+      - WORKORDER_GRPC_PORT=9092
+      - WORKORDER_METRICS_PORT=9998
+      - CONSUL_ADDRESS=consul:8500
+      - CONSUL_SERVICE_HOST=workorder
+    depends_on:
+      jaeger:
+        condition: service_started
+      consul:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+  inventory:
+    build:
+      context: .
+      dockerfile: docker_files/DockerFile.inventory
+    ports:
+      - "19093:9093"
+    environment:
+      - SPRING_PROFILES_ACTIVE=online
+      - MYSQL_DSN=jdbc:mysql://mysql:3306/YOU_DB?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=YOUR_PASSWORD
+      - INVENTORY_GRPC_PORT=9093
+      - INVENTORY_METRICS_PORT=9999
+      - CONSUL_ADDRESS=consul:8500
+      - CONSUL_SERVICE_HOST=inventory
+    depends_on:
+      jaeger:
+        condition: service_started
+      consul:
+        condition: service_healthy
+      mysql:
         condition: service_healthy
   ai:
     # image: app-user:dev
@@ -172,7 +213,6 @@ services:
       - MYSQL_PASSWORD=YOUR_PASSWORD
       - MYSQL_DATABASE=YOU_DB
       - MYSQL_HOST=mysql
-      - OTEL_EXPORTER_OTLP_ENDPOINT=jaeger:4317
       # - MODEL_NAME=
       # - DASHSCOPE_API_KEY=
     depends_on:
@@ -184,6 +224,12 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      user:
+        condition: service_started
+      workorder:
+        condition: service_started
+      inventory:
+        condition: service_started
   app:
     build:
       context: .
@@ -198,7 +244,6 @@ services:
       - MYSQL_PASSWORD=YOUR_PASSWORD
       - MYSQL_DATABASE=YOU_DB
       - MYSQL_HOST=mysql
-      - OTEL_EXPORTER_OTLP_ENDPOINT=jaeger:4317
     depends_on:
       jaeger:
         condition: service_started
@@ -220,7 +265,6 @@ services:
       - static:/static
     environment:
       - GO_ENV=online
-      - OTEL_EXPORTER_OTLP_ENDPOINT=jaeger:4317
     depends_on:
       jaeger:
         condition: service_started
@@ -241,7 +285,6 @@ services:
     environment:
       - GO_ENV=online
       - SESSION_SECRET=YOUR_SESSION_SECRET
-      - OTEL_EXPORTER_OTLP_ENDPOINT=jaeger:4317
     volumes:
       - static:/static
     depends_on:
@@ -252,6 +295,10 @@ services:
       redis:
         condition: service_healthy
       user:
+        condition: service_started
+      workorder:
+        condition: service_started
+      inventory:
         condition: service_started
       app:
         condition: service_started
@@ -274,6 +321,10 @@ services:
       redis:
         condition: service_healthy
       user:
+        condition: service_started
+      workorder:
+        condition: service_started
+      inventory:
         condition: service_started
       app:
         condition: service_started

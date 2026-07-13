@@ -21,6 +21,9 @@ redis:
 consul:
   address: "127.0.0.1:8500"
 
+otel:
+  export_endpoint: "127.0.0.1:4317"
+
 static:
   route: "/static"
   root: "/static"

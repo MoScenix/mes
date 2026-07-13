@@ -21,6 +21,9 @@ redis:
 consul:
   address: "consul:8500"
 
+otel:
+  export_endpoint: "jaeger:4317"
+
 static:
   route: "/static"
   root: "/static"

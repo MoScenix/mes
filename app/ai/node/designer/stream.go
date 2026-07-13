@@ -2,6 +2,7 @@ package designer
 
 import (
 	"context"
+	"encoding/json"
 	"time"
 
 	"github.com/MoScenix/mes/app/ai/agent"
@@ -29,10 +30,9 @@ func waitAnswer(ctx context.Context, answers <-chan answerEvent, targetID string
 		case <-timer.C:
 			return agent.AssistantAnswer{}, false, nil
 		case event := <-answers:
-			if event.TargetID != "" && event.TargetID != targetID {
-				continue
+			if answer, ok := answerForTarget(event.Answer, targetID); ok {
+				return answer, true, nil
 			}
-			return event.Answer, true, nil
 		}
 	}
 }
@@ -41,5 +41,30 @@ func agentAnswer(event aievent.TaskEvent) agent.AssistantAnswer {
 	return agent.AssistantAnswer{
 		Content: event.Content,
 		Payload: event.Payload,
+		Answers: parseAnswerMap(event.Payload),
 	}
+}
+
+func answerForTarget(answer agent.AssistantAnswer, targetID string) (agent.AssistantAnswer, bool) {
+	if targetID == "" || len(answer.Answers) == 0 {
+		return agent.AssistantAnswer{}, false
+	}
+	value, ok := answer.Answers[targetID]
+	return value, ok
+}
+
+func parseAnswerMap(payload map[string]any) map[string]agent.AssistantAnswer {
+	raw, ok := payload["answers"]
+	if !ok || raw == nil {
+		return nil
+	}
+	data, err := json.Marshal(raw)
+	if err != nil {
+		return nil
+	}
+	var answers map[string]agent.AssistantAnswer
+	if err := json.Unmarshal(data, &answers); err != nil {
+		return nil
+	}
+	return answers
 }

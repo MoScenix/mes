@@ -43,7 +43,7 @@ func Init() {
 	once5.Do(initInventoryClient)
 }
 func initUserClient() {
-	opts := newCommonClientOptions(false)
+	opts := newCommonClientOptions(true)
 	var err error
 	UserClient, err = userservice.NewClient(
 		"user",
@@ -87,7 +87,7 @@ func initDocumentClient() {
 	}
 }
 func initWorkOrderClient() {
-	opts := newCommonClientOptions(false)
+	opts := newCommonClientOptions(true)
 	var err error
 	WorkOrderClient, err = workorderservice.NewClient(
 		"workorder",
@@ -98,7 +98,7 @@ func initWorkOrderClient() {
 	}
 }
 func initInventoryClient() {
-	opts := newCommonClientOptions(false)
+	opts := newCommonClientOptions(true)
 	var err error
 	InventoryClient, err = inventoryservice.NewClient(
 		"inventory",

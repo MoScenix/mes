@@ -1,0 +1,47 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e5]:
+      - link [ref=e7] [cursor=pointer]:
+        - /url: /mes
+        - img "Logo" [ref=e8]
+        - heading "MES" [level=1] [ref=e9]
+      - menu [ref=e11]:
+        - menuitem "home 工作台" [ref=e12] [cursor=pointer]:
+          - img "home" [ref=e13]
+          - generic [ref=e16]: 工作台
+      - generic [ref=e18]:
+        - button "扫码" [ref=e19] [cursor=pointer]:
+          - img "scan" [ref=e20]
+        - button "工单" [ref=e24] [cursor=pointer]:
+          - img "mail" [ref=e25]
+        - link "登 录" [ref=e29] [cursor=pointer]:
+          - /url: /user/login
+    - main [ref=e31]:
+      - generic [ref=e33]:
+        - generic [ref=e34]:
+          - generic [ref=e35]:
+            - heading "MES 用户登录" [level=2] [ref=e36]
+            - generic [ref=e37]: 高效生产管理系统
+          - generic [ref=e38]:
+            - generic [ref=e40]:
+              - generic "账号" [ref=e42]: "* 账号"
+              - textbox "* 账号" [ref=e46]:
+                - /placeholder: 请输入账号
+            - generic [ref=e48]:
+              - generic "密码" [ref=e50]: "* 密码"
+              - generic [ref=e54]:
+                - textbox "* 密码" [ref=e55]:
+                  - /placeholder: 请输入密码
+                - img "eye-invisible" [ref=e57] [cursor=pointer]
+            - generic [ref=e61]:
+              - generic [ref=e62]: 安全加密登录中
+              - link "没有账号？去注册" [ref=e63] [cursor=pointer]:
+                - /url: /user/register
+            - button "登 录" [ref=e69] [cursor=pointer]
+        - paragraph [ref=e71]: Powered by AI Engine © 2024
+    - paragraph [ref=e74]:
+      - link "由MoScenix开发" [ref=e75] [cursor=pointer]:
+        - /url: https://github.com/MoScenix
+  - generic [ref=e76]:
+    - generic "Toggle devtools panel" [ref=e77] [cursor=pointer]
+    - generic "Toggle Component Inspector" [ref=e83] [cursor=pointer]

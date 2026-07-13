@@ -1,10 +1,12 @@
 package main
 
 import (
+	"context"
 	"net"
 	"time"
 
 	"github.com/MoScenix/mes/app/document/conf"
+	"github.com/MoScenix/mes/common/mtl"
 	"github.com/MoScenix/mes/common/serversuit"
 	"github.com/MoScenix/mes/rpc_gen/kitex_gen/document/documentservice"
 	"github.com/cloudwego/kitex/pkg/klog"
@@ -19,6 +21,8 @@ import (
 func main() {
 	_ = godotenv.Load(".env")
 	_ = godotenv.Load("app/document/.env")
+	tp := mtl.TraceInit(conf.GetConf().Kitex.Service, conf.GetConf().OTel.ExportEndpoint)
+	defer tp.Shutdown(context.Background())
 	opts := kitexInit()
 
 	svr := documentservice.NewServer(new(DocumentServiceImpl), opts...)
