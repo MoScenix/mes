@@ -88,6 +88,25 @@ public class DocumentService {
     return Map.of("parentIds", store.search(history, file, query, topK));
   }
 
+  public Map<String, Object> searchWithParents(long history, long file, String query, long topK) {
+    List<Long> ids = store.search(history, file, query, topK);
+    Path parents = dir(history, file).resolve("parents");
+    List<Map<String, Object>> rows =
+        ids.stream()
+            .map(
+                id -> {
+                  try {
+                    return Map.<String, Object>of(
+                        "id", id, "content", Files.readString(parents.resolve(id + ".txt")));
+                  } catch (IOException error) {
+                    throw new IllegalStateException(
+                        "read parent document failed: " + parents.resolve(id + ".txt"), error);
+                  }
+                })
+            .toList();
+    return Map.of("fileId", file, "parentIds", ids, "parents", rows);
+  }
+
   public Map<String, Object> delete(long history) {
     store.deleteHistory(history);
     return Map.of("success", true);

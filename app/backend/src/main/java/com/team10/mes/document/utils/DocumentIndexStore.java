@@ -7,6 +7,10 @@ import java.net.http.*;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -17,12 +21,15 @@ public class DocumentIndexStore {
   private final HttpClient http =
       HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
   private final ObjectMapper json;
+  private final DocumentWorkPool workPool;
   private final String es, index, milvus, collection, embeddingUrl, embeddingKey, embeddingModel;
-  private final int dimension;
+  private final int dimension, embeddingBatchSize, esBulkBatchSize, milvusInsertBatchSize;
+  private final int taskChunkSize;
   private final Map<String, String> esHeaders, milvusHeaders;
 
-  public DocumentIndexStore(ObjectMapper json, DocumentProperties p) {
+  public DocumentIndexStore(ObjectMapper json, DocumentProperties p, DocumentWorkPool workPool) {
     this.json = json;
+    this.workPool = workPool;
     this.es = trim(p.getElasticsearch().getUrl());
     this.index = p.getElasticsearch().getIndex();
     this.milvus = trim(p.getMilvus().getUrl());
@@ -31,6 +38,10 @@ public class DocumentIndexStore {
     this.embeddingKey = p.getEmbedding().getApiKey();
     this.embeddingModel = p.getEmbedding().getModel();
     this.dimension = p.getEmbedding().getDimensions();
+    this.embeddingBatchSize = positive(p.getEmbedding().getBatchSize(), 25);
+    this.esBulkBatchSize = positive(p.getElasticsearch().getBulkBatchSize(), 200);
+    this.milvusInsertBatchSize = positive(p.getMilvus().getInsertBatchSize(), 200);
+    this.taskChunkSize = positive(p.getIndex().getTaskChunkSize(), 200);
     this.esHeaders = basic(p.getElasticsearch().getUsername(), p.getElasticsearch().getPassword());
     this.milvusHeaders = token(p.getMilvus().getUsername(), p.getMilvus().getPassword());
   }
@@ -39,7 +50,68 @@ public class DocumentIndexStore {
     if (children.isEmpty()) return;
     ensureEs();
     ensureMilvus();
-    List<List<Double>> vectors = embed(children.stream().map(Child::content).toList());
+    AtomicBoolean cancelled = new AtomicBoolean(false);
+    AtomicReference<Throwable> firstError = new AtomicReference<>();
+    List<CompletableFuture<Void>> tasks = new ArrayList<>();
+    for (int start = 0; start < children.size(); start += taskChunkSize) {
+      int batchNumber = tasks.size() + 1;
+      List<Child> batch =
+          List.copyOf(children.subList(start, Math.min(children.size(), start + taskChunkSize)));
+      CompletableFuture<Void> task =
+          workPool
+              .submit(
+                  () -> {
+                    if (cancelled.get()) return;
+                    try {
+                      indexChildBatch(batch, cancelled);
+                    } catch (Throwable error) {
+                      cancelled.set(true);
+                      throw new IllegalStateException(
+                          "index child batch " + batchNumber + " failed: " + error.getMessage(),
+                          error);
+                    }
+                  })
+              .whenComplete(
+                  (ignored, error) -> {
+                    if (error != null) {
+                      cancelled.set(true);
+                      firstError.compareAndSet(null, unwrap(error));
+                    }
+                  });
+      tasks.add(task);
+    }
+    waitAll(tasks, firstError, "document index");
+  }
+
+  private void indexChildBatch(List<Child> children, AtomicBoolean cancelled) {
+    List<List<Double>> vectors = new ArrayList<>(children.size());
+    for (int start = 0; start < children.size(); start += embeddingBatchSize) {
+      if (cancelled.get()) return;
+      List<Child> batch =
+          children.subList(start, Math.min(children.size(), start + embeddingBatchSize));
+      vectors.addAll(embed(batch.stream().map(Child::content).toList()));
+    }
+    if (vectors.size() != children.size())
+      throw new IllegalStateException(
+          "embedding response size mismatch: expected "
+              + children.size()
+              + ", got "
+              + vectors.size());
+    int writeBatchSize = Math.max(1, Math.min(esBulkBatchSize, milvusInsertBatchSize));
+    for (int start = 0; start < children.size(); start += writeBatchSize) {
+      if (cancelled.get()) return;
+      int end = Math.min(children.size(), start + writeBatchSize);
+      indexBatch(children.subList(start, end), vectors.subList(start, end));
+    }
+  }
+
+  private void indexBatch(List<Child> children, List<List<Double>> vectors) {
+    if (vectors.size() != children.size())
+      throw new IllegalStateException(
+          "embedding response size mismatch: expected "
+              + children.size()
+              + ", got "
+              + vectors.size());
     StringBuilder bulk = new StringBuilder();
     List<Map<String, Object>> rows = new ArrayList<>();
     for (int i = 0; i < children.size(); i++) {
@@ -74,17 +146,32 @@ public class DocumentIndexStore {
                 "POST",
                 bulk.toString(),
                 "application/x-ndjson",
-                esHeaders));
+                esHeaders),
+            "elasticsearch bulk");
     if (Boolean.TRUE.equals(bulkResult.get("errors")))
       throw new IllegalStateException(
-          "bulk index es child chunks failed: " + bulkResult.get("items"));
+          "bulk index es child chunks failed: "
+              + truncate(String.valueOf(bulkResult.get("items"))));
     milvus("/v2/vectordb/entities/insert", Map.of("collectionName", collection, "data", rows));
   }
 
   public List<Long> search(long history, long file, String query, long topK) {
-    int k = (int) (topK > 0 ? topK : 5);
+    int k = normalizeTopK(topK);
     ensureEs();
     ensureMilvus();
+    AtomicReference<Throwable> firstError = new AtomicReference<>();
+    CompletableFuture<List<List<Long>>> esTask =
+        supplyAsync(() -> searchEsParents(history, file, query, k), firstError);
+    CompletableFuture<List<List<Long>>> milvusTask =
+        supplyAsync(() -> searchMilvusParents(history, file, query, k), firstError);
+    waitAll(
+        List.of(esTask.thenAccept(ignored -> {}), milvusTask.thenAccept(ignored -> {})),
+        firstError,
+        "document search");
+    return DocumentText.fuse(List.of(esTask.join(), milvusTask.join()), k);
+  }
+
+  private List<List<Long>> searchEsParents(long history, long file, String query, int k) {
     Map<String, Object> esBody =
         Map.of(
             "size",
@@ -102,14 +189,13 @@ public class DocumentIndexStore {
     Map<String, Object> esResp =
         read(
             request(
-                es + "/" + index + "/_search",
-                "POST",
-                write(esBody),
-                "application/json",
-                Map.of()));
+                es + "/" + index + "/_search", "POST", write(esBody), "application/json", Map.of()),
+            "elasticsearch search");
     List<Map<String, Object>> hits = maps(map(esResp, "hits").get("hits"));
-    List<List<Long>> esParents =
-        hits.stream().map(h -> longs(map(h, "_source").get("parentIds"))).toList();
+    return hits.stream().map(h -> longs(map(h, "_source").get("parentIds"))).toList();
+  }
+
+  private List<List<Long>> searchMilvusParents(long history, long file, String query, int k) {
     List<Double> vector = embed(List.of(query)).getFirst();
     Map<String, Object> mv =
         milvus(
@@ -129,9 +215,7 @@ public class DocumentIndexStore {
                 List.of("parent_ids"),
                 "consistencyLevel",
                 "Strong"));
-    List<List<Long>> mvParents =
-        maps(mv.get("data")).stream().map(x -> longs(x.get("parent_ids"))).toList();
-    return DocumentText.fuse(List.of(esParents, mvParents), k);
+    return maps(mv.get("data")).stream().map(x -> longs(x.get("parent_ids"))).toList();
   }
 
   public void deleteHistory(long history) {
@@ -255,8 +339,16 @@ public class DocumentIndexStore {
                 "POST",
                 write(Map.of("model", embeddingModel, "input", texts)),
                 "application/json",
-                headers));
-    return maps(response.get("data")).stream()
+                headers),
+            "embedding");
+    if (response.containsKey("error"))
+      throw new IllegalStateException(
+          "embedding error: " + truncate(String.valueOf(response.get("error"))));
+    List<Map<String, Object>> data = maps(response.get("data"));
+    if (data.isEmpty() && !texts.isEmpty())
+      throw new IllegalStateException(
+          "embedding response missing data: " + truncate(write(response)));
+    return data.stream()
         .sorted(Comparator.comparingInt(x -> Integer.parseInt(x.get("index").toString())))
         .map(
             x ->
@@ -268,10 +360,12 @@ public class DocumentIndexStore {
 
   private Map<String, Object> milvus(String path, Object body) {
     Map<String, Object> r =
-        read(request(milvus + path, "POST", write(body), "application/json", milvusHeaders));
+        read(
+            request(milvus + path, "POST", write(body), "application/json", milvusHeaders),
+            "milvus " + path);
     Object code = r.get("code");
     if (code != null && Integer.parseInt(code.toString()) != 0)
-      throw new IllegalStateException("milvus error: " + r);
+      throw new IllegalStateException("milvus " + path + " error: " + truncate(write(r)));
     return r;
   }
 
@@ -300,10 +394,28 @@ public class DocumentIndexStore {
               : HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8));
       HttpResponse<String> r = http.send(b.build(), HttpResponse.BodyHandlers.ofString());
       if (!allowError && r.statusCode() >= 300)
-        throw new IllegalStateException(uri + " returned " + r.statusCode() + ": " + r.body());
+        throw new IllegalStateException(
+            method
+                + " "
+                + sanitize(uri)
+                + " returned "
+                + r.statusCode()
+                + ": "
+                + truncate(r.body()));
       return r;
+    } catch (IllegalStateException e) {
+      throw e;
     } catch (Exception e) {
-      throw new IllegalStateException("document index request failed", e);
+      throw new IllegalStateException(
+          "document index request failed: "
+              + method
+              + " "
+              + sanitize(uri)
+              + ": "
+              + e.getClass().getSimpleName()
+              + ": "
+              + Objects.toString(e.getMessage(), ""),
+          e);
     }
   }
 
@@ -316,10 +428,20 @@ public class DocumentIndexStore {
   }
 
   private Map<String, Object> read(HttpResponse<String> response) {
+    return read(response, "document index");
+  }
+
+  private Map<String, Object> read(HttpResponse<String> response, String context) {
     try {
       return json.readValue(response.body(), new TypeReference<>() {});
     } catch (Exception e) {
-      throw new IllegalStateException(e);
+      throw new IllegalStateException(
+          context
+              + " returned invalid JSON: status="
+              + response.statusCode()
+              + ", body="
+              + truncate(response.body()),
+          e);
     }
   }
 
@@ -356,8 +478,85 @@ public class DocumentIndexStore {
         c.content());
   }
 
+  private <T> CompletableFuture<T> supplyAsync(
+      java.util.function.Supplier<T> supplier, AtomicReference<Throwable> firstError) {
+    CompletableFuture<T> result = new CompletableFuture<>();
+    workPool
+        .submit(
+            () -> {
+              try {
+                result.complete(supplier.get());
+              } catch (Throwable error) {
+                firstError.compareAndSet(null, error);
+                result.completeExceptionally(error);
+              }
+            })
+        .whenComplete(
+            (ignored, error) -> {
+              if (error != null) {
+                Throwable cause = unwrap(error);
+                firstError.compareAndSet(null, cause);
+                result.completeExceptionally(cause);
+              }
+            });
+    return result;
+  }
+
+  private static void waitAll(
+      List<CompletableFuture<Void>> tasks, AtomicReference<Throwable> firstError, String context) {
+    try {
+      CompletableFuture.allOf(tasks.toArray(CompletableFuture[]::new)).join();
+    } catch (CompletionException error) {
+      Throwable cause = firstError.get() == null ? unwrap(error) : firstError.get();
+      if (cause instanceof RuntimeException runtime) throw runtime;
+      throw new IllegalStateException(context + " failed: " + cause.getMessage(), cause);
+    }
+    Throwable error = firstError.get();
+    if (error != null) {
+      if (error instanceof RuntimeException runtime) throw runtime;
+      throw new IllegalStateException(context + " failed: " + error.getMessage(), error);
+    }
+  }
+
   private static String id(Child c) {
     return c.historyId() + ":" + c.fileId() + ":" + c.chunkId();
+  }
+
+  private static Throwable unwrap(Throwable error) {
+    if (error instanceof CompletionException && error.getCause() != null) return error.getCause();
+    return error;
+  }
+
+  private static int positive(int value, int fallback) {
+    return value > 0 ? value : fallback;
+  }
+
+  private static int normalizeTopK(long topK) {
+    if (topK <= 0) return 3;
+    return (int) Math.max(3, Math.min(5, topK));
+  }
+
+  private static String truncate(String value) {
+    if (value == null) return "";
+    if (value.length() <= 2000) return value;
+    return value.substring(0, 2000) + "... (+" + (value.length() - 2000) + " chars)";
+  }
+
+  private static String sanitize(String uri) {
+    try {
+      URI parsed = URI.create(uri);
+      return new URI(
+              parsed.getScheme(),
+              null,
+              parsed.getHost(),
+              parsed.getPort(),
+              parsed.getPath(),
+              parsed.getQuery(),
+              null)
+          .toString();
+    } catch (Exception ignored) {
+      return uri;
+    }
   }
 
   private static String trim(String s) {

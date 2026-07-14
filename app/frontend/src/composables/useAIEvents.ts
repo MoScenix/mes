@@ -217,14 +217,21 @@ export function useAIEvents(historyId: Ref<any>, options?: { onDone?: () => void
         isGenerating.value = true
         break
       case 'message': {
-        const msg = ensureAIMessage(event)
         const content = event.content || ''
+        if (isQuestionPayload(content)) break
+        const msg = ensureAIMessage(event)
         msg.content += content
         appendTextPart(msg, content, event)
         msg.loading = false
         break
       }
       case 'tool_call': {
+        if (event.name === 'ask_user') {
+          setLocalState('waiting_answer', { agent: event.agent, lastEventId: event.id })
+          currentQuestion.value = normalizeQuestion(event)
+          isGenerating.value = false
+          break
+        }
         const msg = ensureAIMessage(event)
         if (!msg.toolCalls) msg.toolCalls = []
         const toolID = event.targetId || event.id || `tool-${Date.now()}`
@@ -253,13 +260,13 @@ export function useAIEvents(historyId: Ref<any>, options?: { onDone?: () => void
           (item) => item.name === event.name || item.id === event.targetId,
         )
         if (tool) {
-          tool.status = 'success'
+          tool.status = event.status === 'error' ? 'error' : 'success'
           tool.result = event.content || ''
         } else {
           const fallbackTool = {
             id: event.targetId || event.id || `tool-result-${Date.now()}`,
             name: event.name || 'tool',
-            status: 'success',
+            status: event.status === 'error' ? 'error' : 'success',
             result: event.content || '',
           } satisfies AIToolCall
           msg.toolCalls.push(fallbackTool)
@@ -514,6 +521,16 @@ function normalizeQuestion(source: API.AIEvent | API.AIPendingInterrupt): AIQues
     questions,
     payload: typeof data === 'object' ? data : payload,
   }
+}
+
+function isQuestionPayload(content?: string) {
+  const data = parseMaybeJSON(content)
+  return Boolean(
+    data &&
+      typeof data === 'object' &&
+      Array.isArray(data.questions) &&
+      normalizeQuestionItems(data.questions).length,
+  )
 }
 
 function normalizeQuestionItems(value: any): AIQuestionItem[] {

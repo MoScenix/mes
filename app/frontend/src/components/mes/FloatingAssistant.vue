@@ -206,13 +206,13 @@
         <footer class="composer-wrap">
           <div v-if="currentQuestion && currentQuestionItem" class="question-panel">
             <div class="question-title">
-              <span>{{ currentQuestion.agent || 'AI' }} 需要确认</span>
+              <span class="question-eyebrow">{{ currentQuestion.agent || 'AI' }} asks</span>
               <span v-if="currentQuestionItems.length > 1" class="question-count">
                 {{ currentQuestionIndex + 1 }} / {{ currentQuestionItems.length }}
               </span>
             </div>
             <div class="question-content">{{ currentQuestionItem.question }}</div>
-            <div v-if="currentQuestionItem.options.length" class="question-options">
+            <div v-if="hasCurrentQuestionOptions" class="question-options">
               <button
                 v-for="option in currentQuestionItem.options"
                 :key="option"
@@ -221,13 +221,17 @@
                 :class="{ 'question-option-active': currentAnswerSelection === option }"
                 @click="selectAnswerOption(option)"
               >
-                {{ option }}
+                <span class="question-option-dot"></span>
+                <span>{{ option }}</span>
               </button>
             </div>
-            <a-textarea
+            <a-input
               v-model:value="answerInput"
-              :rows="2"
-              placeholder="输入其他回答，Enter 继续"
+              :placeholder="
+                hasCurrentQuestionOptions
+                  ? '没有合适选项时，在这里输入回答'
+                  : '输入回答，Enter 继续'
+              "
               class="answer-input"
               @keydown.enter.prevent="submitQuestionStep"
             />
@@ -324,6 +328,10 @@ const currentQuestionItems = computed(() => {
 })
 
 const currentQuestionItem = computed(() => currentQuestionItems.value[currentQuestionIndex.value])
+
+const hasCurrentQuestionOptions = computed(() =>
+  Boolean(currentQuestionItem.value?.options?.length),
+)
 
 const currentAnswerSelection = computed(
   () => answerSelections.value[currentQuestionIndex.value] || '',
@@ -459,6 +467,16 @@ const parseFileMeta = (content?: string): AIFileMeta | undefined => {
   }
 }
 
+const isQuestionPayloadMessage = (content?: string) => {
+  if (!content) return false
+  try {
+    const data = JSON.parse(content)
+    return Array.isArray(data?.questions) && data.questions.length > 0
+  } catch {
+    return false
+  }
+}
+
 const buildHistoryMessage = (chat: API.HistoryMessage): AIMessage => {
   const fileMeta = chat.isFile ? parseFileMeta(chat.message) : undefined
   return {
@@ -475,20 +493,26 @@ const loadHistory = async (historyId: number) => {
   const res = await listHistoryMessages({ historyId, pageSize: 30 })
   if (res.data.code !== 0) return
   const records = res.data.data?.records || []
-  messages.value = records.map(buildHistoryMessage).reverse()
+  messages.value = records
+    .filter((chat) => !isQuestionPayloadMessage(chat.message))
+    .map(buildHistoryMessage)
+    .reverse()
 }
 
 const handleSendMessage = async (rawMessage: string, rawFiles?: File[]) => {
   const content = rawMessage.trim()
   if ((!content && !rawFiles?.length) || sendingMessage.value) return
+  const existingHistoryId = activeHistoryId.value
   const ready = await ensureAssistantHistory(content)
   if (!ready) return
+  const createdHistoryForThisSend = !existingHistoryId && activeHistoryId.value
 
   sendingMessage.value = true
   try {
     if (rawFiles?.length && activeHistoryId.value) {
       const historyId = String(activeHistoryId.value)
       for (const file of rawFiles) {
+        let uploaded = false
         const formData = new FormData()
         formData.append('historyId', historyId)
         formData.append('file', file)
@@ -501,17 +525,27 @@ const handleSendMessage = async (rawMessage: string, rawFiles?: File[]) => {
           if (data?.code !== 0) {
             message.error(`文件 ${file.name} 上传失败: ${data?.message || '未知错误'}`)
           } else {
+            uploaded = true
             await loadHistory(Number(historyId))
           }
         } catch (err) {
           console.error('Upload failed:', err)
           message.error(`文件 ${file.name} 上传失败`)
         }
+        if (!uploaded) {
+          if (createdHistoryForThisSend && activeHistoryId.value) {
+            await deleteHistory({ id: activeHistoryId.value })
+            activeHistoryId.value = undefined
+            activeTitle.value = '选择历史记录或直接提问'
+            messages.value = []
+            await loadSessions()
+          }
+          return
+        }
       }
     }
 
     if (!content) {
-      sendingMessage.value = false
       await loadSessions()
       return
     }
@@ -536,6 +570,7 @@ const cancelCurrentTask = async () => {
 }
 
 const selectAnswerOption = (option: string) => {
+  answerInput.value = ''
   answerSelections.value = {
     ...answerSelections.value,
     [currentQuestionIndex.value]: option,
@@ -1126,10 +1161,11 @@ onMounted(async () => {
 
 .question-panel {
   margin-bottom: 12px;
-  padding: 12px;
-  border: 1px solid #dbeafe;
-  border-radius: 14px;
-  background: #eff6ff;
+  padding: 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
 }
 
 .question-title,
@@ -1141,47 +1177,103 @@ onMounted(async () => {
 }
 
 .question-title {
-  margin-bottom: 8px;
-  color: #1e3a8a;
-  font-size: 13px;
-  font-weight: 700;
+  margin-bottom: 10px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.question-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.question-eyebrow::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #10a37f;
 }
 
 .question-count {
-  color: #64748b;
+  color: #94a3b8;
   font-size: 12px;
 }
 
 .question-content {
-  margin-bottom: 8px;
-  color: #0f172a;
+  margin-bottom: 12px;
+  color: #111827;
   font-size: 14px;
+  font-weight: 600;
+  line-height: 1.55;
 }
 
 .question-options {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 8px;
+  flex-direction: column;
+  gap: 7px;
+  margin-bottom: 10px;
 }
 
 .question-option {
-  border: 1px solid #bfdbfe;
-  border-radius: 999px;
-  padding: 5px 10px;
-  background: white;
-  color: #1d4ed8;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 9px 11px;
+  background: #fafafa;
+  color: #1f2937;
+  font-size: 13px;
+  text-align: left;
   cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.question-option:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.question-option-dot {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  border: 1px solid #94a3b8;
+  border-radius: 999px;
+  background: #ffffff;
 }
 
 .question-option-active {
-  background: #2563eb;
-  color: white;
+  border-color: #10a37f;
+  background: #ecfdf5;
+  box-shadow: 0 0 0 3px rgba(16, 163, 127, 0.12);
+  color: #065f46;
+}
+
+.question-option-active .question-option-dot {
+  border-color: #10a37f;
+  background: #10a37f;
 }
 
 .answer-input {
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   border-radius: 12px;
+}
+
+.answer-input :deep(.ant-input) {
+  border-radius: 12px;
+}
+
+.question-actions {
+  margin-top: 4px;
 }
 
 .assistant-ball {

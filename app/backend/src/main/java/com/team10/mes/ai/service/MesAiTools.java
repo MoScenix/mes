@@ -1,17 +1,21 @@
 package com.team10.mes.ai.service;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.team10.mes.document.service.DocumentService;
 import com.team10.mes.inventory.service.InventoryService;
 import com.team10.mes.user.service.UserService;
 import com.team10.mes.workorder.service.WorkOrderService;
 import java.util.*;
 import org.springframework.ai.tool.annotation.Tool;
+import org.springframework.ai.tool.annotation.ToolParam;
 
 /** Per-request Spring AI tool object bound to the authenticated operator. */
 public final class MesAiTools {
   private final WorkOrderService workOrders;
   private final InventoryService inventory;
   private final UserService users;
+  private final DocumentService documents;
+  private final long historyId;
   private final long userId;
   private final boolean admin;
 
@@ -19,11 +23,15 @@ public final class MesAiTools {
       WorkOrderService workOrders,
       InventoryService inventory,
       UserService users,
+      DocumentService documents,
+      long historyId,
       long userId,
       boolean admin) {
     this.workOrders = workOrders;
     this.inventory = inventory;
     this.users = users;
+    this.documents = documents;
+    this.historyId = historyId;
     this.userId = userId;
     this.admin = admin;
   }
@@ -89,6 +97,14 @@ public final class MesAiTools {
   }
 
   @Tool(
+      name = "search_history_file",
+      description =
+          "Search an uploaded large file in the current history by file_id and query. Use this whenever the user asks about an uploaded file's contents; returns matched parent text. top_k should be 3 to 5; default is 3.")
+  public Map<String, Object> searchHistoryFile(SearchHistoryFileInput in) {
+    return documents.searchWithParents(historyId, in.fileId(), in.query(), in.topK());
+  }
+
+  @Tool(
       name = "create_engineering_order_draft",
       description = "Create an engineering order draft for planned production.")
   public Map<String, Object> createEngineeringOrderDraft(EngineeringOrderInput in) {
@@ -119,11 +135,12 @@ public final class MesAiTools {
 
   @Tool(
       name = "create_inventory_flow_draft",
-      description = "Create an inbound or outbound inventory flow draft.")
+      description =
+          "Create an inbound or outbound inventory flow draft. The backend always uses the authenticated current user as from_user; do not ask for from_user.")
   public Map<String, Object> createInventoryFlowDraft(InventoryFlowInput in) {
     Map<String, Object> m = new HashMap<>();
     m.put("name", in.name());
-    m.put("fromUserId", admin && in.fromUserId() > 0 ? in.fromUserId() : userId);
+    m.put("fromUserId", userId);
     m.put("toUserId", in.toUserId());
     m.put("flowType", flowType(in.flowType()));
     m.put("description", in.description());
@@ -277,17 +294,10 @@ public final class MesAiTools {
       String status) {}
 
   public record WorkOrderDraftInput(
-      String name,
-      @JsonProperty("to_user_id") long toUserId,
-      String description,
-      @JsonProperty("from_user_id") long fromUserId) {}
+      String name, @JsonProperty("to_user_id") long toUserId, String description) {}
 
   public record UpdateWorkOrderInput(
-      long id,
-      String name,
-      @JsonProperty("to_user_id") long toUserId,
-      String description,
-      @JsonProperty("from_user_id") long fromUserId) {}
+      long id, String name, @JsonProperty("to_user_id") long toUserId, String description) {}
 
   public record SearchUsersInput(
       long id,
@@ -295,6 +305,16 @@ public final class MesAiTools {
       String account,
       String role,
       @JsonProperty("page_size") long pageSize) {}
+
+  public record SearchHistoryFileInput(
+      @JsonProperty("file_id") long fileId,
+      String query,
+      @JsonProperty("top_k")
+          @ToolParam(
+              required = false,
+              description =
+                  "Number of parent chunks to return. Recommended range is 3 to 5; default is 3 and values above 5 are capped.")
+          long topK) {}
 
   public record EngineeringOrderInput(
       String name,
@@ -336,8 +356,7 @@ public final class MesAiTools {
       @JsonProperty("flow_type") String flowType,
       String description,
       List<FlowItem> items,
-      @JsonProperty("item_unit_ids") List<Long> itemUnitIds,
-      @JsonProperty("from_user_id") long fromUserId) {
+      @JsonProperty("item_unit_ids") List<Long> itemUnitIds) {
     public InventoryFlowInput {
       items = items == null ? List.of() : items;
       itemUnitIds = itemUnitIds == null ? List.of() : itemUnitIds;

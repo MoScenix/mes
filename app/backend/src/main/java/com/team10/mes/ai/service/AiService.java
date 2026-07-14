@@ -6,12 +6,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.team10.mes.ai.control.AiControlWatcher;
 import com.team10.mes.ai.controller.AiController.Answer;
-import com.team10.mes.ai.graph.AiGraph;
-import com.team10.mes.ai.node.coder.CoderNode;
-import com.team10.mes.ai.node.designer.DesignerNode;
 import com.team10.mes.ai.state.RedisAiStore;
 import com.team10.mes.ai.task.ChatTask;
 import com.team10.mes.ai.workpool.AiWorkPool;
+import com.team10.mes.document.service.DocumentService;
 import com.team10.mes.history.model.HistoryMessage;
 import com.team10.mes.history.service.HistoryMessageService;
 import com.team10.mes.history.service.HistorySessionService;
@@ -27,6 +25,10 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.*;
 import org.springframework.ai.support.ToolCallbacks;
 import org.springframework.ai.tool.ToolCallback;
+import org.springframework.ai.tool.definition.DefaultToolDefinition;
+import org.springframework.ai.tool.definition.ToolDefinition;
+import org.springframework.ai.tool.metadata.DefaultToolMetadata;
+import org.springframework.ai.tool.metadata.ToolMetadata;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -39,8 +41,21 @@ public class AiService {
       """
         You are the assistant agent for an MES system. Help users with work orders, engineering orders,
         inventory flows, items and production. Never invent identifiers. If required information is
-        missing, return only JSON in this shape: {"questions":[{"question":"...","options":[]}]}
-        so the application can pause and ask the user. Otherwise answer normally.
+        missing, call the ask_user tool and wait for the user's answer. Never print JSON questions
+        or tool-call payloads as assistant text. Prefer providing concrete options in ask_user when
+        there are clear choices; use an empty options array for open-ended questions. Otherwise answer
+        normally.
+
+        When the user asks about an uploaded large file, use search_history_file with the file_id
+        shown in the conversation history. Do not claim that you cannot read or search uploaded
+        files before trying the tool.
+
+        The authenticated operator is always the current user. When creating work orders,
+        engineering orders, or inventory flow drafts, do not ask who the initiator/from user/leader is
+        unless the user explicitly asks to create it on behalf of another user and the tool schema
+        supports that field. For inventory flow drafts, the from user is supplied by the backend from
+        the current session; only ask for the receiver, item, quantity, type, or description when
+        those are missing.
         """;
 
   private final RedisAiStore store;
@@ -51,13 +66,15 @@ public class AiService {
   private final WorkOrderService workOrders;
   private final InventoryService inventory;
   private final UserService users;
+  private final DocumentService documents;
   private final AiWorkPool workPool;
   private final ConcurrentMap<Long, RuntimeTask> tasks = new ConcurrentHashMap<>();
-  private final AiGraph graph = new AiGraph(new DesignerNode(), new CoderNode());
+  private final ConcurrentMap<String, PendingAsk> pendingAsks = new ConcurrentHashMap<>();
   private final int historyLimit;
   private final String systemPrompt;
   private final long controlBlockMs;
   private final int controlReadCount;
+  private final long askUserTimeoutMs;
 
   public AiService(
       RedisAiStore store,
@@ -68,11 +85,13 @@ public class AiService {
       WorkOrderService workOrders,
       InventoryService inventory,
       UserService users,
+      DocumentService documents,
       AiWorkPool workPool,
       @Value("${mes.ai.history-limit:20}") int historyLimit,
       @Value("${mes.ai.system-prompt:}") String systemPrompt,
       @Value("${mes.ai.control.block-ms:1000}") long controlBlockMs,
-      @Value("${mes.ai.control.read-count:10}") int controlReadCount) {
+      @Value("${mes.ai.control.read-count:10}") int controlReadCount,
+      @Value("${mes.ai.ask-user.timeout-ms:1800000}") long askUserTimeoutMs) {
     this.store = store;
     this.histories = histories;
     this.chatClient = builder.build();
@@ -81,12 +100,14 @@ public class AiService {
     this.workOrders = workOrders;
     this.inventory = inventory;
     this.users = users;
+    this.documents = documents;
     this.workPool = workPool;
     this.historyLimit = Math.max(1, Math.min(100, historyLimit));
     this.systemPrompt =
         systemPrompt == null || systemPrompt.isBlank() ? DEFAULT_PROMPT : systemPrompt.trim();
     this.controlBlockMs = Math.max(1, controlBlockMs);
     this.controlReadCount = Math.max(1, controlReadCount);
+    this.askUserTimeoutMs = Math.max(60_000, askUserTimeoutMs);
   }
 
   public void submit(long historyId, String message, Identity identity) {
@@ -138,29 +159,16 @@ public class AiService {
                 .collect(java.util.stream.Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     if (normalized.isEmpty()) throw new IllegalArgumentException("answers are required");
     synchronized (lock(historyId)) {
-      AiState state = state(historyId);
-      if (!state.exists() || state.pendingInterrupts().isEmpty())
-        throw new IllegalStateException("pending interrupt target not found");
-      QuestionCheckpoint checkpoint = store.checkpoint(historyId, QuestionCheckpoint.class);
-      if (checkpoint == null || !Objects.equals(checkpoint.checkpointId(), state.checkpointId()))
-        throw new IllegalStateException("AI checkpoint is missing or invalid");
-      Set<String> targets = new HashSet<>();
-      checkpoint.pendingInterrupts().forEach(i -> targets.add(i.id()));
-      normalized
-          .keySet()
-          .forEach(
-              id -> {
-                if (!targets.contains(id))
-                  throw new IllegalArgumentException(
-                      "answer target does not match pending interrupts: " + id);
-              });
+      String target = normalized.keySet().iterator().next();
+      PendingAsk pending = pendingAsks.get(target);
+      if (pending == null || pending.historyId() != historyId)
+        throw new IllegalStateException("pending ask_user target not found");
       String answerText =
           normalized.values().stream()
               .map(a -> !trim(a.content()).isEmpty() ? trim(a.content()) : writeJson(a.payload()))
               .reduce((a, b) -> a + "\n" + b)
               .orElseThrow();
       histories.append(historyId, identity.userId(), "user", answerText, false);
-      String target = normalized.keySet().iterator().next();
       control(historyId, "answer", answerText, target, Map.of("answers", normalized));
       publish(
           historyId,
@@ -172,7 +180,7 @@ public class AiService {
           null,
           Map.of("answers", normalized));
       historySessions.touch(historyId);
-      start(historyId, "assistant resume accepted", identity, true, answerText);
+      completePendingAsk(historyId, target, answerText);
     }
   }
 
@@ -229,11 +237,6 @@ public class AiService {
             resume,
             ignored -> run(historyId, runtime),
             (task, status) -> markLifecycle(historyId, status));
-    if (resume) {
-      QuestionCheckpoint checkpoint = store.checkpoint(historyId, QuestionCheckpoint.class);
-      if (checkpoint != null && !checkpoint.pendingInterrupts().isEmpty())
-        runtime.task.runtime().setControlCursor(checkpointControlCursor(checkpoint));
-    }
     runtime.task.enqueue();
     workPool.submit(runtime.task);
   }
@@ -290,6 +293,8 @@ public class AiService {
               @Override
               public void onAnswer(AiEvent event) {
                 runtime.task.runtime().setControlCursor(event.id());
+                if (!current(historyId, runtime)) return;
+                completePendingAsk(historyId, event.targetId(), event.content());
               }
             });
     Thread watcherThread = Thread.ofVirtual().name("ai-control-" + historyId).start(watcher);
@@ -300,109 +305,33 @@ public class AiService {
       List<Message> history = history(historyId);
       MesAiTools tools =
           new MesAiTools(
-              workOrders, inventory, users, runtime.identity.userId(), runtime.identity.admin());
-      DesignerNode.ModelRunner model =
-          (resumeContext, chunks) -> {
-            List<Message> promptHistory = new ArrayList<>(history);
-            if (resumeContext != null && !resumeContext.isBlank())
-              promptHistory.add(new UserMessage(resumeContext));
-            StringBuilder output = new StringBuilder();
-            for (String chunk :
-                chatClient
-                    .prompt()
-                    .system(systemPrompt)
-                    .messages(promptHistory)
-                    .toolCallbacks(toolCallbacks(tools, runtime.identity.role(), historyId))
-                    .stream()
-                    .content()
-                    .toIterable()) {
-              if (!current(historyId, runtime)) throw new CancellationException();
-              if (chunk != null && !chunk.isEmpty()) {
-                output.append(chunk);
-                runtime.task.runtime().buffer().append(chunk);
-                chunks.accept(chunk);
-              }
-            }
-            return output.toString();
-          };
-      java.util.function.Function<List<Question>, PendingInterrupt> interruptFactory =
-          questions -> {
-            String target = UUID.randomUUID().toString();
-            Map<String, Object> payload =
-                Map.of(
-                    "questions",
-                    questions,
-                    "control_cursor",
-                    runtime.task.runtime().controlCursor());
-            AiEvent event =
-                publish(
-                    historyId,
-                    "question",
-                    AGENT,
-                    questions.stream()
-                        .map(Question::question)
-                        .reduce((a, b) -> a + "\n" + b)
-                        .orElse(""),
-                    target,
-                    null,
-                    null,
-                    payload);
-            return new PendingInterrupt(target, AGENT, event.content(), writeJson(payload));
-          };
-      java.util.function.Function<PendingInterrupt, QuestionCheckpoint> checkpointFactory =
-          pending -> {
-            String id = UUID.randomUUID().toString();
-            return new QuestionCheckpoint(
-                id,
-                List.of(pending),
-                runtime.task.runtime().buffer().value(),
-                store.state(historyId).lastEventId(),
-                Instant.now().toEpochMilli());
-          };
-      AiGraph.CheckpointWriter checkpointWriter =
-          checkpoint -> {
-            store.saveCheckpoint(historyId, checkpoint);
-            saveState(
-                historyId,
-                "waiting_answer",
-                AGENT,
-                checkpoint.lastEventId(),
-                checkpoint.checkpointId(),
-                checkpoint.pendingInterrupts(),
-                "",
-                checkpoint.modelOutput(),
-                false);
-          };
-      QuestionCheckpoint persisted =
-          runtime.task.needsResume() ? store.checkpoint(historyId, QuestionCheckpoint.class) : null;
-      AiGraph.Result result =
-          runtime.task.needsResume()
-              ? graph.resume(
-                  persisted,
-                  runtime.resumeAnswer,
-                  persisted == null ? "" : persisted.modelOutput(),
-                  model,
-                  this::parseQuestions,
-                  chunk -> publish(historyId, "message", AGENT, chunk, null, null, null, null),
-                  interruptFactory,
-                  checkpointFactory,
-                  checkpointWriter,
-                  output ->
-                      histories.append(
-                          historyId, runtime.identity.userId(), "assistant", output, false))
-              : graph.run(
-                  model,
-                  this::parseQuestions,
-                  chunk -> publish(historyId, "message", AGENT, chunk, null, null, null, null),
-                  interruptFactory,
-                  checkpointFactory,
-                  checkpointWriter,
-                  output ->
-                      histories.append(
-                          historyId, runtime.identity.userId(), "assistant", output, false));
-      if (result.status() == AiGraph.Status.INTERRUPTED) return;
+              workOrders,
+              inventory,
+              users,
+              documents,
+              historyId,
+              runtime.identity.userId(),
+              runtime.identity.admin());
+      StringBuilder output = new StringBuilder();
+      for (String chunk :
+          chatClient
+              .prompt()
+              .system(systemPrompt)
+              .messages(history)
+              .toolCallbacks(toolCallbacks(tools, runtime.identity.role(), historyId))
+              .stream()
+              .content()
+              .toIterable()) {
+        if (!current(historyId, runtime)) throw new CancellationException();
+        if (chunk != null && !chunk.isEmpty()) {
+          output.append(chunk);
+          runtime.task.runtime().buffer().append(chunk);
+          publish(historyId, "message", AGENT, chunk, null, null, null, null);
+        }
+      }
+      histories.append(historyId, runtime.identity.userId(), "assistant", output.toString(), false);
       AiEvent done = publish(historyId, "done", AGENT, "", null, null, null, null);
-      saveState(historyId, "done", AGENT, done.id(), "", List.of(), "", result.output(), false);
+      saveState(historyId, "done", AGENT, done.id(), "", List.of(), "", output.toString(), false);
       store.deleteCheckpoint(historyId);
       store.expireTerminal(historyId);
     } catch (Throwable error) {
@@ -560,31 +489,6 @@ public class AiService {
               Instant.now().toEpochMilli()));
   }
 
-  private Optional<List<Question>> parseQuestions(String text) {
-    try {
-      String source = text.replaceFirst("^```(?:json)?\\s*", "").replaceFirst("\\s*```$", "");
-      JsonNode node = json.readTree(source).path("questions");
-      if (!node.isArray() || node.isEmpty()) return Optional.empty();
-      List<Question> out = new ArrayList<>();
-      node.forEach(
-          q -> {
-            String question = trim(q.path("question").asText());
-            if (!question.isEmpty()) {
-              List<String> options = new ArrayList<>();
-              q.path("options")
-                  .forEach(
-                      o -> {
-                        if (!trim(o.asText()).isEmpty()) options.add(trim(o.asText()));
-                      });
-              out.add(new Question(question, options));
-            }
-          });
-      return out.isEmpty() ? Optional.empty() : Optional.of(out);
-    } catch (Exception ignored) {
-      return Optional.empty();
-    }
-  }
-
   private List<Question> parsePayloadQuestions(String payload) {
     try {
       JsonNode n = json.readTree(payload).path("questions");
@@ -602,7 +506,7 @@ public class AiService {
   }
 
   ToolCallback[] toolCallbacks(MesAiTools tools, String role, long historyId) {
-    Set<String> common = Set.of("search_users");
+    Set<String> common = Set.of("search_users", "search_history_file");
     Set<String> work =
         Set.of(
             "list_work_orders",
@@ -654,61 +558,205 @@ public class AiService {
         allowed.addAll(flowRead);
       }
     }
-    return Arrays.stream(ToolCallbacks.from(tools))
-        .filter(t -> allowed.contains(t.getToolDefinition().name()))
-        .map(
-            delegate ->
-                new ToolCallback() {
-                  @Override
-                  public org.springframework.ai.tool.definition.ToolDefinition getToolDefinition() {
-                    return delegate.getToolDefinition();
-                  }
+    List<ToolCallback> callbacks =
+        Arrays.stream(ToolCallbacks.from(tools))
+            .filter(t -> allowed.contains(t.getToolDefinition().name()))
+            .map(delegate -> wrapToolCallback(delegate, historyId))
+            .collect(java.util.stream.Collectors.toCollection(ArrayList::new));
+    callbacks.add(wrapToolCallback(askUserCallback(historyId), historyId));
+    return callbacks.toArray(ToolCallback[]::new);
+  }
 
-                  @Override
-                  public org.springframework.ai.tool.metadata.ToolMetadata getToolMetadata() {
-                    return delegate.getToolMetadata();
-                  }
+  private ToolCallback wrapToolCallback(ToolCallback delegate, long historyId) {
+    return new ToolCallback() {
+      @Override
+      public ToolDefinition getToolDefinition() {
+        return delegate.getToolDefinition();
+      }
 
-                  @Override
-                  public String call(String input) {
-                    String target = UUID.randomUUID().toString();
-                    String name = delegate.getToolDefinition().name();
-                    publish(
-                        historyId,
-                        "tool_call",
-                        AGENT,
-                        "",
-                        target,
-                        name,
-                        "running",
-                        Map.of("arguments", input));
-                    try {
-                      String result = delegate.call(input);
-                      publish(
-                          historyId,
-                          "tool_result",
-                          AGENT,
-                          truncate(empty(result)),
-                          target,
-                          name,
-                          "success",
-                          null);
-                      return result;
-                    } catch (RuntimeException error) {
-                      publish(
-                          historyId,
-                          "tool_result",
-                          AGENT,
-                          truncate(empty(error.getMessage())),
-                          target,
-                          name,
-                          "error",
-                          null);
-                      throw error;
-                    }
+      @Override
+      public ToolMetadata getToolMetadata() {
+        return delegate.getToolMetadata();
+      }
+
+      @Override
+      public String call(String input) {
+        String target = UUID.randomUUID().toString();
+        String name = delegate.getToolDefinition().name();
+        if ("ask_user".equals(name)) return callAskUser(historyId, input, target);
+        publish(
+            historyId, "tool_call", AGENT, "", target, name, "running", Map.of("arguments", input));
+        try {
+          String result = delegate.call(input);
+          publish(
+              historyId,
+              "tool_result",
+              AGENT,
+              truncate(empty(result)),
+              target,
+              name,
+              "success",
+              null);
+          return result;
+        } catch (RuntimeException error) {
+          publish(
+              historyId,
+              "tool_result",
+              AGENT,
+              truncate(empty(error.getMessage())),
+              target,
+              name,
+              "error",
+              null);
+          throw error;
+        }
+      }
+    };
+  }
+
+  private ToolCallback askUserCallback(long historyId) {
+    ToolDefinition definition =
+        DefaultToolDefinition.builder()
+            .name("ask_user")
+            .description(
+                "Ask the current user for missing information. Prefer concrete options when there are clear choices; use an empty options array for open-ended questions. The UI also provides a free-text input for other answers. Use this instead of printing JSON or guessing. The tool blocks until the user answers.")
+            .inputSchema(
+                """
+                {
+                  "type": "object",
+                  "properties": {
+                    "questions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "question": {"type": "string"},
+                          "options": {"type": "array", "items": {"type": "string"}}
+                        },
+                        "required": ["question", "options"]
+                      }
+                    },
+                    "question": {"type": "string"},
+                    "options": {"type": "array", "items": {"type": "string"}}
                   }
-                })
-        .toArray(ToolCallback[]::new);
+                }
+                """)
+            .build();
+    ToolMetadata metadata = DefaultToolMetadata.builder().returnDirect(false).build();
+    return new ToolCallback() {
+      @Override
+      public ToolDefinition getToolDefinition() {
+        return definition;
+      }
+
+      @Override
+      public ToolMetadata getToolMetadata() {
+        return metadata;
+      }
+
+      @Override
+      public String call(String input) {
+        throw new IllegalStateException("ask_user must be called through AiService wrapper");
+      }
+    };
+  }
+
+  private String callAskUser(long historyId, String input, String target) {
+    List<Question> questions = parseAskUserQuestions(input);
+    if (questions.isEmpty()) throw new IllegalArgumentException("ask_user question is required");
+    CompletableFuture<String> answer = new CompletableFuture<>();
+    PendingAsk pending = new PendingAsk(historyId, target, answer, Instant.now().toEpochMilli());
+    pendingAsks.put(target, pending);
+    Map<String, Object> payload = Map.of("arguments", input, "questions", questions);
+    AiEvent toolCall =
+        publish(
+            historyId,
+            "tool_call",
+            AGENT,
+            questions.stream().map(Question::question).reduce((a, b) -> a + "\n" + b).orElse(""),
+            target,
+            "ask_user",
+            "waiting",
+            payload);
+    saveState(
+        historyId,
+        "waiting_answer",
+        AGENT,
+        toolCall.id(),
+        "",
+        List.of(new PendingInterrupt(target, AGENT, toolCall.content(), writeJson(payload))),
+        "",
+        "",
+        false);
+    try {
+      String value = answer.get(askUserTimeoutMs, TimeUnit.MILLISECONDS);
+      saveState(historyId, "running", AGENT, toolCall.id(), "", List.of(), "", "", false);
+      return value;
+    } catch (TimeoutException error) {
+      pendingAsks.remove(target, pending);
+      publish(
+          historyId,
+          "tool_result",
+          AGENT,
+          "ask_user timed out waiting for answer",
+          target,
+          "ask_user",
+          "error",
+          null);
+      throw new IllegalStateException("ask_user timed out waiting for answer", error);
+    } catch (InterruptedException error) {
+      Thread.currentThread().interrupt();
+      pendingAsks.remove(target, pending);
+      throw new CancellationException("ask_user interrupted");
+    } catch (ExecutionException error) {
+      pendingAsks.remove(target, pending);
+      Throwable cause = error.getCause() == null ? error : error.getCause();
+      if (cause instanceof RuntimeException runtime) throw runtime;
+      throw new IllegalStateException(cause);
+    }
+  }
+
+  private List<Question> parseAskUserQuestions(String input) {
+    try {
+      JsonNode root = json.readTree(empty(input));
+      JsonNode source = root.has("in") && root.path("in").isObject() ? root.path("in") : root;
+      List<Question> questions = new ArrayList<>();
+      JsonNode array = source.path("questions");
+      if (array.isArray()) {
+        array.forEach(
+            item -> {
+              String text = trim(item.path("question").asText());
+              if (!text.isEmpty())
+                questions.add(new Question(text, parseOptions(item.path("options"))));
+            });
+      }
+      String single = trim(source.path("question").asText());
+      if (questions.isEmpty() && !single.isEmpty())
+        questions.add(new Question(single, parseOptions(source.path("options"))));
+      return questions;
+    } catch (Exception error) {
+      throw new IllegalArgumentException("invalid ask_user input", error);
+    }
+  }
+
+  private List<String> parseOptions(JsonNode node) {
+    List<String> options = new ArrayList<>();
+    if (node != null && node.isArray()) {
+      node.forEach(
+          option -> {
+            String value = trim(option.asText());
+            if (!value.isEmpty()) options.add(value);
+          });
+    }
+    return options;
+  }
+
+  private void completePendingAsk(long historyId, String targetId, String answer) {
+    String target = trim(targetId);
+    if (target.isEmpty()) return;
+    PendingAsk pending = pendingAsks.get(target);
+    if (pending == null || pending.historyId() != historyId) return;
+    if (pendingAsks.remove(target, pending)) pending.answer().complete(empty(answer));
   }
 
   private String writeJson(Object value) {
@@ -716,16 +764,6 @@ public class AiService {
       return json.writeValueAsString(value);
     } catch (JsonProcessingException e) {
       throw new IllegalStateException(e);
-    }
-  }
-
-  private String checkpointControlCursor(QuestionCheckpoint checkpoint) {
-    try {
-      return json.readTree(checkpoint.pendingInterrupts().getFirst().payloadJson())
-          .path("control_cursor")
-          .asText("0");
-    } catch (Exception ignored) {
-      return "0";
     }
   }
 
@@ -752,6 +790,15 @@ public class AiService {
       task.cancelled = true;
       if (task.task != null) task.task.cancel();
     }
+    pendingAsks
+        .entrySet()
+        .removeIf(
+            entry -> {
+              PendingAsk ask = entry.getValue();
+              if (ask.historyId() != historyId) return false;
+              ask.answer().completeExceptionally(new CancellationException("AI task cancelled"));
+              return true;
+            });
   }
 
   private static void requireHistory(long historyId) {
@@ -767,7 +814,8 @@ public class AiService {
   }
 
   private static String truncate(String value) {
-    return value.length() <= 1200 ? value : value.substring(0, 1200);
+    if (value.length() <= 1200) return value;
+    return value.substring(0, 1200) + "... (+" + (value.length() - 1200) + " chars)";
   }
 
   private static final class RuntimeTask {
@@ -796,12 +844,8 @@ public class AiService {
 
   public record PendingInterrupt(String id, String agent, String content, String payloadJson) {}
 
-  public record QuestionCheckpoint(
-      String checkpointId,
-      List<PendingInterrupt> pendingInterrupts,
-      String modelOutput,
-      String lastEventId,
-      long createdAt) {}
+  private record PendingAsk(
+      long historyId, String targetId, CompletableFuture<String> answer, long createdAt) {}
 
   public record AiState(
       boolean exists,

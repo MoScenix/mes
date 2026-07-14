@@ -15,7 +15,7 @@ export default defineConfig({
     },
   },
   server: {
-    host: true,
+    host: '::',
     proxy: {
       '/api': {
         target: backendTarget,

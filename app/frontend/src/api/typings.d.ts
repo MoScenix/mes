@@ -29,6 +29,7 @@ declare namespace API {
     content?: string
     targetId?: string
     name?: string
+    status?: string
     payloadJson?: string
     createdAt?: number
     questions?: AIQuestion[]

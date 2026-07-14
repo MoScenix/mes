@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
+import com.team10.mes.document.service.DocumentService;
 import com.team10.mes.inventory.service.InventoryService;
 import com.team10.mes.user.service.UserService;
 import com.team10.mes.workorder.service.WorkOrderService;
@@ -22,6 +23,8 @@ class MesAiToolsTest {
             mock(WorkOrderService.class),
             mock(InventoryService.class),
             mock(UserService.class),
+            mock(DocumentService.class),
+            42L,
             1L,
             true);
 
@@ -31,9 +34,10 @@ class MesAiToolsTest {
             .map(callback -> callback.getToolDefinition().name())
             .collect(Collectors.toSet());
 
-    assertEquals(17, callbacks.length);
+    assertEquals(18, callbacks.length);
     assertTrue(names.contains("list_work_orders"));
     assertTrue(names.contains("search_users"));
+    assertTrue(names.contains("search_history_file"));
     assertTrue(names.contains("inventory_check"));
   }
 }

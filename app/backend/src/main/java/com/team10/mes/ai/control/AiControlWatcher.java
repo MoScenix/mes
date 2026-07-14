@@ -50,14 +50,19 @@ public final class AiControlWatcher implements Runnable, AutoCloseable {
   @Override
   public void run() {
     while (running.get() && !Thread.currentThread().isInterrupted()) {
-      for (AiEvent event : reader.read(historyId, cursor, blockMs, count)) {
-        cursor = event.id();
-        switch (event.type()) {
-          case "push" -> handler.onPush(event);
-          case "cancel" -> handler.onCancel(event);
-          case "answer" -> handler.onAnswer(event);
-          default -> {}
+      try {
+        for (AiEvent event : reader.read(historyId, cursor, blockMs, count)) {
+          cursor = event.id();
+          switch (event.type()) {
+            case "push" -> handler.onPush(event);
+            case "cancel" -> handler.onCancel(event);
+            case "answer" -> handler.onAnswer(event);
+            default -> {}
+          }
         }
+      } catch (RuntimeException error) {
+        if (!running.get() || Thread.currentThread().isInterrupted()) return;
+        throw error;
       }
     }
   }

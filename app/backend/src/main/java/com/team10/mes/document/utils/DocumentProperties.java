@@ -10,6 +10,7 @@ public class DocumentProperties {
   private final Elasticsearch elasticsearch = new Elasticsearch();
   private final Milvus milvus = new Milvus();
   private final Embedding embedding = new Embedding();
+  private final Index index = new Index();
 
   public String getRoot() {
     return root;
@@ -31,8 +32,13 @@ public class DocumentProperties {
     return embedding;
   }
 
+  public Index getIndex() {
+    return index;
+  }
+
   public static class Elasticsearch {
     private String url, index, username, password;
+    private int bulkBatchSize;
 
     public String getUrl() {
       return url;
@@ -65,10 +71,19 @@ public class DocumentProperties {
     public void setPassword(String v) {
       password = v;
     }
+
+    public int getBulkBatchSize() {
+      return bulkBatchSize;
+    }
+
+    public void setBulkBatchSize(int v) {
+      bulkBatchSize = v;
+    }
   }
 
   public static class Milvus {
     private String url, collection, username, password;
+    private int insertBatchSize;
 
     public String getUrl() {
       return url;
@@ -101,11 +116,19 @@ public class DocumentProperties {
     public void setPassword(String v) {
       password = v;
     }
+
+    public int getInsertBatchSize() {
+      return insertBatchSize;
+    }
+
+    public void setInsertBatchSize(int v) {
+      insertBatchSize = v;
+    }
   }
 
   public static class Embedding {
     private String baseUrl, apiKey, model;
-    private int dimensions;
+    private int dimensions, batchSize;
 
     public String getBaseUrl() {
       return baseUrl;
@@ -137,6 +160,80 @@ public class DocumentProperties {
 
     public void setDimensions(int v) {
       dimensions = v;
+    }
+
+    public int getBatchSize() {
+      return batchSize;
+    }
+
+    public void setBatchSize(int v) {
+      batchSize = v;
+    }
+  }
+
+  public static class Index {
+    private int taskChunkSize;
+    private int minWorkers;
+    private int maxWorkers;
+    private int queueSize;
+    private int scaleUpThreshold;
+    private int scaleDownThreshold;
+    private long idleTimeoutSeconds;
+
+    public int getTaskChunkSize() {
+      return taskChunkSize;
+    }
+
+    public void setTaskChunkSize(int v) {
+      taskChunkSize = v;
+    }
+
+    public int getMinWorkers() {
+      return minWorkers;
+    }
+
+    public void setMinWorkers(int v) {
+      minWorkers = v;
+    }
+
+    public int getMaxWorkers() {
+      return maxWorkers;
+    }
+
+    public void setMaxWorkers(int v) {
+      maxWorkers = v;
+    }
+
+    public int getQueueSize() {
+      return queueSize;
+    }
+
+    public void setQueueSize(int v) {
+      queueSize = v;
+    }
+
+    public int getScaleUpThreshold() {
+      return scaleUpThreshold;
+    }
+
+    public void setScaleUpThreshold(int v) {
+      scaleUpThreshold = v;
+    }
+
+    public int getScaleDownThreshold() {
+      return scaleDownThreshold;
+    }
+
+    public void setScaleDownThreshold(int v) {
+      scaleDownThreshold = v;
+    }
+
+    public long getIdleTimeoutSeconds() {
+      return idleTimeoutSeconds;
+    }
+
+    public void setIdleTimeoutSeconds(long v) {
+      idleTimeoutSeconds = v;
     }
   }
 }

@@ -48,16 +48,27 @@ mes:
       index: ${ELASTICSEARCH_INDEX:document_chunks}
       username: ${ELASTICSEARCH_USERNAME:}
       password: ${ELASTICSEARCH_PASSWORD:}
+      bulk-batch-size: ${ELASTICSEARCH_BULK_BATCH_SIZE:200}
     milvus:
       url: ${MILVUS_URL:http://127.0.0.1:19530}
       collection: ${MILVUS_COLLECTION:document_chunks}
       username: ${MILVUS_USERNAME:}
       password: ${MILVUS_PASSWORD:}
+      insert-batch-size: ${MILVUS_INSERT_BATCH_SIZE:200}
     embedding:
       base-url: ${EMBEDDING_BASE_URL:https://dashscope.aliyuncs.com/compatible-mode/v1}
       api-key: ${DASHSCOPE_API_KEY:}
       model: ${EMBEDDING_MODEL:text-embedding-v1}
       dimensions: ${EMBEDDING_DIMENSIONS:1536}
+      batch-size: ${EMBEDDING_BATCH_SIZE:25}
+    index:
+      task-chunk-size: ${DOCUMENT_INDEX_TASK_CHUNK_SIZE:200}
+      min-workers: ${DOCUMENT_INDEX_MIN_WORKERS:8}
+      max-workers: ${DOCUMENT_INDEX_MAX_WORKERS:32}
+      queue-size: ${DOCUMENT_INDEX_QUEUE_SIZE:256}
+      scale-up-threshold: ${DOCUMENT_INDEX_SCALE_UP_THRESHOLD:4}
+      scale-down-threshold: ${DOCUMENT_INDEX_SCALE_DOWN_THRESHOLD:0}
+      idle-timeout-seconds: ${DOCUMENT_INDEX_IDLE_TIMEOUT_SECONDS:30}
   ai:
     history-limit: ${AI_HISTORY_LIMIT:20}
     system-prompt: ${AI_SYSTEM_PROMPT:}
