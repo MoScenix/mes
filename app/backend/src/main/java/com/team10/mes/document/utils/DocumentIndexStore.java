@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class DocumentIndexStore {
   public record Child(
-      long projectId, long fileId, long chunkId, List<Long> parentIds, String content) {}
+      long historyId, long fileId, long chunkId, List<Long> parentIds, String content) {}
 
   private final HttpClient http =
       HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
@@ -56,8 +56,8 @@ public class DocumentIndexStore {
                   id,
                   "content",
                   c.content(),
-                  "project_id",
-                  c.projectId(),
+                  "history_id",
+                  c.historyId(),
                   "file_id",
                   c.fileId(),
                   "chunk_id",
@@ -81,7 +81,7 @@ public class DocumentIndexStore {
     milvus("/v2/vectordb/entities/insert", Map.of("collectionName", collection, "data", rows));
   }
 
-  public List<Long> search(long project, long file, String query, long topK) {
+  public List<Long> search(long history, long file, String query, long topK) {
     int k = (int) (topK > 0 ? topK : 5);
     ensureEs();
     ensureMilvus();
@@ -95,7 +95,7 @@ public class DocumentIndexStore {
                 Map.of(
                     "filter",
                     List.of(
-                        Map.of("term", Map.of("projectId", project)),
+                        Map.of("term", Map.of("historyId", history)),
                         Map.of("term", Map.of("fileId", file))),
                     "must",
                     List.of(Map.of("match", Map.of("content", query))))));
@@ -122,7 +122,7 @@ public class DocumentIndexStore {
                 "annsField",
                 "vector",
                 "filter",
-                "project_id == " + project + " && file_id == " + file,
+                "history_id == " + history + " && file_id == " + file,
                 "limit",
                 k,
                 "outputFields",
@@ -134,18 +134,18 @@ public class DocumentIndexStore {
     return DocumentText.fuse(List.of(esParents, mvParents), k);
   }
 
-  public void deleteProject(long project) {
+  public void deleteHistory(long history) {
     ensureEs();
     ensureMilvus();
     request(
         es + "/" + index + "/_delete_by_query?conflicts=proceed&refresh=true",
         "POST",
-        write(Map.of("query", Map.of("term", Map.of("projectId", project)))),
+        write(Map.of("query", Map.of("term", Map.of("historyId", history)))),
         "application/json",
         Map.of());
     milvus(
         "/v2/vectordb/entities/delete",
-        Map.of("collectionName", collection, "filter", "project_id == " + project));
+        Map.of("collectionName", collection, "filter", "history_id == " + history));
   }
 
   private void ensureEs() {
@@ -164,7 +164,7 @@ public class DocumentIndexStore {
                 Map.of(
                     "properties",
                     Map.of(
-                        "projectId",
+                        "historyId",
                         Map.of("type", "long"),
                         "fileId",
                         Map.of("type", "long"),
@@ -186,7 +186,7 @@ public class DocumentIndexStore {
         List.of(
             field("id", "VarChar", true, Map.of("max_length", "128")),
             field("content", "VarChar", false, Map.of("max_length", "65535")),
-            field("project_id", "Int64", false, Map.of()),
+            field("history_id", "Int64", false, Map.of()),
             field("file_id", "Int64", false, Map.of()),
             field("chunk_id", "Int64", false, Map.of()),
             arrayField("parent_ids", "Int64", Map.of("max_capacity", "4")),
@@ -204,9 +204,9 @@ public class DocumentIndexStore {
                 Map.of("index_type", "HNSW", "M", 16, "efConstruction", 200)),
             Map.of(
                 "fieldName",
-                "project_id",
+                "history_id",
                 "indexName",
-                "project_id",
+                "history_id",
                 "params",
                 Map.of("index_type", "STL_SORT")),
             Map.of(
@@ -344,8 +344,8 @@ public class DocumentIndexStore {
 
   private Map<String, Object> doc(Child c) {
     return Map.of(
-        "projectId",
-        c.projectId(),
+        "historyId",
+        c.historyId(),
         "fileId",
         c.fileId(),
         "chunkId",
@@ -357,7 +357,7 @@ public class DocumentIndexStore {
   }
 
   private static String id(Child c) {
-    return c.projectId() + ":" + c.fileId() + ":" + c.chunkId();
+    return c.historyId() + ":" + c.fileId() + ":" + c.chunkId();
   }
 
   private static String trim(String s) {

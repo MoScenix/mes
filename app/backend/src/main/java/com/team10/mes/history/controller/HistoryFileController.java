@@ -1,7 +1,7 @@
-package com.team10.mes.app.controller;
+package com.team10.mes.history.controller;
 
-import com.team10.mes.app.service.AppFileService;
 import com.team10.mes.controller.ApiResponseAdvice.ApiResponse;
+import com.team10.mes.history.service.HistoryFileService;
 import com.team10.mes.user.service.SessionIdentity;
 import com.team10.mes.user.service.UnauthorizedException;
 import jakarta.servlet.http.HttpSession;
@@ -13,23 +13,23 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
-@RequestMapping("/app/file")
-public class AppFileController {
-  private final AppFileService service;
+@RequestMapping("/history/file")
+public class HistoryFileController {
+  private final HistoryFileService service;
   private final SessionIdentity identity;
 
-  public AppFileController(AppFileService service, SessionIdentity identity) {
+  public HistoryFileController(HistoryFileService service, SessionIdentity identity) {
     this.service = service;
     this.identity = identity;
   }
 
   @PostMapping(path = "/add", consumes = "multipart/form-data")
   public ApiResponse add(
-      @RequestParam long appId, @RequestParam MultipartFile file, HttpSession session)
+      @RequestParam long historyId, @RequestParam MultipartFile file, HttpSession session)
       throws IOException {
     Long userId = identity.userId(session);
     if (userId == null) throw new UnauthorizedException();
-    boolean admin = "admin".equalsIgnoreCase(identity.role(session));
-    return new ApiResponse(0, service.upload(appId, userId, admin, file), "success");
+    return new ApiResponse(
+        0, service.upload(historyId, userId, identity.role(session), file), "success");
   }
 }

@@ -16,11 +16,11 @@ public class HistoryMessageService {
   }
 
   public HistoryMessage append(
-      long appId, Long userId, String role, String content, Boolean isFile) {
+      long historyId, Long userId, String role, String content, Boolean isFile) {
     if (content == null || content.isBlank())
       throw new IllegalArgumentException("content must not be blank");
     HistoryMessage m = new HistoryMessage();
-    m.setAppId(appId);
+    m.setHistoryId(historyId);
     m.setUserId(userId);
     m.setRole(role);
     m.setContent(content);
@@ -29,16 +29,16 @@ public class HistoryMessageService {
     return m;
   }
 
-  public MessagePage history(long appId, int size, LocalDateTime before, Long beforeId) {
+  public MessagePage history(long historyId, int size, LocalDateTime before, Long beforeId) {
     int limit = Math.max(1, Math.min(size, 100));
-    var rows = mapper.page(appId, before, beforeId, limit + 1);
+    var rows = mapper.page(historyId, before, beforeId, limit + 1);
     boolean more = rows.size() > limit;
     if (more) rows = rows.subList(0, limit);
-    return new MessagePage(rows, mapper.count(appId), more);
+    return new MessagePage(rows, mapper.count(historyId), more);
   }
 
-  public boolean delete(long appId, long id) {
-    return mapper.delete(appId, id) > 0;
+  public boolean delete(long historyId, long id) {
+    return mapper.delete(historyId, id) > 0;
   }
 
   public boolean deleteById(long id) {
@@ -49,19 +49,19 @@ public class HistoryMessageService {
       Long id,
       String message,
       String messageType,
-      Long appId,
+      Long historyId,
       Long userId,
       LocalDateTime lastCreateTime,
       int pageNum,
       int pageSize) {
     int number = Math.max(1, pageNum), size = Math.max(1, Math.min(pageSize, 100));
-    long total = mapper.adminCount(id, message, messageType, appId, userId, lastCreateTime);
+    long total = mapper.adminCount(id, message, messageType, historyId, userId, lastCreateTime);
     return new AdminPage(
         mapper.adminPage(
             id,
             message,
             messageType,
-            appId,
+            historyId,
             userId,
             lastCreateTime,
             (long) (number - 1) * size,

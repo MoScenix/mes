@@ -74,15 +74,18 @@ import type { WorkOrderVO } from '@/api/mesController'
 import { WorkOrderStatus } from '@/api/mesController'
 import MesUserName from '@/components/mes/MesUserName.vue'
 
-const props = withDefaults(defineProps<{
-  mode?: 'inbox' | 'sent'
-  orders: WorkOrderVO[]
-  loading: boolean
-  hasMore: boolean
-  loadingMore: boolean
-}>(), {
-  mode: 'inbox',
-})
+const props = withDefaults(
+  defineProps<{
+    mode?: 'inbox' | 'sent'
+    orders: WorkOrderVO[]
+    loading: boolean
+    hasMore: boolean
+    loadingMore: boolean
+  }>(),
+  {
+    mode: 'inbox',
+  },
+)
 
 const emit = defineEmits<{
   (e: 'view-detail', order: WorkOrderVO): void
@@ -135,7 +138,9 @@ const emitLoadMore = () => emit('load-more')
   padding: 14px 16px;
   border-bottom: 1px solid var(--border);
   cursor: pointer;
-  transition: background 0.16s ease, box-shadow 0.16s ease;
+  transition:
+    background 0.16s ease,
+    box-shadow 0.16s ease;
 }
 
 .mail-row:last-child {

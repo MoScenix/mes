@@ -1,11 +1,11 @@
-package com.team10.mes.app.service;
+package com.team10.mes.history.service;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 @Component
 @ConfigurationProperties(prefix = "mes.file")
-public class AppFileProperties {
+public class HistoryFileProperties {
   private long bigThresholdBytes;
   private long chunkMinSize;
   private long chunkMaxSize;

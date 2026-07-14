@@ -13,9 +13,18 @@ export const useWorkerList = (selectedType: Ref<WorkerPanelType>) => {
   const dataList = ref<any[]>([])
   const loading = ref(false)
   const loadingMore = ref(false)
-  const listPage = reactive({ pageSize: 30, hasMore: false, nextCursorUpdatedAt: '', nextCursorId: 0 })
+  const listPage = reactive({
+    pageSize: 30,
+    hasMore: false,
+    nextCursorUpdatedAt: '',
+    nextCursorId: 0,
+  })
 
-  const syncCursor = (data?: { hasMore?: boolean; nextCursorUpdatedAt?: string; nextCursorId?: number }) => {
+  const syncCursor = (data?: {
+    hasMore?: boolean
+    nextCursorUpdatedAt?: string
+    nextCursorId?: number
+  }) => {
     listPage.hasMore = Boolean(data?.hasMore)
     listPage.nextCursorUpdatedAt = data?.nextCursorUpdatedAt || ''
     listPage.nextCursorId = data?.nextCursorId || 0
@@ -27,23 +36,26 @@ export const useWorkerList = (selectedType: Ref<WorkerPanelType>) => {
     else loading.value = true
     try {
       const params = { pageSize: listPage.pageSize }
-      const res = selectedType.value === 'engineering'
-        ? await listEngineeringOrder({
-            ...params,
-            itemId: searchItemId.value,
-            itemNamePrefix: searchItemId.value ? undefined : searchText.value.trim() || undefined,
-            cursorUpdatedAt: next ? listPage.nextCursorUpdatedAt : undefined,
-            cursorId: next ? listPage.nextCursorId : undefined,
-          })
-        : await listItemUnit({
-            ...params,
-            itemId: searchItemId.value,
-            itemNamePrefix: searchItemId.value ? undefined : searchText.value.trim() || undefined,
-            engineeringOrderId: Number(route.query.engineeringOrderId || 0) || undefined,
-            cursorId: next ? listPage.nextCursorId : undefined,
-          })
+      const res =
+        selectedType.value === 'engineering'
+          ? await listEngineeringOrder({
+              ...params,
+              itemId: searchItemId.value,
+              itemNamePrefix: searchItemId.value ? undefined : searchText.value.trim() || undefined,
+              cursorUpdatedAt: next ? listPage.nextCursorUpdatedAt : undefined,
+              cursorId: next ? listPage.nextCursorId : undefined,
+            })
+          : await listItemUnit({
+              ...params,
+              itemId: searchItemId.value,
+              itemNamePrefix: searchItemId.value ? undefined : searchText.value.trim() || undefined,
+              engineeringOrderId: Number(route.query.engineeringOrderId || 0) || undefined,
+              cursorId: next ? listPage.nextCursorId : undefined,
+            })
       if (res.data.code === 0 && res.data.data) {
-        dataList.value = next ? [...dataList.value, ...(res.data.data.records ?? [])] : (res.data.data.records ?? [])
+        dataList.value = next
+          ? [...dataList.value, ...(res.data.data.records ?? [])]
+          : (res.data.data.records ?? [])
         syncCursor(res.data.data)
       }
     } finally {

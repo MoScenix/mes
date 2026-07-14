@@ -19,7 +19,7 @@ export const getDeployUrl = (deployKey: string) => {
   return `${origin}${basePath}/${deployKey}/`
 }
 
-// 获取静态资源预览URL（后端只有 HTML：固定 <appId>）
-export const getStaticPreviewUrl = (appId: string) => {
-  return `${STATIC_BASE_URL}/project/${appId}/index.html`
+// 获取 history 文件静态资源 URL
+export const getHistoryDocumentUrl = (historyId: string, fileId: string, filename: string) => {
+  return `${STATIC_BASE_URL}/document/${historyId}/${fileId}/${encodeURIComponent(filename)}`
 }

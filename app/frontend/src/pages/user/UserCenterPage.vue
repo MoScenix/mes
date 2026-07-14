@@ -12,10 +12,14 @@
               :src="formState.userAvatar || loginUser.userAvatar"
               class="border-4 border-blue-50 shadow-sm transition-all duration-500"
             />
-            <div class="absolute bottom-1 right-1 w-6 h-6 bg-green-500 border-4 border-white rounded-full"></div>
+            <div
+              class="absolute bottom-1 right-1 w-6 h-6 bg-green-500 border-4 border-white rounded-full"
+            ></div>
           </div>
 
-          <h2 class="text-xl font-bold text-gray-800 mb-1">{{ loginUser.userName ?? '无名用户' }}</h2>
+          <h2 class="text-xl font-bold text-gray-800 mb-1">
+            {{ loginUser.userName ?? '无名用户' }}
+          </h2>
           <p class="text-gray-400 text-sm mb-6">{{ loginUser.userAccount }}</p>
 
           <div class="w-full space-y-3">
@@ -56,7 +60,10 @@
                   @change="handleAvatarChange"
                 >
                   <div v-if="formState.userAvatar" class="w-full h-full relative group/avatar">
-                    <img :src="formState.userAvatar" class="w-full h-full object-cover rounded-xl" />
+                    <img
+                      :src="formState.userAvatar"
+                      class="w-full h-full object-cover rounded-xl"
+                    />
                     <div
                       class="absolute inset-0 bg-black/40 opacity-0 group-hover/avatar:opacity-100 flex items-center justify-center transition-opacity rounded-xl"
                     >

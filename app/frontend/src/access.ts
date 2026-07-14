@@ -3,7 +3,7 @@ import { message } from 'ant-design-vue'
 import router from '@/router'
 
 const publicPathPrefixes = ['/user/login', '/user/register']
-const protectedPathPrefixes = ['/mes', '/admin', '/app', '/user/center']
+const protectedPathPrefixes = ['/mes', '/admin', '/user/center']
 
 const matchesPathPrefix = (path: string, prefixes: string[]) =>
   prefixes.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))

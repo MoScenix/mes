@@ -77,7 +77,9 @@ const modeOptions = [
 const filteredOrders = computed(() => {
   if (!filterUserId.value) return orders.value
   return orders.value.filter((order) =>
-    mode.value === 'inbox' ? order.fromUserId === filterUserId.value : order.toUserId === filterUserId.value,
+    mode.value === 'inbox'
+      ? order.fromUserId === filterUserId.value
+      : order.toUserId === filterUserId.value,
   )
 })
 
@@ -96,7 +98,11 @@ const handleNameFilterChange = () => {
   }
 }
 
-const syncPage = (data?: { hasMore?: boolean; nextCursorUpdatedAt?: string; nextCursorId?: number }) => {
+const syncPage = (data?: {
+  hasMore?: boolean
+  nextCursorUpdatedAt?: string
+  nextCursorId?: number
+}) => {
   page.hasMore = Boolean(data?.hasMore)
   page.nextCursorUpdatedAt = data?.nextCursorUpdatedAt || ''
   page.nextCursorId = data?.nextCursorId || 0

@@ -29,9 +29,13 @@
           <a-tag>{{ record.flowType === FLOW_TYPE_IN ? '入库' : '出库' }}</a-tag>
         </template>
         <template v-else-if="column.dataIndex === 'flowStatus'">
-          <a-tag :color="statusColor(record.flowStatus)">{{ statusLabel(record.flowStatus) }}</a-tag>
+          <a-tag :color="statusColor(record.flowStatus)">{{
+            statusLabel(record.flowStatus)
+          }}</a-tag>
         </template>
-        <template v-else-if="column.dataIndex === 'createTime' || column.dataIndex === 'updateTime'">
+        <template
+          v-else-if="column.dataIndex === 'createTime' || column.dataIndex === 'updateTime'"
+        >
           {{ formatTime(record[column.dataIndex]) }}
         </template>
         <template v-else-if="column.key === 'action'">
@@ -69,10 +73,23 @@
       <span v-else class="muted-text">没有更多了</span>
     </div>
 
-    <a-modal v-if="false" v-model:open="flowOpen" title="新建流转单" :confirm-loading="flowSaving" @ok="handleCreateFlow">
+    <a-modal
+      v-if="false"
+      v-model:open="flowOpen"
+      title="新建流转单"
+      :confirm-loading="flowSaving"
+      @ok="handleCreateFlow"
+    >
       <a-form layout="vertical" :model="flowForm">
         <a-form-item label="流转方向">
-          <a-segmented v-model:value="flowForm.flowType" :options="[{ label: '入库', value: FLOW_TYPE_IN }, { label: '出库', value: FLOW_TYPE_OUT }]" block />
+          <a-segmented
+            v-model:value="flowForm.flowType"
+            :options="[
+              { label: '入库', value: FLOW_TYPE_IN },
+              { label: '出库', value: FLOW_TYPE_OUT },
+            ]"
+            block
+          />
         </a-form-item>
         <a-form-item label="说明">
           <a-textarea v-model:value="flowForm.description" :rows="3" />
@@ -88,9 +105,13 @@ import { useRouter } from 'vue-router'
 import dayjs from 'dayjs'
 import { message } from 'ant-design-vue'
 import {
-  FLOW_TYPE_IN, FLOW_TYPE_OUT,
+  FLOW_TYPE_IN,
+  FLOW_TYPE_OUT,
   MesListScope,
-  listInventoryFlow, createInventoryFlowDraft, deleteInventoryFlowDraft, submitInventoryFlow,
+  listInventoryFlow,
+  createInventoryFlowDraft,
+  deleteInventoryFlowDraft,
+  submitInventoryFlow,
 } from '@/api/mesController'
 import { parseMesCode } from '@/utils/mesCode'
 import { useLoginUserStore } from '@/stores/loginUser'
@@ -103,10 +124,15 @@ type DataType = 'flows'
 const selectedType = ref<DataType>('flows')
 
 const searchText = ref('')
-const onTypeChange = () => { fetchData() }
+const onTypeChange = () => {
+  fetchData()
+}
 const onSearch = (value: string) => {
   const parsed = parseMesCode(value)
-  if (parsed.kind && parsed.id) { router.push({ path: '/mes/detail', query: { kind: parsed.kind, id: String(parsed.id) } }); return }
+  if (parsed.kind && parsed.id) {
+    router.push({ path: '/mes/detail', query: { kind: parsed.kind, id: String(parsed.id) } })
+    return
+  }
   fetchData()
 }
 const clearSearch = () => {
@@ -120,7 +146,12 @@ const flowColumns = [
   { title: '类型', dataIndex: 'flowType', width: 80 },
   { title: '状态', dataIndex: 'flowStatus', width: 80 },
   { title: '描述', dataIndex: 'description', ellipsis: true },
-  { title: '进度', key: 'flowProgress', width: 120, customRender: ({ record }: any) => flowProgressText(record) },
+  {
+    title: '进度',
+    key: 'flowProgress',
+    width: 120,
+    customRender: ({ record }: any) => flowProgressText(record),
+  },
   { title: '更新时间', dataIndex: 'updateTime', width: 160 },
   { title: '操作', key: 'action', width: 150 },
 ]
@@ -136,9 +167,18 @@ const flowProgressText = (record: any) => {
 const dataList = ref<any[]>([])
 const loading = ref(false)
 const loadingMore = ref(false)
-const listPage = reactive({ pageSize: 30, hasMore: false, nextCursorUpdatedAt: '', nextCursorId: 0 })
+const listPage = reactive({
+  pageSize: 30,
+  hasMore: false,
+  nextCursorUpdatedAt: '',
+  nextCursorId: 0,
+})
 
-const syncCursor = (data?: { hasMore?: boolean; nextCursorUpdatedAt?: string; nextCursorId?: number }) => {
+const syncCursor = (data?: {
+  hasMore?: boolean
+  nextCursorUpdatedAt?: string
+  nextCursorId?: number
+}) => {
   listPage.hasMore = Boolean(data?.hasMore)
   listPage.nextCursorUpdatedAt = data?.nextCursorUpdatedAt || ''
   listPage.nextCursorId = data?.nextCursorId || 0
@@ -156,7 +196,9 @@ const fetchData = async (next = false) => {
       cursorId: next ? listPage.nextCursorId : undefined,
     })
     if (res.data.code === 0 && res.data.data) {
-      dataList.value = next ? [...dataList.value, ...(res.data.data.records ?? [])] : (res.data.data.records ?? [])
+      dataList.value = next
+        ? [...dataList.value, ...(res.data.data.records ?? [])]
+        : (res.data.data.records ?? [])
       syncCursor(res.data.data)
     }
   } finally {
@@ -204,7 +246,9 @@ const deleteFlowDraft = async (record: any) => {
 const flowOpen = ref(false)
 const flowSaving = ref(false)
 const flowForm = reactive({ flowType: FLOW_TYPE_IN, description: '' })
-const openCreateFlow = () => { router.push({ path: '/mes/create', query: { type: 'flow' } }) }
+const openCreateFlow = () => {
+  router.push({ path: '/mes/create', query: { type: 'flow' } })
+}
 const handleCreateFlow = async () => {
   flowSaving.value = true
   try {
@@ -212,26 +256,62 @@ const handleCreateFlow = async () => {
     if (res.data.code === 0 && res.data.data) {
       await submitInventoryFlow({ id: res.data.data })
       message.success('流转单已提交')
-      flowOpen.value = false; fetchData()
-    } else { message.error(res.data.message || '创建失败') }
-  } finally { flowSaving.value = false }
+      flowOpen.value = false
+      fetchData()
+    } else {
+      message.error(res.data.message || '创建失败')
+    }
+  } finally {
+    flowSaving.value = false
+  }
 }
 
-const formatTime = (t?: string) => t ? dayjs(t).format('YYYY-MM-DD HH:mm') : '-'
-const statusColor = (s?: number) => s === 1 ? 'default' : s === 2 ? 'blue' : s === 3 ? 'green' : 'red'
-const statusLabel = (s?: number) => s === 1 ? '草稿' : s === 2 ? '待处理' : s === 3 ? '已通过' : '已拒绝'
+const formatTime = (t?: string) => (t ? dayjs(t).format('YYYY-MM-DD HH:mm') : '-')
+const statusColor = (s?: number) =>
+  s === 1 ? 'default' : s === 2 ? 'blue' : s === 3 ? 'green' : 'red'
+const statusLabel = (s?: number) =>
+  s === 1 ? '草稿' : s === 2 ? '待处理' : s === 3 ? '已通过' : '已拒绝'
 
 onMounted(fetchData)
 </script>
 
 <style scoped>
-.workspace-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
-.search-input { width: 280px; max-width: 100%; }
-.id-link { color: var(--primary); cursor: pointer; font-weight: 500; }
-.id-link:hover { text-decoration: underline; }
-:deep(.ant-table-wrapper) { border: 1px solid var(--border); border-radius: var(--radius); }
-.list-more { display: flex; justify-content: center; padding-top: 14px; }
-.muted-text { color: var(--muted-foreground, #94a3b8); font-size: 13px; }
-.row-actions { white-space: nowrap; }
-.row-actions :deep(.ant-btn) { padding-inline: 2px; }
+.workspace-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.search-input {
+  width: 280px;
+  max-width: 100%;
+}
+.id-link {
+  color: var(--primary);
+  cursor: pointer;
+  font-weight: 500;
+}
+.id-link:hover {
+  text-decoration: underline;
+}
+:deep(.ant-table-wrapper) {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.list-more {
+  display: flex;
+  justify-content: center;
+  padding-top: 14px;
+}
+.muted-text {
+  color: var(--muted-foreground, #94a3b8);
+  font-size: 13px;
+}
+.row-actions {
+  white-space: nowrap;
+}
+.row-actions :deep(.ant-btn) {
+  padding-inline: 2px;
+}
 </style>

@@ -5,7 +5,8 @@ The backend is a single Spring Boot application. The former `user`, `app`, `ai`,
 not a Java module; its public HTTP routes and session/permission rules live in each domain's
 controller and service.
 
-Application management remains in `app`; chat/message records live in `history`. Each domain
+The old application-management semantics have been removed; assistant sessions and chat/message
+records now live in `history`. Each domain
 primarily contains `controller`, `service`, and `dal`, with focused `tools`, `llm`, `state`, or
 `utils` packages where the original behavior needs them. Java mapper interfaces contain no SQL;
 relational queries are stored under `src/main/resources/mapper/<domain>/*.xml`.

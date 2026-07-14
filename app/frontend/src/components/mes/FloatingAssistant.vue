@@ -28,7 +28,13 @@
           </div>
           <div class="head-actions">
             <a-tooltip title="新建对话">
-              <a-button type="text" shape="circle" size="small" :loading="creating" @click="createNewChat">
+              <a-button
+                type="text"
+                shape="circle"
+                size="small"
+                :loading="creating"
+                @click="createNewChat"
+              >
                 <EditOutlined />
               </a-button>
             </a-tooltip>
@@ -37,7 +43,13 @@
                 <HistoryOutlined />
               </a-button>
             </a-tooltip>
-            <a-button v-if="!pageMode" type="text" shape="circle" size="small" @click="open = false">
+            <a-button
+              v-if="!pageMode"
+              type="text"
+              shape="circle"
+              size="small"
+              @click="open = false"
+            >
               <CloseOutlined />
             </a-button>
           </div>
@@ -46,7 +58,9 @@
         <aside v-if="historyOpen" class="history-panel">
           <div class="history-title">
             <span>历史记录</span>
-            <a-button size="small" type="text" :loading="loadingSessions" @click="loadSessions">刷新</a-button>
+            <a-button size="small" type="text" :loading="loadingSessions" @click="loadSessions"
+              >刷新</a-button
+            >
           </div>
           <div class="history-cards custom-scrollbar">
             <template v-if="sessions.length">
@@ -54,11 +68,13 @@
                 v-for="session in sessions"
                 :key="session.id"
                 class="history-card-item"
-                :class="{ active: Number(activeAppId) === session.id }"
+                :class="{ active: Number(activeHistoryId) === session.id }"
               >
                 <button class="history-card-main" type="button" @click="selectSession(session)">
-                  <span class="history-card-title">{{ session.appName || '未命名对话' }}</span>
-                  <time class="history-card-time">{{ session.updateTime || session.createTime || '' }}</time>
+                  <span class="history-card-title">{{ session.historyName || '未命名对话' }}</span>
+                  <time class="history-card-time">{{
+                    session.updateTime || session.createTime || ''
+                  }}</time>
                 </button>
                 <a-popconfirm title="确定要删除这条对话吗？" @confirm="deleteSession(session)">
                   <a-tooltip title="删除">
@@ -85,122 +101,148 @@
         <main ref="messagesContainer" class="chat-list custom-scrollbar">
           <div v-if="!messages.length" class="empty-chat">
             <div class="empty-title">今天要处理什么？</div>
-            <div class="empty-subtitle">询问工单、库存、工程单或流转单，我会按你的角色调用工具。</div>
-          </div>
-
-        <template v-for="(item, index) in messages" :key="item.id || index">
-          <div v-if="item.type === 'system'" class="system-row">
-            <span>{{ item.content }}</span>
-          </div>
-
-          <div v-else-if="item.type === 'user'" class="message-row user-row">
-            <div class="user-message">
-              <div v-if="item.isPush" class="push-label">push</div>
-              <div
-                v-if="item.isFile && item.fileMeta"
-                class="file-message"
-                @dblclick="openFileMessage(item.fileMeta)"
-              >
-                <FileTextOutlined class="file-icon" />
-                <div class="file-main">
-                  <div class="file-name">{{ item.fileMeta.filename }}</div>
-                  <div class="file-meta">
-                    <span>{{ formatFileSize(item.fileMeta.size) }}</span>
-                    <span>{{ item.fileMeta.isBig ? '已分块' : '已解析' }}</span>
-                    <span v-if="item.fileMeta.parentCount">{{ item.fileMeta.parentCount }} 个父块</span>
-                  </div>
-                </div>
-              </div>
-              <MarkdownRenderer v-else class="message-markdown user-markdown" :content="item.content.trimEnd()" />
+            <div class="empty-subtitle">
+              询问工单、库存、工程单或流转单，我会按你的角色调用工具。
             </div>
           </div>
 
-          <div v-else class="message-row assistant-row">
-            <div class="assistant-message">
-              <div v-if="item.agent" class="agent-label">{{ item.agent }}</div>
-              <template v-if="item.parts && item.parts.length">
-                <template v-for="part in item.parts" :key="part.id">
+          <template v-for="(item, index) in messages" :key="item.id || index">
+            <div v-if="item.type === 'system'" class="system-row">
+              <span>{{ item.content }}</span>
+            </div>
+
+            <div v-else-if="item.type === 'user'" class="message-row user-row">
+              <div class="user-message">
+                <div v-if="item.isPush" class="push-label">push</div>
+                <div
+                  v-if="item.isFile && item.fileMeta"
+                  class="file-message"
+                  @dblclick="openFileMessage(item.fileMeta)"
+                >
+                  <FileTextOutlined class="file-icon" />
+                  <div class="file-main">
+                    <div class="file-name">{{ item.fileMeta.filename }}</div>
+                    <div class="file-meta">
+                      <span>{{ formatFileSize(item.fileMeta.size) }}</span>
+                      <span>{{ item.fileMeta.isBig ? '已分块' : '已解析' }}</span>
+                      <span v-if="item.fileMeta.parentCount"
+                        >{{ item.fileMeta.parentCount }} 个父块</span
+                      >
+                    </div>
+                  </div>
+                </div>
+                <MarkdownRenderer
+                  v-else
+                  class="message-markdown user-markdown"
+                  :content="item.content.trimEnd()"
+                />
+              </div>
+            </div>
+
+            <div v-else class="message-row assistant-row">
+              <div class="assistant-message">
+                <div v-if="item.agent" class="agent-label">{{ item.agent }}</div>
+                <template v-if="item.parts && item.parts.length">
+                  <template v-for="part in item.parts" :key="part.id">
+                    <MarkdownRenderer
+                      v-if="part.type === 'text' && part.content"
+                      class="message-markdown assistant-markdown"
+                      :content="part.content.trimEnd()"
+                    />
+                    <div v-else-if="part.type === 'tool'" class="tool-list">
+                      <details class="tool-item">
+                        <summary>
+                          <span class="tool-corner"></span>
+                          <span class="tool-status">{{
+                            part.tool.status === 'running'
+                              ? 'running'
+                              : part.tool.status === 'error'
+                                ? 'failed'
+                                : 'ran'
+                          }}</span>
+                          <span class="tool-name">{{ part.tool.name }}</span>
+                        </summary>
+                        <pre v-if="part.tool.args" class="tool-code">{{
+                          formatJSON(part.tool.args)
+                        }}</pre>
+                        <pre v-if="part.tool.result" class="tool-code">{{ part.tool.result }}</pre>
+                      </details>
+                    </div>
+                  </template>
+                </template>
+                <template v-else>
                   <MarkdownRenderer
-                    v-if="part.type === 'text' && part.content"
+                    v-if="item.content"
                     class="message-markdown assistant-markdown"
-                    :content="part.content.trimEnd()"
+                    :content="item.content.trimEnd()"
                   />
-                  <div v-else-if="part.type === 'tool'" class="tool-list">
-                    <details class="tool-item">
+                  <div v-if="item.toolCalls && item.toolCalls.length" class="tool-list">
+                    <details v-for="tool in item.toolCalls" :key="tool.id" class="tool-item">
                       <summary>
                         <span class="tool-corner"></span>
-                        <span class="tool-status">{{ part.tool.status === 'running' ? 'running' : part.tool.status === 'error' ? 'failed' : 'ran' }}</span>
-                        <span class="tool-name">{{ part.tool.name }}</span>
+                        <span class="tool-status">{{
+                          tool.status === 'running'
+                            ? 'running'
+                            : tool.status === 'error'
+                              ? 'failed'
+                              : 'ran'
+                        }}</span>
+                        <span class="tool-name">{{ tool.name }}</span>
                       </summary>
-                      <pre v-if="part.tool.args" class="tool-code">{{ formatJSON(part.tool.args) }}</pre>
-                      <pre v-if="part.tool.result" class="tool-code">{{ part.tool.result }}</pre>
+                      <pre v-if="tool.args" class="tool-code">{{ formatJSON(tool.args) }}</pre>
+                      <pre v-if="tool.result" class="tool-code">{{ formatJSON(tool.result) }}</pre>
                     </details>
                   </div>
                 </template>
-              </template>
-              <template v-else>
-                <MarkdownRenderer v-if="item.content" class="message-markdown assistant-markdown" :content="item.content.trimEnd()" />
-                <div v-if="item.toolCalls && item.toolCalls.length" class="tool-list">
-                  <details v-for="tool in item.toolCalls" :key="tool.id" class="tool-item">
-                    <summary>
-                      <span class="tool-corner"></span>
-                      <span class="tool-status">{{ tool.status === 'running' ? 'running' : tool.status === 'error' ? 'failed' : 'ran' }}</span>
-                      <span class="tool-name">{{ tool.name }}</span>
-                    </summary>
-                    <pre v-if="tool.args" class="tool-code">{{ formatJSON(tool.args) }}</pre>
-                    <pre v-if="tool.result" class="tool-code">{{ formatJSON(tool.result) }}</pre>
-                  </details>
+                <div v-if="item.loading" class="assistant-loading">
+                  <span class="loading-dot"></span>
+                  <span>{{ aiState?.status || 'unknown' }}</span>
                 </div>
-              </template>
-              <div v-if="item.loading" class="assistant-loading">
-                <span class="loading-dot"></span>
-                <span>{{ aiState?.status || 'unknown' }}</span>
               </div>
             </div>
-          </div>
-        </template>
+          </template>
         </main>
 
         <footer class="composer-wrap">
           <div v-if="currentQuestion && currentQuestionItem" class="question-panel">
-          <div class="question-title">
-            <span>{{ currentQuestion.agent || 'AI' }} 需要确认</span>
-            <span v-if="currentQuestionItems.length > 1" class="question-count">
-              {{ currentQuestionIndex + 1 }} / {{ currentQuestionItems.length }}
-            </span>
-          </div>
-          <div class="question-content">{{ currentQuestionItem.question }}</div>
-          <div v-if="currentQuestionItem.options.length" class="question-options">
-            <button
-              v-for="option in currentQuestionItem.options"
-              :key="option"
-              type="button"
-              class="question-option"
-              :class="{ 'question-option-active': currentAnswerSelection === option }"
-              @click="selectAnswerOption(option)"
-            >
-              {{ option }}
-            </button>
-          </div>
-          <a-textarea
-            v-model:value="answerInput"
-            :rows="2"
-            placeholder="输入其他回答，Enter 继续"
-            class="answer-input"
-            @keydown.enter.prevent="submitQuestionStep"
-          />
-          <div class="question-actions">
-            <a-button size="small" @click="currentQuestion = null">稍后</a-button>
-            <a-button
-              type="primary"
-              size="small"
-              :disabled="!canSubmitAnswer || answeringQuestion"
-              :loading="answeringQuestion"
-              @click="submitQuestionStep"
-            >
-              {{ isLastQuestion ? '发送' : '继续' }}
-            </a-button>
-          </div>
+            <div class="question-title">
+              <span>{{ currentQuestion.agent || 'AI' }} 需要确认</span>
+              <span v-if="currentQuestionItems.length > 1" class="question-count">
+                {{ currentQuestionIndex + 1 }} / {{ currentQuestionItems.length }}
+              </span>
+            </div>
+            <div class="question-content">{{ currentQuestionItem.question }}</div>
+            <div v-if="currentQuestionItem.options.length" class="question-options">
+              <button
+                v-for="option in currentQuestionItem.options"
+                :key="option"
+                type="button"
+                class="question-option"
+                :class="{ 'question-option-active': currentAnswerSelection === option }"
+                @click="selectAnswerOption(option)"
+              >
+                {{ option }}
+              </button>
+            </div>
+            <a-textarea
+              v-model:value="answerInput"
+              :rows="2"
+              placeholder="输入其他回答，Enter 继续"
+              class="answer-input"
+              @keydown.enter.prevent="submitQuestionStep"
+            />
+            <div class="question-actions">
+              <a-button size="small" @click="currentQuestion = null">稍后</a-button>
+              <a-button
+                type="primary"
+                size="small"
+                :disabled="!canSubmitAnswer || answeringQuestion"
+                :loading="answeringQuestion"
+                @click="submitQuestionStep"
+              >
+                {{ isLastQuestion ? '发送' : '继续' }}
+              </a-button>
+            </div>
           </div>
 
           <PromptInputBox
@@ -208,7 +250,7 @@
             v-model="userInput"
             :is-loading="isGenerating"
             :is-submitting="sendingMessage || creating"
-            :placeholder="activeAppId ? '继续和 MES 助手对话' : '发送后创建一条新的助手对话'"
+            :placeholder="activeHistoryId ? '继续和 MES 助手对话' : '发送后创建一条新的助手对话'"
             @send="(msg: string, files?: File[]) => handleSendMessage(msg, files)"
             @cancel="cancelCurrentTask"
           />
@@ -229,8 +271,12 @@ import {
   FileTextOutlined,
   HistoryOutlined,
 } from '@ant-design/icons-vue'
-import { addApp, deleteApp, listMyAppVoByPage } from '@/api/appController'
-import { listAppChatHistory } from '@/api/chatHistoryController'
+import {
+  addHistory,
+  deleteHistory,
+  listHistoryMessages,
+  listMyHistoryVoByPage,
+} from '@/api/historyController'
 import { cancelAI } from '@/api/aiController'
 import request from '@/request'
 import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
@@ -247,9 +293,9 @@ const creating = ref(false)
 const sendingMessage = ref(false)
 const answeringQuestion = ref(false)
 const userInput = ref('')
-const activeAppId = ref<number>()
+const activeHistoryId = ref<number>()
 const activeTitle = ref('选择历史记录或直接提问')
-const sessions = ref<API.AppVO[]>([])
+const sessions = ref<API.HistoryVO[]>([])
 const historyOpen = ref(false)
 const loadingSessions = ref(false)
 const deletingSessionId = ref<number>()
@@ -257,7 +303,6 @@ const messagesContainer = ref<HTMLElement>()
 const currentQuestionIndex = ref(0)
 const answerInput = ref('')
 const answerSelections = ref<Record<number, string>>({})
-
 
 const {
   messages,
@@ -269,7 +314,7 @@ const {
   answerQuestion,
   loadInitialState,
   stop,
-} = useAIEvents(activeAppId, { onDone: loadSessions })
+} = useAIEvents(activeHistoryId, { onDone: loadSessions })
 
 const currentQuestionItems = computed(() => {
   if (!currentQuestion.value) return []
@@ -280,11 +325,17 @@ const currentQuestionItems = computed(() => {
 
 const currentQuestionItem = computed(() => currentQuestionItems.value[currentQuestionIndex.value])
 
-const currentAnswerSelection = computed(() => answerSelections.value[currentQuestionIndex.value] || '')
+const currentAnswerSelection = computed(
+  () => answerSelections.value[currentQuestionIndex.value] || '',
+)
 
-const isLastQuestion = computed(() => currentQuestionIndex.value >= currentQuestionItems.value.length - 1)
+const isLastQuestion = computed(
+  () => currentQuestionIndex.value >= currentQuestionItems.value.length - 1,
+)
 
-const canSubmitAnswer = computed(() => Boolean(answerInput.value.trim() || currentAnswerSelection.value.trim()))
+const canSubmitAnswer = computed(() =>
+  Boolean(answerInput.value.trim() || currentAnswerSelection.value.trim()),
+)
 
 const toggle = async () => {
   if (isMobileViewport()) {
@@ -298,12 +349,13 @@ const toggle = async () => {
   }
 }
 
-const isMobileViewport = () => window.matchMedia?.('(max-width: 768px)').matches || window.innerWidth <= 768
+const isMobileViewport = () =>
+  window.matchMedia?.('(max-width: 768px)').matches || window.innerWidth <= 768
 
 async function loadSessions() {
   loadingSessions.value = true
   try {
-    const res = await listMyAppVoByPage({ pageNum: 1, pageSize: 30 })
+    const res = await listMyHistoryVoByPage({ pageNum: 1, pageSize: 30 })
     if (res.data.code === 0 && res.data.data?.records) {
       sessions.value = [...res.data.data.records].sort((a, b) => {
         const at = new Date(a.updateTime || a.createTime || '').getTime()
@@ -323,30 +375,33 @@ const toggleHistory = async () => {
   }
 }
 
-const selectSession = async (idOrSession: number | API.AppVO) => {
+const selectSession = async (idOrSession: number | API.HistoryVO) => {
   const sessionId = typeof idOrSession === 'number' ? idOrSession : idOrSession.id
   if (!sessionId) return
-  activeAppId.value = sessionId
-  activeTitle.value = typeof idOrSession === 'number' ? `对话 #${sessionId}` : idOrSession.appName || `对话 #${sessionId}`
+  activeHistoryId.value = sessionId
+  activeTitle.value =
+    typeof idOrSession === 'number'
+      ? `对话 #${sessionId}`
+      : idOrSession.historyName || `对话 #${sessionId}`
   historyOpen.value = false
   await loadHistory(sessionId)
   await loadInitialState()
   await nextTick(scrollToBottom)
 }
 
-const deleteSession = async (session: API.AppVO) => {
+const deleteSession = async (session: API.HistoryVO) => {
   if (!session.id || deletingSessionId.value) return
   deletingSessionId.value = session.id
   try {
-    const res = await deleteApp({ id: session.id })
+    const res = await deleteHistory({ id: session.id })
     if (res.data.code !== 0 || !res.data.data) {
       message.error(res.data.message || '删除失败')
       return
     }
     message.success('删除成功')
     sessions.value = sessions.value.filter((item) => item.id !== session.id)
-    if (activeAppId.value === session.id) {
-      activeAppId.value = undefined
+    if (activeHistoryId.value === session.id) {
+      activeHistoryId.value = undefined
       activeTitle.value = '选择历史记录或直接提问'
       messages.value = []
       currentQuestion.value = null
@@ -362,7 +417,7 @@ const deleteSession = async (session: API.AppVO) => {
 }
 
 const createNewChat = async () => {
-  activeAppId.value = undefined
+  activeHistoryId.value = undefined
   activeTitle.value = '新对话'
   messages.value = []
   currentQuestion.value = null
@@ -375,14 +430,14 @@ const chatTitleFromPrompt = (prompt: string) => {
   return title.length > 24 ? `${title.slice(0, 24)}...` : title || '新对话'
 }
 
-const ensureAssistantApp = async (initialPrompt = '') => {
-  if (activeAppId.value) return true
+const ensureAssistantHistory = async (initialPrompt = '') => {
+  if (activeHistoryId.value) return true
   creating.value = true
   try {
     const prompt = initialPrompt.trim()
-    const res = await addApp({ initPrompt: prompt })
+    const res = await addHistory({ initPrompt: prompt })
     if (res.data.code === 0 && res.data.data) {
-      activeAppId.value = res.data.data
+      activeHistoryId.value = res.data.data
       activeTitle.value = chatTitleFromPrompt(prompt)
       await loadSessions()
       return true
@@ -404,7 +459,7 @@ const parseFileMeta = (content?: string): AIFileMeta | undefined => {
   }
 }
 
-const buildHistoryMessage = (chat: API.ChatHistory): AIMessage => {
+const buildHistoryMessage = (chat: API.HistoryMessage): AIMessage => {
   const fileMeta = chat.isFile ? parseFileMeta(chat.message) : undefined
   return {
     id: chat.id?.toString() || `${chat.messageType}-${chat.createTime || Math.random()}`,
@@ -416,8 +471,8 @@ const buildHistoryMessage = (chat: API.ChatHistory): AIMessage => {
   }
 }
 
-const loadHistory = async (appId: number) => {
-  const res = await listAppChatHistory({ appId, pageSize: 30 })
+const loadHistory = async (historyId: number) => {
+  const res = await listHistoryMessages({ historyId, pageSize: 30 })
   if (res.data.code !== 0) return
   const records = res.data.data?.records || []
   messages.value = records.map(buildHistoryMessage).reverse()
@@ -426,19 +481,19 @@ const loadHistory = async (appId: number) => {
 const handleSendMessage = async (rawMessage: string, rawFiles?: File[]) => {
   const content = rawMessage.trim()
   if ((!content && !rawFiles?.length) || sendingMessage.value) return
-  const ready = await ensureAssistantApp(content)
+  const ready = await ensureAssistantHistory(content)
   if (!ready) return
 
   sendingMessage.value = true
   try {
-    if (rawFiles?.length && activeAppId.value) {
-      const appId = String(activeAppId.value)
+    if (rawFiles?.length && activeHistoryId.value) {
+      const historyId = String(activeHistoryId.value)
       for (const file of rawFiles) {
         const formData = new FormData()
-        formData.append('appId', appId)
+        formData.append('historyId', historyId)
         formData.append('file', file)
         try {
-          const res = await request.post('/app/file/add', formData, {
+          const res = await request.post('/history/file/add', formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
             timeout: 10 * 60 * 1000,
           })
@@ -446,7 +501,7 @@ const handleSendMessage = async (rawMessage: string, rawFiles?: File[]) => {
           if (data?.code !== 0) {
             message.error(`文件 ${file.name} 上传失败: ${data?.message || '未知错误'}`)
           } else {
-            await loadHistory(Number(appId))
+            await loadHistory(Number(historyId))
           }
         } catch (err) {
           console.error('Upload failed:', err)
@@ -475,8 +530,8 @@ const handleSendMessage = async (rawMessage: string, rawFiles?: File[]) => {
 }
 
 const cancelCurrentTask = async () => {
-  if (!activeAppId.value) return
-  await cancelAI({ appId: activeAppId.value, reason: 'cancelled by user' })
+  if (!activeHistoryId.value) return
+  await cancelAI({ historyId: activeHistoryId.value, reason: 'cancelled by user' })
   stop()
 }
 
@@ -487,7 +542,8 @@ const selectAnswerOption = (option: string) => {
   }
 }
 
-const currentStepAnswer = () => (answerInput.value.trim() || currentAnswerSelection.value.trim()).trim()
+const currentStepAnswer = () =>
+  (answerInput.value.trim() || currentAnswerSelection.value.trim()).trim()
 
 const buildAnswerContent = () => {
   return currentQuestionItems.value
@@ -546,13 +602,13 @@ const formatFileSize = (size?: number) => {
 }
 
 const openFileMessage = (fileMeta: AIFileMeta) => {
-  if (!activeAppId.value || !fileMeta.fileId || !fileMeta.filename) {
+  if (!activeHistoryId.value || !fileMeta.fileId || !fileMeta.filename) {
     message.warning('文件地址不存在')
     return
   }
   const base = (window as any).STATIC_BASE_URL || ''
   const filename = fileMeta.filename.split('/').map(encodeURIComponent).join('/')
-  window.open(`${base}/document/${activeAppId.value}/${fileMeta.fileId}/${filename}`, '_blank')
+  window.open(`${base}/document/${activeHistoryId.value}/${fileMeta.fileId}/${filename}`, '_blank')
 }
 
 const formatJSON = (value?: string) => {
@@ -564,7 +620,8 @@ const formatJSON = (value?: string) => {
   }
 }
 
-const safeText = (value?: unknown) => (typeof value === 'string' ? value : value == null ? '' : String(value))
+const safeText = (value?: unknown) =>
+  typeof value === 'string' ? value : value == null ? '' : String(value)
 
 watch(
   () => currentQuestion.value?.id,
@@ -748,7 +805,9 @@ onMounted(async () => {
   border-radius: 8px;
   background: transparent;
   text-align: left;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
 }
 
 .history-card-item:hover {
@@ -776,7 +835,9 @@ onMounted(async () => {
 .history-delete {
   flex: 0 0 auto;
   opacity: 0;
-  transition: opacity 0.15s ease, background 0.15s ease;
+  transition:
+    opacity 0.15s ease,
+    background 0.15s ease;
 }
 
 .history-card-item:hover .history-delete,
@@ -855,8 +916,14 @@ onMounted(async () => {
 }
 
 @keyframes systemFadeIn {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .message-row {
@@ -882,8 +949,14 @@ onMounted(async () => {
 }
 
 @keyframes messageSlideIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .user-message {
@@ -1035,8 +1108,13 @@ onMounted(async () => {
 }
 
 @keyframes pulse-dot {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 1; }
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 .composer-wrap {

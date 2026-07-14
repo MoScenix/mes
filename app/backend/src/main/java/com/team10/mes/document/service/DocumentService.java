@@ -22,8 +22,8 @@ public class DocumentService {
     this.root = Paths.get(properties.getRoot()).normalize();
   }
 
-  private Path dir(long project, long file) {
-    return root.resolve(Long.toString(project)).resolve(Long.toString(file));
+  private Path dir(long history, long file) {
+    return root.resolve(Long.toString(history)).resolve(Long.toString(file));
   }
 
   private Path latest(Path d, String ext) throws IOException {
@@ -43,8 +43,8 @@ public class DocumentService {
     }
   }
 
-  public Map<String, Object> parse(long project, long file) throws IOException {
-    Path pdf = latest(dir(project, file), ".pdf"),
+  public Map<String, Object> parse(long history, long file) throws IOException {
+    Path pdf = latest(dir(history, file), ".pdf"),
         txt = pdf.resolveSibling(pdf.getFileName().toString().replaceFirst("(?i)\\.pdf$", ".txt"));
     String text = poppler(pdf, txt);
     if (text == null)
@@ -61,8 +61,8 @@ public class DocumentService {
         (long) text.getBytes(StandardCharsets.UTF_8).length);
   }
 
-  public Map<String, Object> index(long project, long file, long min, long max) throws IOException {
-    Path txt = latest(dir(project, file), ".txt");
+  public Map<String, Object> index(long history, long file, long min, long max) throws IOException {
+    Path txt = latest(dir(history, file), ".txt");
     DocumentText.Split split =
         DocumentText.splitWithParents(DocumentText.clean(Files.readString(txt)), min, max);
     Path parents = txt.getParent().resolve("parents");
@@ -73,7 +73,7 @@ public class DocumentService {
     for (int i = 0; i < split.chunks().size(); i++)
       children.add(
           new DocumentIndexStore.Child(
-              project, file, i + 1, split.parentIds().get(i), split.chunks().get(i).text()));
+              history, file, i + 1, split.parentIds().get(i), split.chunks().get(i).text()));
     store.index(children);
     return Map.of(
         "fileId",
@@ -84,12 +84,12 @@ public class DocumentService {
         (long) split.parents().size());
   }
 
-  public Map<String, Object> search(long project, long file, String query, long topK) {
-    return Map.of("parentIds", store.search(project, file, query, topK));
+  public Map<String, Object> search(long history, long file, String query, long topK) {
+    return Map.of("parentIds", store.search(history, file, query, topK));
   }
 
-  public Map<String, Object> delete(long project) {
-    store.deleteProject(project);
+  public Map<String, Object> delete(long history) {
+    store.deleteHistory(history);
     return Map.of("success", true);
   }
 

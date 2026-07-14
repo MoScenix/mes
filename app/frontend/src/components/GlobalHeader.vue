@@ -10,7 +10,13 @@
       </a-col>
       <!-- 中间：导航菜单 -->
       <a-col class="header-center-col" flex="auto">
-        <a-menu class="desktop-menu" v-model:selectedKeys="selectedKeys" mode="horizontal" :items="menuItems" @click="handleMenuClick" />
+        <a-menu
+          class="desktop-menu"
+          v-model:selectedKeys="selectedKeys"
+          mode="horizontal"
+          :items="menuItems"
+          @click="handleMenuClick"
+        />
       </a-col>
       <!-- 右侧：扫码 + 邮件 + 用户操作 -->
       <a-col class="header-action-col" flex="none">
@@ -65,12 +71,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { type MenuProps, message } from 'ant-design-vue'
 import { useLoginUserStore } from '@/stores/loginUser.ts'
 import { userLogout } from '@/api/userController.ts'
-import {
-  DownOutlined,
-  HomeOutlined,
-  LogoutOutlined,
-  UserOutlined,
-} from '@ant-design/icons-vue'
+import { DownOutlined, HomeOutlined, LogoutOutlined, UserOutlined } from '@ant-design/icons-vue'
 import ScanButton from '@/components/ScanButton.vue'
 import WorkOrderInbox from '@/components/mes/WorkOrderInbox.vue'
 import { normalizeMesRole } from '@/utils/mesRole'
@@ -104,17 +105,20 @@ const isActiveMobileItem = (item: MesNavItem) => {
   const target = targetFor(item)
   if (route.path !== target.path) return false
   if (target.scanMode) return String(route.query.mode || '') === target.scanMode
-  return String(route.query.panel || '') === (target.panel || '') && String(route.query.view || '') === target.view
+  return (
+    String(route.query.panel || '') === (target.panel || '') &&
+    String(route.query.view || '') === target.view
+  )
 }
 
-const mobileMenuItems = computed<MenuProps['items']>(() => (
+const mobileMenuItems = computed<MenuProps['items']>(() =>
   visibleMobileNavItems.value.map((item) => ({
     key: item.key,
     icon: () => h(item.icon),
     label: item.label,
     title: item.label,
-  }))
-))
+  })),
+)
 
 const mobileModuleTitle = computed(() => {
   const activeItem = visibleMobileNavItems.value.find(isActiveMobileItem)

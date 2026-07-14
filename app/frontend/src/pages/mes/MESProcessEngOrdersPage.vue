@@ -92,7 +92,9 @@ const loadEngOrders = async (next = false) => {
       cursorId: next ? cursorId : undefined,
     })
     if (res.data.code === 0 && res.data.data) {
-      const records = next ? [...engRows.value, ...(res.data.data.records || [])] : (res.data.data.records || [])
+      const records = next
+        ? [...engRows.value, ...(res.data.data.records || [])]
+        : res.data.data.records || []
       engRows.value = records as EngineeringOrderVO[]
       engHasMore.value = !!res.data.data.hasMore
       cursorUpdatedAt = res.data.data.nextCursorUpdatedAt || ''
@@ -123,7 +125,7 @@ const goBack = () => {
   }
 }
 
-const formatTime = (t?: string) => t ? dayjs(t).format('YYYY-MM-DD HH:mm') : '-'
+const formatTime = (t?: string) => (t ? dayjs(t).format('YYYY-MM-DD HH:mm') : '-')
 
 onMounted(() => loadEngOrders())
 </script>
@@ -164,10 +166,18 @@ onMounted(() => loadEngOrders())
   background: #fff;
 }
 
-.id-link { color: var(--primary, #2563eb); cursor: pointer; font-weight: 600; }
-.id-link:hover { text-decoration: underline; }
+.id-link {
+  color: var(--primary, #2563eb);
+  cursor: pointer;
+  font-weight: 600;
+}
+.id-link:hover {
+  text-decoration: underline;
+}
 
-.empty-state { padding: 36px 0; }
+.empty-state {
+  padding: 36px 0;
+}
 
 .mail-hint {
   margin-top: 10px;

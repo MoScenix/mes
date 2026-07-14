@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 public class HistoryMessage {
   private Long id;
-  private Long appId;
+  private Long historyId;
   private Long userId;
   private String role;
   private String content;
@@ -20,12 +20,12 @@ public class HistoryMessage {
     this.id = id;
   }
 
-  public Long getAppId() {
-    return appId;
+  public Long getHistoryId() {
+    return historyId;
   }
 
-  public void setAppId(Long appId) {
-    this.appId = appId;
+  public void setHistoryId(Long historyId) {
+    this.historyId = historyId;
   }
 
   public Long getUserId() {

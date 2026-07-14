@@ -86,14 +86,21 @@ public class UserService {
     int n = ((Number) r.getOrDefault("pageNum", 1)).intValue(),
         s = ((Number) r.getOrDefault("pageSize", 10)).intValue();
     String name = text(r, "userName"), a = text(r, "account");
+    if (a.isBlank()) a = text(r, "userAccount");
     return Map.of(
         "records",
-        mapper.page(name, a, Math.max(0, n - 1) * s, s),
+        mapper.page(name, a, Math.max(0, n - 1) * s, s).stream().map(this::view).toList(),
         "total",
+        mapper.pageCount(name, a),
+        "totalRow",
         mapper.pageCount(name, a),
         "current",
         n,
+        "pageNumber",
+        n,
         "size",
+        s,
+        "pageSize",
         s);
   }
 
@@ -108,6 +115,11 @@ public class UserService {
     v.put("userName", v.remove("name"));
     if (!v.containsKey("userAccount")) v.put("userAccount", v.remove("user_account"));
     if (!v.containsKey("userRole")) v.put("userRole", v.remove("user_role"));
+    if (!v.containsKey("userName")) v.put("userName", v.remove("name"));
+    if (!v.containsKey("createTime")) v.put("createTime", v.remove("createdAt"));
+    if (!v.containsKey("updateTime")) v.put("updateTime", v.remove("updatedAt"));
+    if (!v.containsKey("createTime")) v.put("createTime", v.remove("created_at"));
+    if (!v.containsKey("updateTime")) v.put("updateTime", v.remove("updated_at"));
     return v;
   }
 }

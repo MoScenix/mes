@@ -1,9 +1,5 @@
 <template>
-  <div
-    class="prompt-box"
-    @dragover.prevent
-    @drop.prevent="handleDrop"
-  >
+  <div class="prompt-box" @dragover.prevent @drop.prevent="handleDrop">
     <div v-if="files.length > 0" class="flex flex-wrap gap-2 px-4 pt-3">
       <div v-for="(file, index) in files" :key="index" class="file-chip group">
         <PaperClipOutlined class="text-slate-500" />
@@ -27,18 +23,38 @@
 
     <div class="flex items-center justify-between px-3 pb-2">
       <div class="flex items-center gap-1">
-        <button class="icon-btn" title="上传文件" :disabled="isLoading || isSubmitting" @click="fileInputRef?.click()">
+        <button
+          class="icon-btn"
+          title="上传文件"
+          :disabled="isLoading || isSubmitting"
+          @click="fileInputRef?.click()"
+        >
           <PaperClipOutlined />
         </button>
-        <input ref="fileInputRef" type="file" accept=".pdf,.txt,application/pdf,text/plain" class="hidden" :disabled="isLoading || isSubmitting" @change="onFileChange" />
+        <input
+          ref="fileInputRef"
+          type="file"
+          accept=".pdf,.txt,application/pdf,text/plain"
+          class="hidden"
+          :disabled="isLoading || isSubmitting"
+          @change="onFileChange"
+        />
 
         <div class="w-px h-5 bg-gray-200 mx-1"></div>
 
-        <button class="mode-btn" :class="{ active: mode === 'search' }" @click="toggleMode('search')">
+        <button
+          class="mode-btn"
+          :class="{ active: mode === 'search' }"
+          @click="toggleMode('search')"
+        >
           <GlobalOutlined />
           <span v-if="mode === 'search'">搜索</span>
         </button>
-        <button class="mode-btn think" :class="{ active: mode === 'think' }" @click="toggleMode('think')">
+        <button
+          class="mode-btn think"
+          :class="{ active: mode === 'think' }"
+          @click="toggleMode('think')"
+        >
           <BulbOutlined />
           <span v-if="mode === 'think'">思考</span>
         </button>
@@ -46,7 +62,11 @@
 
       <button
         class="send-btn"
-        :class="{ active: hasContent || isSubmitting, stop: isLoading && !hasContent && !isSubmitting, idle: !isLoading && !hasContent && !isSubmitting }"
+        :class="{
+          active: hasContent || isSubmitting,
+          stop: isLoading && !hasContent && !isSubmitting,
+          idle: !isLoading && !hasContent && !isSubmitting,
+        }"
         :disabled="isSubmitting || (disabled && !isLoading)"
         :title="buttonTitle"
         @click="handleButtonClick"
@@ -59,12 +79,17 @@
       </button>
     </div>
   </div>
-
 </template>
 
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
-import { ArrowUpOutlined, BulbOutlined, GlobalOutlined, LoadingOutlined, PaperClipOutlined } from '@ant-design/icons-vue'
+import {
+  ArrowUpOutlined,
+  BulbOutlined,
+  GlobalOutlined,
+  LoadingOutlined,
+  PaperClipOutlined,
+} from '@ant-design/icons-vue'
 
 type Mode = '' | 'search' | 'think'
 
@@ -101,7 +126,10 @@ function autoResize() {
   textareaRef.value.style.height = `${Math.min(textareaRef.value.scrollHeight, 180)}px`
 }
 
-watch(() => props.modelValue, () => nextTick(autoResize))
+watch(
+  () => props.modelValue,
+  () => nextTick(autoResize),
+)
 
 function onInput(e: Event) {
   emit('update:modelValue', (e.target as HTMLTextAreaElement).value)
@@ -133,7 +161,11 @@ function handleButtonClick() {
   let content = props.modelValue.trim()
   if (mode.value === 'search') content = `[搜索: ${content}]`
   if (mode.value === 'think') content = `[思考: ${content}]`
-  emit('send', content, files.value.map((item) => item.file))
+  emit(
+    'send',
+    content,
+    files.value.map((item) => item.file),
+  )
   emit('update:modelValue', '')
   files.value = []
 }
@@ -156,7 +188,12 @@ function processFile(file: File) {
 
 function isSupportedFile(file: File) {
   const name = file.name.toLowerCase()
-  return name.endsWith('.pdf') || name.endsWith('.txt') || file.type === 'application/pdf' || file.type === 'text/plain'
+  return (
+    name.endsWith('.pdf') ||
+    name.endsWith('.txt') ||
+    file.type === 'application/pdf' ||
+    file.type === 'text/plain'
+  )
 }
 </script>
 
@@ -168,7 +205,9 @@ function isSupportedFile(file: File) {
   border-radius: 24px;
   background: #fff;
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .prompt-box:focus-within {

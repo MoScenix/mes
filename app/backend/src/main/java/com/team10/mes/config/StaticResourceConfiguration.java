@@ -1,6 +1,5 @@
-package com.team10.mes.app.controller;
+package com.team10.mes.config;
 
-import com.team10.mes.app.service.StaticResourceProperties;
 import java.nio.file.Paths;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;

@@ -62,7 +62,13 @@ const columns = [
   { title: '库存', dataIndex: 'stockStatus', width: 80 },
   { title: '质量', dataIndex: 'qualityStatus', width: 80 },
   { title: '说明', dataIndex: 'description', ellipsis: true },
-  { title: '工程单', key: 'engineeringOrderId', width: 80, customRender: ({ record }: any) => record.engineeringOrderId ? `#${record.engineeringOrderId}` : '-' },
+  {
+    title: '工程单',
+    key: 'engineeringOrderId',
+    width: 80,
+    customRender: ({ record }: any) =>
+      record.engineeringOrderId ? `#${record.engineeringOrderId}` : '-',
+  },
   { title: '更新时间', dataIndex: 'updateTime', width: 160 },
   { title: '操作', key: 'action', width: 120 },
 ]

@@ -1,11 +1,6 @@
 import { reactive, ref, type Ref } from 'vue'
 import { message } from 'ant-design-vue'
-import {
-  listInventoryFlow,
-  listItems,
-  listItemUnit,
-  MesListScope,
-} from '@/api/mesController'
+import { listInventoryFlow, listItems, listItemUnit, MesListScope } from '@/api/mesController'
 import type { PurchasePanel } from './types'
 
 type UsePurchaseListOptions = {
@@ -30,7 +25,11 @@ export function usePurchaseList(options: UsePurchaseListOptions) {
     nextCursorId: 0,
   })
 
-  const syncCursor = (data?: { hasMore?: boolean; nextCursorUpdatedAt?: string; nextCursorId?: number }) => {
+  const syncCursor = (data?: {
+    hasMore?: boolean
+    nextCursorUpdatedAt?: string
+    nextCursorId?: number
+  }) => {
     listPage.hasMore = Boolean(data?.hasMore)
     listPage.nextCursorUpdatedAt = data?.nextCursorUpdatedAt || ''
     listPage.nextCursorId = data?.nextCursorId || 0
@@ -66,7 +65,9 @@ export function usePurchaseList(options: UsePurchaseListOptions) {
         res = await listItemUnit({
           ...params,
           itemId: options.searchItemId.value,
-          itemNamePrefix: options.searchItemId.value ? undefined : options.searchText.value.trim() || undefined,
+          itemNamePrefix: options.searchItemId.value
+            ? undefined
+            : options.searchText.value.trim() || undefined,
           stockStatus: options.stockStatusFilter.value,
           qualityStatus: options.qualityStatusFilter.value,
           engineeringOrderId: options.engineeringOrderId.value,
@@ -77,7 +78,9 @@ export function usePurchaseList(options: UsePurchaseListOptions) {
       }
 
       if (res.data.code === 0 && res.data.data) {
-        dataList.value = next ? [...dataList.value, ...(res.data.data.records ?? [])] : (res.data.data.records ?? [])
+        dataList.value = next
+          ? [...dataList.value, ...(res.data.data.records ?? [])]
+          : (res.data.data.records ?? [])
         syncCursor(res.data.data)
       } else {
         message.error(res.data.message || '获取数据失败')

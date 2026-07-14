@@ -50,7 +50,9 @@ export function usePurchaseScan(route: RouteLocationNormalizedLoadedGeneric, rou
     }
     await loadScanFlowById(parsed.id)
     if (scanFlow.value?.id) {
-      await router.replace({ query: { ...route.query, panel: 'scan', flowId: String(scanFlow.value.id) } })
+      await router.replace({
+        query: { ...route.query, panel: 'scan', flowId: String(scanFlow.value.id) },
+      })
     }
   }
 

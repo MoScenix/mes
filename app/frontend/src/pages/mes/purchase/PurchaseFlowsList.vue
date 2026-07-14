@@ -16,7 +16,9 @@
         <a-tag>{{ flowTypeLabel(record.flowType) }}</a-tag>
       </template>
       <template v-else-if="column.dataIndex === 'flowStatus'">
-        <a-tag :color="flowStatusColor(record.flowStatus)">{{ flowStatusLabel(record.flowStatus) }}</a-tag>
+        <a-tag :color="flowStatusColor(record.flowStatus)">{{
+          flowStatusLabel(record.flowStatus)
+        }}</a-tag>
       </template>
       <template v-else-if="column.dataIndex === 'updateTime'">
         {{ formatTime(record.updateTime) }}
@@ -82,7 +84,12 @@ const columns = [
   { title: '类型', dataIndex: 'flowType', width: 80 },
   { title: '状态', dataIndex: 'flowStatus', width: 80 },
   { title: '描述', dataIndex: 'description', ellipsis: true },
-  { title: '进度', key: 'flowProgress', width: 120, customRender: ({ record }: any) => flowProgressText(record) },
+  {
+    title: '进度',
+    key: 'flowProgress',
+    width: 120,
+    customRender: ({ record }: any) => flowProgressText(record),
+  },
   { title: '更新时间', dataIndex: 'updateTime', width: 160 },
   { title: '操作', key: 'action', width: 150 },
 ]

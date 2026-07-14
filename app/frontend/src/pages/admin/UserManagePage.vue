@@ -28,7 +28,7 @@
           <a-tag :color="roleColor(record.userRole)">{{ roleLabel(record.userRole) }}</a-tag>
         </template>
         <template v-else-if="column.dataIndex === 'createTime'">
-          {{ dayjs(record.createTime).format('YYYY-MM-DD HH:mm:ss') }}
+          {{ formatTime(record.createTime) }}
         </template>
         <template v-else-if="column.key === 'action'">
           <a-space>
@@ -39,12 +39,7 @@
       </template>
     </a-table>
 
-    <a-modal
-      v-model:open="editOpen"
-      title="编辑人员信息"
-      :confirm-loading="saving"
-      @ok="saveUser"
-    >
+    <a-modal v-model:open="editOpen" title="编辑人员信息" :confirm-loading="saving" @ok="saveUser">
       <a-form layout="vertical" :model="editForm">
         <a-form-item label="用户名">
           <a-input v-model:value="editForm.userName" placeholder="输入用户名" />
@@ -212,7 +207,8 @@ const doDelete = async (id: number) => {
   }
 }
 
-const roleLabel = (role?: string) => roleOptions.find((item) => item.value === role)?.label || '普通用户'
+const roleLabel = (role?: string) =>
+  roleOptions.find((item) => item.value === role)?.label || '普通用户'
 
 const roleColor = (role?: string) =>
   ({
@@ -224,6 +220,12 @@ const roleColor = (role?: string) =>
     warehouse_admin: 'orange',
     sales: 'magenta',
   })[role || ''] || 'default'
+
+const formatTime = (value?: string) => {
+  if (!value) return '-'
+  const parsed = dayjs(value)
+  return parsed.isValid() ? parsed.format('YYYY-MM-DD HH:mm:ss') : '-'
+}
 
 // 页面加载时请求一次
 onMounted(() => {

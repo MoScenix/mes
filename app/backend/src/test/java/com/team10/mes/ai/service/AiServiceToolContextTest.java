@@ -10,8 +10,8 @@ import static org.mockito.Mockito.when;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.team10.mes.ai.state.RedisAiStore;
 import com.team10.mes.ai.workpool.AiWorkPool;
-import com.team10.mes.app.service.AppService;
 import com.team10.mes.history.service.HistoryMessageService;
+import com.team10.mes.history.service.HistorySessionService;
 import com.team10.mes.inventory.service.InventoryService;
 import com.team10.mes.user.service.UserService;
 import com.team10.mes.workorder.service.WorkOrderService;
@@ -71,7 +71,7 @@ class AiServiceToolContextTest {
         mock(HistoryMessageService.class),
         builder,
         new ObjectMapper(),
-        mock(AppService.class),
+        mock(HistorySessionService.class),
         mock(WorkOrderService.class),
         mock(InventoryService.class),
         users,

@@ -1,4 +1,4 @@
-package com.team10.mes.app.service;
+package com.team10.mes.history.service;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -6,39 +6,37 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.team10.mes.document.service.DocumentService;
 import com.team10.mes.document.utils.DocumentProperties;
 import com.team10.mes.history.model.HistoryMessage;
-import com.team10.mes.history.service.HistoryMessageService;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Locale;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
-public class AppFileService {
+public class HistoryFileService {
   private static final AtomicLong LAST_FILE_ID =
       new AtomicLong(System.currentTimeMillis() * 1_000_000L);
 
-  private final AppService apps;
+  private final HistorySessionService historySessions;
   private final DocumentService documents;
   private final HistoryMessageService histories;
-  private final AppFileProperties fileProperties;
+  private final HistoryFileProperties fileProperties;
   private final ObjectMapper json;
   private final Path documentRoot;
 
-  public AppFileService(
-      AppService apps,
+  public HistoryFileService(
+      HistorySessionService historySessions,
       DocumentService documents,
       HistoryMessageService histories,
-      AppFileProperties fileProperties,
+      HistoryFileProperties fileProperties,
       DocumentProperties documentProperties,
       ObjectMapper json) {
-    this.apps = apps;
+    this.historySessions = historySessions;
     this.documents = documents;
     this.histories = histories;
     this.fileProperties = fileProperties;
@@ -46,9 +44,9 @@ public class AppFileService {
     this.json = json;
   }
 
-  public String upload(long appId, long userId, boolean admin, MultipartFile upload)
+  public String upload(long historyId, long userId, String role, MultipartFile upload)
       throws IOException {
-    requireOwner(appId, userId, admin);
+    requireOwner(historyId, userId, role);
     if (upload == null || upload.isEmpty()) {
       throw new IllegalArgumentException("missing upload file");
     }
@@ -61,7 +59,7 @@ public class AppFileService {
     }
 
     long fileId = nextFileId();
-    Path directory = documentRoot.resolve(Long.toString(appId)).resolve(Long.toString(fileId));
+    Path directory = documentRoot.resolve(Long.toString(historyId)).resolve(Long.toString(fileId));
     Files.createDirectories(directory);
     Path savedFile = directory.resolve(filename).normalize();
     if (!savedFile.getParent().equals(directory.normalize())) {
@@ -73,7 +71,7 @@ public class AppFileService {
     String textFilename = filename;
     long textSize = size;
     if (extension.equals(".pdf")) {
-      Map<String, Object> parsed = documents.parse(appId, fileId);
+      Map<String, Object> parsed = documents.parse(historyId, fileId);
       textFilename = stringValue(parsed, "textFilename");
       textSize = longValue(parsed, "textSize");
     }
@@ -86,7 +84,10 @@ public class AppFileService {
     if (big) {
       Map<String, Object> indexed =
           documents.index(
-              appId, fileId, fileProperties.getChunkMinSize(), fileProperties.getChunkMaxSize());
+              historyId,
+              fileId,
+              fileProperties.getChunkMinSize(),
+              fileProperties.getChunkMaxSize());
       chunkCount = longValue(indexed, "chunkCount");
       parentCount = longValue(indexed, "parentCount");
     }
@@ -102,13 +103,15 @@ public class AppFileService {
             big,
             chunkCount,
             parentCount);
-    HistoryMessage message = histories.append(appId, userId, "user", writeContent(content), true);
+    HistoryMessage message =
+        histories.append(historyId, userId, "user", writeContent(content), true);
+    historySessions.touch(historyId);
     return Long.toString(message.getId());
   }
 
-  public void deleteProjectFiles(long appId) throws IOException {
-    documents.delete(appId);
-    Path projectDirectory = documentRoot.resolve(Long.toString(appId)).normalize();
+  public void deleteHistoryFiles(long historyId) throws IOException {
+    documents.delete(historyId);
+    Path projectDirectory = documentRoot.resolve(Long.toString(historyId)).normalize();
     if (!projectDirectory.startsWith(documentRoot) || !Files.exists(projectDirectory)) return;
     try (Stream<Path> paths = Files.walk(projectDirectory)) {
       for (Path path : paths.sorted((left, right) -> right.compareTo(left)).toList()) {
@@ -117,13 +120,9 @@ public class AppFileService {
     }
   }
 
-  private void requireOwner(long appId, long userId, boolean admin) {
+  private void requireOwner(long historyId, long userId, String role) {
     if (userId <= 0) throw new IllegalStateException("unauthorized");
-    var app = apps.get(appId);
-    if (app == null) throw new NoSuchElementException("app not found");
-    if (!admin && !app.userId().equals(userId)) {
-      throw new IllegalStateException("forbidden: app owner or admin required");
-    }
+    historySessions.authorize(historyId, userId, role);
   }
 
   private String writeContent(FileMessageContent content) {

@@ -94,10 +94,19 @@
     </div>
 
     <!-- 审批 Modal -->
-    <a-modal v-model:open="auditOpen" :title="auditTitle" :confirm-loading="auditSaving" @ok="handleAudit">
+    <a-modal
+      v-model:open="auditOpen"
+      :title="auditTitle"
+      :confirm-loading="auditSaving"
+      @ok="handleAudit"
+    >
       <a-form layout="vertical">
         <a-form-item label="审批意见">
-          <a-textarea v-model:value="auditReason" :rows="3" :placeholder="isApprove ? '输入批准说明（可选）' : '输入拒绝原因'" />
+          <a-textarea
+            v-model:value="auditReason"
+            :rows="3"
+            :placeholder="isApprove ? '输入批准说明（可选）' : '输入拒绝原因'"
+          />
         </a-form-item>
       </a-form>
     </a-modal>
@@ -110,10 +119,16 @@ import { useRoute, useRouter } from 'vue-router'
 import dayjs from 'dayjs'
 import { message } from 'ant-design-vue'
 import {
-  FLOW_TYPE_IN, FLOW_TYPE_OUT, FLOW_STATUS_SUBMITTED,
+  FLOW_TYPE_IN,
+  FLOW_TYPE_OUT,
+  FLOW_STATUS_SUBMITTED,
   MesListScope,
-  listInventoryFlow, auditInventoryFlow, listWorkOrder, listItems,
-  deleteWorkOrderDraft, submitWorkOrder,
+  listInventoryFlow,
+  auditInventoryFlow,
+  listWorkOrder,
+  listItems,
+  deleteWorkOrderDraft,
+  submitWorkOrder,
   type ItemVO,
 } from '@/api/mesController'
 import { parseMesCode } from '@/utils/mesCode'
@@ -127,16 +142,23 @@ const route = useRoute()
 type DataType = 'audit' | 'flows' | 'inventory' | 'workOrders'
 const panelFromRoute = () => {
   const panel = String(route.query.panel || 'audit')
-  return ['audit', 'flows', 'inventory', 'workOrders'].includes(panel) ? (panel as DataType) : 'audit'
+  return ['audit', 'flows', 'inventory', 'workOrders'].includes(panel)
+    ? (panel as DataType)
+    : 'audit'
 }
 const selectedType = ref<DataType>(panelFromRoute())
 
 const searchText = ref('')
 const searchItemId = ref<number>()
-const onTypeChange = () => { fetchData() }
+const onTypeChange = () => {
+  fetchData()
+}
 const onSearch = (value: string) => {
   const parsed = parseMesCode(value)
-  if (parsed.kind && parsed.id) { router.push({ path: '/mes/detail', query: { kind: parsed.kind, id: String(parsed.id) } }); return }
+  if (parsed.kind && parsed.id) {
+    router.push({ path: '/mes/detail', query: { kind: parsed.kind, id: String(parsed.id) } })
+    return
+  }
   searchItemId.value = undefined
   fetchData()
 }
@@ -157,7 +179,12 @@ const auditColumns = [
   { title: '类型', dataIndex: 'flowType', width: 80 },
   { title: '申请人', dataIndex: 'fromUserId', width: 150 },
   { title: '说明', dataIndex: 'description', ellipsis: true },
-  { title: '进度', key: 'flowProgress', width: 120, customRender: ({ record }: any) => flowProgressText(record) },
+  {
+    title: '进度',
+    key: 'flowProgress',
+    width: 120,
+    customRender: ({ record }: any) => flowProgressText(record),
+  },
   { title: '创建时间', dataIndex: 'createTime', width: 160 },
   { title: '操作', key: 'action', width: 250 },
 ]
@@ -197,9 +224,18 @@ const woColumns = [
 const dataList = ref<any[]>([])
 const loading = ref(false)
 const loadingMore = ref(false)
-const listPage = reactive({ pageSize: 30, hasMore: false, nextCursorUpdatedAt: '', nextCursorId: 0 })
+const listPage = reactive({
+  pageSize: 30,
+  hasMore: false,
+  nextCursorUpdatedAt: '',
+  nextCursorId: 0,
+})
 
-const syncCursor = (data?: { hasMore?: boolean; nextCursorUpdatedAt?: string; nextCursorId?: number }) => {
+const syncCursor = (data?: {
+  hasMore?: boolean
+  nextCursorUpdatedAt?: string
+  nextCursorId?: number
+}) => {
   listPage.hasMore = Boolean(data?.hasMore)
   listPage.nextCursorUpdatedAt = data?.nextCursorUpdatedAt || ''
   listPage.nextCursorId = data?.nextCursorId || 0
@@ -244,7 +280,9 @@ const fetchData = async (next = false) => {
       })
     }
     if (res.data.code === 0 && res.data.data) {
-      dataList.value = next ? [...dataList.value, ...(res.data.data.records ?? [])] : (res.data.data.records ?? [])
+      dataList.value = next
+        ? [...dataList.value, ...(res.data.data.records ?? [])]
+        : (res.data.data.records ?? [])
       syncCursor(res.data.data)
     }
   } finally {
@@ -299,10 +337,20 @@ const auditSaving = ref(false)
 const auditTarget = ref<any>(null)
 const isApprove = ref(true)
 const auditReason = ref('')
-const auditTitle = computed(() => isApprove.value ? '批准流转单' : '拒绝流转单')
+const auditTitle = computed(() => (isApprove.value ? '批准流转单' : '拒绝流转单'))
 
-const approveFlow = (record: any) => { isApprove.value = true; auditTarget.value = record; auditReason.value = ''; auditOpen.value = true }
-const rejectFlow = (record: any) => { isApprove.value = false; auditTarget.value = record; auditReason.value = ''; auditOpen.value = true }
+const approveFlow = (record: any) => {
+  isApprove.value = true
+  auditTarget.value = record
+  auditReason.value = ''
+  auditOpen.value = true
+}
+const rejectFlow = (record: any) => {
+  isApprove.value = false
+  auditTarget.value = record
+  auditReason.value = ''
+  auditOpen.value = true
+}
 
 const handleAudit = async () => {
   if (!auditTarget.value) return
@@ -311,25 +359,65 @@ const handleAudit = async () => {
     const res = await auditInventoryFlow({ id: auditTarget.value.id, approved: isApprove.value })
     if (res.data.code === 0) {
       message.success(isApprove.value ? '已批准' : '已拒绝')
-      auditOpen.value = false; fetchData()
-    } else { message.error(res.data.message || '操作失败') }
-  } finally { auditSaving.value = false }
+      auditOpen.value = false
+      fetchData()
+    } else {
+      message.error(res.data.message || '操作失败')
+    }
+  } finally {
+    auditSaving.value = false
+  }
 }
 
-const formatTime = (t?: string) => t ? dayjs(t).format('YYYY-MM-DD HH:mm') : '-'
+const formatTime = (t?: string) => (t ? dayjs(t).format('YYYY-MM-DD HH:mm') : '-')
 
-watch(() => route.query.panel, () => { selectedType.value = panelFromRoute(); onTypeChange() })
+watch(
+  () => route.query.panel,
+  () => {
+    selectedType.value = panelFromRoute()
+    onTypeChange()
+  },
+)
 onMounted(fetchData)
 </script>
 
 <style scoped>
-.workspace-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
-.search-input { width: 280px; max-width: 100%; }
-.id-link { color: var(--primary); cursor: pointer; font-weight: 500; }
-.id-link:hover { text-decoration: underline; }
-:deep(.ant-table-wrapper) { border: 1px solid var(--border); border-radius: var(--radius); }
-.list-more { display: flex; justify-content: center; padding-top: 14px; }
-.muted-text { color: var(--muted-foreground, #94a3b8); font-size: 13px; }
-.row-actions { white-space: nowrap; }
-.row-actions :deep(.ant-btn) { padding-inline: 2px; }
+.workspace-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.search-input {
+  width: 280px;
+  max-width: 100%;
+}
+.id-link {
+  color: var(--primary);
+  cursor: pointer;
+  font-weight: 500;
+}
+.id-link:hover {
+  text-decoration: underline;
+}
+:deep(.ant-table-wrapper) {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.list-more {
+  display: flex;
+  justify-content: center;
+  padding-top: 14px;
+}
+.muted-text {
+  color: var(--muted-foreground, #94a3b8);
+  font-size: 13px;
+}
+.row-actions {
+  white-space: nowrap;
+}
+.row-actions :deep(.ant-btn) {
+  padding-inline: 2px;
+}
 </style>

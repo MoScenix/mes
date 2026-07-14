@@ -416,7 +416,10 @@ export async function completeInventoryFlow(body: CompleteInventoryFlowRequest) 
   })
 }
 
-export async function auditInventoryFlow(id: number | { id?: number; approved?: boolean }, approved?: boolean) {
+export async function auditInventoryFlow(
+  id: number | { id?: number; approved?: boolean },
+  approved?: boolean,
+) {
   return request<BaseResponse<boolean>>('/mes/inventory-flow/audit', {
     method: 'POST',
     headers: jsonHeaders,

@@ -39,7 +39,7 @@
             @change="fetchData()"
           />
         </div>
-        <a-button v-if="selectedType !== 'items'" type="primary" @click="openCreate">
+        <a-button type="primary" @click="openCreate">
           <PlusOutlined /> {{ createButtonText }}
         </a-button>
       </div>

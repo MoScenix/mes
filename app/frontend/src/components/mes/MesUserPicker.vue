@@ -72,13 +72,18 @@ const handleSearch = (query: string) => {
         listUserVoByPage({ userAccount: text, pageNum: 1, pageSize: 8 }),
       ])
       const seen = new Set<number>()
-      const users = [...(nameRes.data.data?.records || []), ...(accountRes.data.data?.records || [])]
-      options.value = users.filter((user) => {
-        const id = user.id || 0
-        if (!id || seen.has(id)) return false
-        seen.add(id)
-        return true
-      }).map(toOption)
+      const users = [
+        ...(nameRes.data.data?.records || []),
+        ...(accountRes.data.data?.records || []),
+      ]
+      options.value = users
+        .filter((user) => {
+          const id = user.id || 0
+          if (!id || seen.has(id)) return false
+          seen.add(id)
+          return true
+        })
+        .map(toOption)
     } finally {
       loading.value = false
     }

@@ -6,7 +6,7 @@
       type="search"
       @input="updateValue(($event.target as HTMLInputElement).value)"
       @keydown.enter.prevent="submitCurrent()"
-    >
+    />
   </label>
 </template>
 
@@ -69,14 +69,21 @@ watch(
   border-radius: 16px;
   background: rgba(248, 250, 252, 0.92);
   color: #64748b;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 8px 24px rgba(15, 23, 42, 0.06);
-  transition: border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 8px 24px rgba(15, 23, 42, 0.06);
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    background 0.16s ease;
 }
 
 .mes-list-search:focus-within {
   border-color: rgba(59, 130, 246, 0.42);
   background: #ffffff;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1), 0 10px 28px rgba(15, 23, 42, 0.08);
+  box-shadow:
+    0 0 0 3px rgba(59, 130, 246, 0.1),
+    0 10px 28px rgba(15, 23, 42, 0.08);
 }
 
 .mes-list-search input {

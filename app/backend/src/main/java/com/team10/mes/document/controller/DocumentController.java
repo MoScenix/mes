@@ -16,19 +16,19 @@ public class DocumentController {
 
   @PostMapping("/parse-pdf-to-text")
   public Map<String, Object> parse(@RequestBody Map<String, Object> r) throws IOException {
-    return service.parse(num(r, "projectId"), num(r, "fileId"));
+    return service.parse(num(r, "historyId"), num(r, "fileId"));
   }
 
   @PostMapping("/index-text-file")
   public Map<String, Object> index(@RequestBody Map<String, Object> r) throws IOException {
     return service.index(
-        num(r, "projectId"), num(r, "fileId"), num(r, "minSize"), num(r, "maxSize"));
+        num(r, "historyId"), num(r, "fileId"), num(r, "minSize"), num(r, "maxSize"));
   }
 
   @PostMapping("/search-file")
   public Map<String, Object> search(@RequestBody Map<String, Object> r) {
     return service.search(
-        num(r, "projectId"),
+        num(r, "historyId"),
         num(r, "fileId"),
         String.valueOf(r.getOrDefault("query", "")),
         num(r, "topK"));
@@ -36,7 +36,7 @@ public class DocumentController {
 
   @PostMapping("/delete-project-file-data")
   public Map<String, Object> delete(@RequestBody Map<String, Object> r) throws IOException {
-    return service.delete(num(r, "projectId"));
+    return service.delete(num(r, "historyId"));
   }
 
   private long num(Map<String, Object> r, String k) {

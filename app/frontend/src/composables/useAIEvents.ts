@@ -53,7 +53,7 @@ export interface AIQuestionItem {
   options: string[]
 }
 
-export function useAIEvents(appId: Ref<any>, options?: { onDone?: () => void }) {
+export function useAIEvents(historyId: Ref<any>, options?: { onDone?: () => void }) {
   const messages = ref<AIMessage[]>([])
   const aiState = ref<API.AIState | null>(null)
   const isGenerating = ref(false)
@@ -76,7 +76,7 @@ export function useAIEvents(appId: Ref<any>, options?: { onDone?: () => void }) 
   onUnmounted(stop)
 
   watch(
-    () => appId.value,
+    () => historyId.value,
     () => {
       stopEventPolling()
       lastEventId = '0'
@@ -325,24 +325,24 @@ export function useAIEvents(appId: Ref<any>, options?: { onDone?: () => void }) 
 
   async function pollEvents(initialLastId?: string) {
     if (polling) return
-    const pollingAppId = Number(appId.value)
-    if (!pollingAppId) return
+    const pollingHistoryId = Number(historyId.value)
+    if (!pollingHistoryId) return
     polling = true
     lastEventId = initialLastId || lastEventId || '0'
 
-    while (polling && Number(appId.value) === pollingAppId) {
+    while (polling && Number(historyId.value) === pollingHistoryId) {
       try {
         abortController = new AbortController()
         const res = await listAIEvents(
           {
-            appId: pollingAppId,
+            historyId: pollingHistoryId,
             lastId: lastEventId,
             blockMs: 30000,
             count: 50,
           },
           { signal: abortController.signal },
         )
-        if (Number(appId.value) !== pollingAppId) break
+        if (Number(historyId.value) !== pollingHistoryId) break
         if (res.data.code === 0) {
           const events = res.data.data?.events || []
           for (const event of events) processEvent(event)
@@ -360,8 +360,8 @@ export function useAIEvents(appId: Ref<any>, options?: { onDone?: () => void }) 
   }
 
   async function refreshState() {
-    if (!appId.value) return
-    const res = await getAIState({ appId: Number(appId.value) })
+    if (!historyId.value) return
+    const res = await getAIState({ historyId: Number(historyId.value) })
     if (res.data.code !== 0 || !res.data.data) return
     aiState.value = res.data.data
     if (!res.data.data.exists) {
@@ -385,7 +385,7 @@ export function useAIEvents(appId: Ref<any>, options?: { onDone?: () => void }) 
   }
 
   async function loadInitialState() {
-    if (!appId.value) return
+    if (!historyId.value) return
     await refreshState()
     if (!aiState.value?.exists) return
     lastEventId = aiState.value.lastEventId || '0'
@@ -398,7 +398,7 @@ export function useAIEvents(appId: Ref<any>, options?: { onDone?: () => void }) 
   }
 
   async function sendMessage(content: string) {
-    if (!appId.value || !content.trim() || isGenerating.value) return false
+    if (!historyId.value || !content.trim() || isGenerating.value) return false
     messages.value.push({ id: `user-${Date.now()}`, type: 'user', content: content.trim() })
     messages.value.push({
       id: `ai-${Date.now()}`,
@@ -411,7 +411,7 @@ export function useAIEvents(appId: Ref<any>, options?: { onDone?: () => void }) 
     isGenerating.value = true
     lastEventId = '0'
     setLocalState('queued')
-    const res = await submitAI({ appId: Number(appId.value), message: content.trim() })
+    const res = await submitAI({ historyId: Number(historyId.value), message: content.trim() })
     if (res.data.code !== 0) {
       finishAIMessage()
       isGenerating.value = false
@@ -423,8 +423,8 @@ export function useAIEvents(appId: Ref<any>, options?: { onDone?: () => void }) 
   }
 
   async function pushMessage(content: string) {
-    if (!appId.value || !content.trim() || !isGenerating.value) return false
-    const res = await pushAI({ appId: Number(appId.value), content: content.trim() })
+    if (!historyId.value || !content.trim() || !isGenerating.value) return false
+    const res = await pushAI({ historyId: Number(historyId.value), content: content.trim() })
     if (res.data.code !== 0) return false
     const id = res.data.data || `push-${Date.now()}`
     lastEventId = id
@@ -442,9 +442,9 @@ export function useAIEvents(appId: Ref<any>, options?: { onDone?: () => void }) 
   }
 
   async function answerQuestion(content: string) {
-    if (!appId.value || !currentQuestion.value || !content.trim()) return false
+    if (!historyId.value || !currentQuestion.value || !content.trim()) return false
     const res = await answerAI({
-      appId: Number(appId.value),
+      historyId: Number(historyId.value),
       answers: {
         [currentQuestion.value.id]: {
           content: content.trim(),
@@ -462,8 +462,8 @@ export function useAIEvents(appId: Ref<any>, options?: { onDone?: () => void }) 
   }
 
   async function cancelCurrentTask() {
-    if (!appId.value) return
-    await cancelAI({ appId: Number(appId.value), reason: '用户取消' })
+    if (!historyId.value) return
+    await cancelAI({ historyId: Number(historyId.value), reason: '用户取消' })
     finishAIMessage()
     appendSystem('已取消')
     isGenerating.value = false

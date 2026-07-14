@@ -12,9 +12,9 @@ import com.team10.mes.ai.node.designer.DesignerNode;
 import com.team10.mes.ai.state.RedisAiStore;
 import com.team10.mes.ai.task.ChatTask;
 import com.team10.mes.ai.workpool.AiWorkPool;
-import com.team10.mes.app.service.AppService;
 import com.team10.mes.history.model.HistoryMessage;
 import com.team10.mes.history.service.HistoryMessageService;
+import com.team10.mes.history.service.HistorySessionService;
 import com.team10.mes.inventory.service.InventoryService;
 import com.team10.mes.user.service.UnauthorizedException;
 import com.team10.mes.user.service.UserService;
@@ -47,7 +47,7 @@ public class AiService {
   private final HistoryMessageService histories;
   private final ChatClient chatClient;
   private final ObjectMapper json;
-  private final AppService apps;
+  private final HistorySessionService historySessions;
   private final WorkOrderService workOrders;
   private final InventoryService inventory;
   private final UserService users;
@@ -64,7 +64,7 @@ public class AiService {
       HistoryMessageService histories,
       ChatClient.Builder builder,
       ObjectMapper json,
-      AppService apps,
+      HistorySessionService historySessions,
       WorkOrderService workOrders,
       InventoryService inventory,
       UserService users,
@@ -77,7 +77,7 @@ public class AiService {
     this.histories = histories;
     this.chatClient = builder.build();
     this.json = json;
-    this.apps = apps;
+    this.historySessions = historySessions;
     this.workOrders = workOrders;
     this.inventory = inventory;
     this.users = users;
@@ -89,41 +89,42 @@ public class AiService {
     this.controlReadCount = Math.max(1, controlReadCount);
   }
 
-  public void submit(long appId, String message, Identity identity) {
-    requireApp(appId);
-    authorize(appId, identity);
+  public void submit(long historyId, String message, Identity identity) {
+    requireHistory(historyId);
+    authorize(historyId, identity);
     String text = trim(message);
-    synchronized (lock(appId)) {
-      AiState current = store.state(appId);
+    synchronized (lock(historyId)) {
+      AiState current = store.state(historyId);
       if (current != null
           && ACTIVE.contains(current.status())
           && !"interrupted".equals(current.status())) {
         throw new IllegalStateException("AI task is already active");
       }
-      if (!text.isEmpty()) histories.append(appId, identity.userId(), "user", text, false);
-      if (histories.history(appId, 1, null, null).messageList().isEmpty())
+      if (!text.isEmpty()) histories.append(historyId, identity.userId(), "user", text, false);
+      if (histories.history(historyId, 1, null, null).messageList().isEmpty())
         throw new IllegalArgumentException("message is required");
-      store.resetEvents(appId);
-      start(appId, "task accepted", identity, false, "");
+      historySessions.touch(historyId);
+      store.resetEvents(historyId);
+      start(historyId, "task accepted", identity, false, "");
     }
   }
 
-  public String push(long appId, String content, Identity identity) {
-    requireApp(appId);
-    authorize(appId, identity);
+  public String push(long historyId, String content, Identity identity) {
+    requireHistory(historyId);
+    authorize(historyId, identity);
     String text = trim(content);
     if (text.isEmpty()) throw new IllegalArgumentException("content is required");
-    synchronized (lock(appId)) {
-      AiState state = store.state(appId);
+    synchronized (lock(historyId)) {
+      AiState state = store.state(historyId);
       if (state == null || !ACTIVE.contains(state.status()))
         throw new IllegalStateException("AI task is not active");
-      return control(appId, "push", text, null, null);
+      return control(historyId, "push", text, null, null);
     }
   }
 
-  public void answer(long appId, Map<String, Answer> answers, Identity identity) {
-    requireApp(appId);
-    authorize(appId, identity);
+  public void answer(long historyId, Map<String, Answer> answers, Identity identity) {
+    requireHistory(historyId);
+    authorize(historyId, identity);
     Map<String, Answer> normalized =
         answers == null
             ? Map.of()
@@ -136,11 +137,11 @@ public class AiService {
                                 && !e.getValue().payload().isEmpty()))
                 .collect(java.util.stream.Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     if (normalized.isEmpty()) throw new IllegalArgumentException("answers are required");
-    synchronized (lock(appId)) {
-      AiState state = state(appId);
+    synchronized (lock(historyId)) {
+      AiState state = state(historyId);
       if (!state.exists() || state.pendingInterrupts().isEmpty())
         throw new IllegalStateException("pending interrupt target not found");
-      QuestionCheckpoint checkpoint = store.checkpoint(appId, QuestionCheckpoint.class);
+      QuestionCheckpoint checkpoint = store.checkpoint(historyId, QuestionCheckpoint.class);
       if (checkpoint == null || !Objects.equals(checkpoint.checkpointId(), state.checkpointId()))
         throw new IllegalStateException("AI checkpoint is missing or invalid");
       Set<String> targets = new HashSet<>();
@@ -158,41 +159,49 @@ public class AiService {
               .map(a -> !trim(a.content()).isEmpty() ? trim(a.content()) : writeJson(a.payload()))
               .reduce((a, b) -> a + "\n" + b)
               .orElseThrow();
-      histories.append(appId, identity.userId(), "user", answerText, false);
+      histories.append(historyId, identity.userId(), "user", answerText, false);
       String target = normalized.keySet().iterator().next();
-      control(appId, "answer", answerText, target, Map.of("answers", normalized));
+      control(historyId, "answer", answerText, target, Map.of("answers", normalized));
       publish(
-          appId, "answer", AGENT, answerText, target, null, null, Map.of("answers", normalized));
-      start(appId, "assistant resume accepted", identity, true, answerText);
+          historyId,
+          "answer",
+          AGENT,
+          answerText,
+          target,
+          null,
+          null,
+          Map.of("answers", normalized));
+      historySessions.touch(historyId);
+      start(historyId, "assistant resume accepted", identity, true, answerText);
     }
   }
 
-  public String cancel(long appId, String reason, Identity identity) {
-    requireApp(appId);
-    authorize(appId, identity);
+  public String cancel(long historyId, String reason, Identity identity) {
+    requireHistory(historyId);
+    authorize(historyId, identity);
     String cause = trim(reason).isEmpty() ? "cancelled" : trim(reason);
-    synchronized (lock(appId)) {
-      String controlId = control(appId, "cancel", cause, null, null);
-      if (tasks.containsKey(appId)) return controlId;
-      AiEvent cancelled = publish(appId, "cancelled", AGENT, cause, null, null, null, null);
-      cancelRuntime(appId);
-      saveState(appId, "cancelled", AGENT, cancelled.id(), "", List.of(), cause, "", true);
-      store.expireTerminal(appId);
+    synchronized (lock(historyId)) {
+      String controlId = control(historyId, "cancel", cause, null, null);
+      if (tasks.containsKey(historyId)) return controlId;
+      AiEvent cancelled = publish(historyId, "cancelled", AGENT, cause, null, null, null, null);
+      cancelRuntime(historyId);
+      saveState(historyId, "cancelled", AGENT, cancelled.id(), "", List.of(), cause, "", true);
+      store.expireTerminal(historyId);
       return controlId;
     }
   }
 
-  public AiState state(long appId) {
-    requireApp(appId);
-    AiState current = store.state(appId);
+  public AiState state(long historyId) {
+    requireHistory(historyId);
+    AiState current = store.state(historyId);
     return current == null
         ? new AiState(false, "", "", "", "", List.of(), "", "", false, 0)
         : current;
   }
 
-  public EventPage events(long appId, String lastId, long blockMs, int count) {
-    requireApp(appId);
-    List<AiEvent> result = store.events(appId, lastId, blockMs, count);
+  public EventPage events(long historyId, String lastId, long blockMs, int count) {
+    requireHistory(historyId);
+    List<AiEvent> result = store.events(historyId, lastId, blockMs, count);
     String next =
         result.isEmpty()
             ? (lastId == null || lastId.isBlank() ? "0" : lastId)
@@ -201,22 +210,27 @@ public class AiService {
   }
 
   private void start(
-      long appId, String acceptedMessage, Identity identity, boolean resume, String resumeAnswer) {
-    RuntimeTask previous = tasks.get(appId);
+      long historyId,
+      String acceptedMessage,
+      Identity identity,
+      boolean resume,
+      String resumeAnswer) {
+    RuntimeTask previous = tasks.get(historyId);
     long generation = previous == null ? 1 : previous.generation.incrementAndGet();
     RuntimeTask runtime = new RuntimeTask(generation, identity, resumeAnswer);
-    tasks.put(appId, runtime);
-    AiEvent accepted = publish(appId, "accepted", AGENT, acceptedMessage, null, null, null, null);
-    saveState(appId, "queued", AGENT, accepted.id(), "", List.of(), acceptedMessage, "", false);
+    tasks.put(historyId, runtime);
+    AiEvent accepted =
+        publish(historyId, "accepted", AGENT, acceptedMessage, null, null, null, null);
+    saveState(historyId, "queued", AGENT, accepted.id(), "", List.of(), acceptedMessage, "", false);
     runtime.task =
         new ChatTask(
-            appId,
+            historyId,
             identity,
             resume,
-            ignored -> run(appId, runtime),
-            (task, status) -> markLifecycle(appId, status));
+            ignored -> run(historyId, runtime),
+            (task, status) -> markLifecycle(historyId, status));
     if (resume) {
-      QuestionCheckpoint checkpoint = store.checkpoint(appId, QuestionCheckpoint.class);
+      QuestionCheckpoint checkpoint = store.checkpoint(historyId, QuestionCheckpoint.class);
       if (checkpoint != null && !checkpoint.pendingInterrupts().isEmpty())
         runtime.task.runtime().setControlCursor(checkpointControlCursor(checkpoint));
     }
@@ -224,11 +238,11 @@ public class AiService {
     workPool.submit(runtime.task);
   }
 
-  private void run(long appId, RuntimeTask runtime) {
+  private void run(long historyId, RuntimeTask runtime) {
     AiControlWatcher watcher =
         new AiControlWatcher(
             store,
-            appId,
+            historyId,
             runtime.task.runtime().controlCursor(),
             controlBlockMs,
             controlReadCount,
@@ -236,23 +250,23 @@ public class AiService {
               @Override
               public void onPush(AiEvent event) {
                 runtime.task.runtime().setControlCursor(event.id());
-                if (!current(appId, runtime)) return;
+                if (!current(historyId, runtime)) return;
                 String text = trim(event.content());
                 if (text.isEmpty()) return;
-                histories.append(appId, runtime.identity.userId(), "user", text, false);
-                publish(appId, "push", AGENT, text, null, null, null, null);
-                cancelRuntime(appId);
-                start(appId, "push accepted", runtime.identity, false, "");
+                histories.append(historyId, runtime.identity.userId(), "user", text, false);
+                publish(historyId, "push", AGENT, text, null, null, null, null);
+                cancelRuntime(historyId);
+                start(historyId, "push accepted", runtime.identity, false, "");
               }
 
               @Override
               public void onCancel(AiEvent event) {
                 runtime.task.runtime().setControlCursor(event.id());
-                if (!current(appId, runtime)) return;
+                if (!current(historyId, runtime)) return;
                 runtime.task.cancel();
                 AiEvent cancelled =
                     publish(
-                        appId,
+                        historyId,
                         "cancelled",
                         AGENT,
                         trim(event.content()).isEmpty() ? "cancelled" : event.content(),
@@ -261,7 +275,7 @@ public class AiService {
                         null,
                         null);
                 saveState(
-                    appId,
+                    historyId,
                     "cancelled",
                     AGENT,
                     cancelled.id(),
@@ -270,7 +284,7 @@ public class AiService {
                     event.content(),
                     runtime.task.runtime().buffer().value(),
                     true);
-                store.expireTerminal(appId);
+                store.expireTerminal(historyId);
               }
 
               @Override
@@ -278,12 +292,12 @@ public class AiService {
                 runtime.task.runtime().setControlCursor(event.id());
               }
             });
-    Thread watcherThread = Thread.ofVirtual().name("ai-control-" + appId).start(watcher);
+    Thread watcherThread = Thread.ofVirtual().name("ai-control-" + historyId).start(watcher);
     try {
-      if (!current(appId, runtime)) return;
-      AiEvent started = publish(appId, "agent_start", AGENT, "", null, null, null, null);
-      saveState(appId, "running", AGENT, started.id(), "", List.of(), "", "", false);
-      List<Message> history = history(appId);
+      if (!current(historyId, runtime)) return;
+      AiEvent started = publish(historyId, "agent_start", AGENT, "", null, null, null, null);
+      saveState(historyId, "running", AGENT, started.id(), "", List.of(), "", "", false);
+      List<Message> history = history(historyId);
       MesAiTools tools =
           new MesAiTools(
               workOrders, inventory, users, runtime.identity.userId(), runtime.identity.admin());
@@ -298,11 +312,11 @@ public class AiService {
                     .prompt()
                     .system(systemPrompt)
                     .messages(promptHistory)
-                    .toolCallbacks(toolCallbacks(tools, runtime.identity.role(), appId))
+                    .toolCallbacks(toolCallbacks(tools, runtime.identity.role(), historyId))
                     .stream()
                     .content()
                     .toIterable()) {
-              if (!current(appId, runtime)) throw new CancellationException();
+              if (!current(historyId, runtime)) throw new CancellationException();
               if (chunk != null && !chunk.isEmpty()) {
                 output.append(chunk);
                 runtime.task.runtime().buffer().append(chunk);
@@ -322,7 +336,7 @@ public class AiService {
                     runtime.task.runtime().controlCursor());
             AiEvent event =
                 publish(
-                    appId,
+                    historyId,
                     "question",
                     AGENT,
                     questions.stream()
@@ -342,14 +356,14 @@ public class AiService {
                 id,
                 List.of(pending),
                 runtime.task.runtime().buffer().value(),
-                store.state(appId).lastEventId(),
+                store.state(historyId).lastEventId(),
                 Instant.now().toEpochMilli());
           };
       AiGraph.CheckpointWriter checkpointWriter =
           checkpoint -> {
-            store.saveCheckpoint(appId, checkpoint);
+            store.saveCheckpoint(historyId, checkpoint);
             saveState(
-                appId,
+                historyId,
                 "waiting_answer",
                 AGENT,
                 checkpoint.lastEventId(),
@@ -360,7 +374,7 @@ public class AiService {
                 false);
           };
       QuestionCheckpoint persisted =
-          runtime.task.needsResume() ? store.checkpoint(appId, QuestionCheckpoint.class) : null;
+          runtime.task.needsResume() ? store.checkpoint(historyId, QuestionCheckpoint.class) : null;
       AiGraph.Result result =
           runtime.task.needsResume()
               ? graph.resume(
@@ -369,47 +383,47 @@ public class AiService {
                   persisted == null ? "" : persisted.modelOutput(),
                   model,
                   this::parseQuestions,
-                  chunk -> publish(appId, "message", AGENT, chunk, null, null, null, null),
+                  chunk -> publish(historyId, "message", AGENT, chunk, null, null, null, null),
                   interruptFactory,
                   checkpointFactory,
                   checkpointWriter,
                   output ->
                       histories.append(
-                          appId, runtime.identity.userId(), "assistant", output, false))
+                          historyId, runtime.identity.userId(), "assistant", output, false))
               : graph.run(
                   model,
                   this::parseQuestions,
-                  chunk -> publish(appId, "message", AGENT, chunk, null, null, null, null),
+                  chunk -> publish(historyId, "message", AGENT, chunk, null, null, null, null),
                   interruptFactory,
                   checkpointFactory,
                   checkpointWriter,
                   output ->
                       histories.append(
-                          appId, runtime.identity.userId(), "assistant", output, false));
+                          historyId, runtime.identity.userId(), "assistant", output, false));
       if (result.status() == AiGraph.Status.INTERRUPTED) return;
-      AiEvent done = publish(appId, "done", AGENT, "", null, null, null, null);
-      saveState(appId, "done", AGENT, done.id(), "", List.of(), "", result.output(), false);
-      store.deleteCheckpoint(appId);
-      store.expireTerminal(appId);
+      AiEvent done = publish(historyId, "done", AGENT, "", null, null, null, null);
+      saveState(historyId, "done", AGENT, done.id(), "", List.of(), "", result.output(), false);
+      store.deleteCheckpoint(historyId);
+      store.expireTerminal(historyId);
     } catch (Throwable error) {
-      if (!current(appId, runtime)) return;
+      if (!current(historyId, runtime)) return;
       String message =
           trim(error.getMessage()).isEmpty()
               ? error.getClass().getSimpleName()
               : trim(error.getMessage());
-      AiEvent event = publish(appId, "error", AGENT, truncate(message), null, null, null, null);
-      saveState(appId, "error", AGENT, event.id(), "", List.of(), message, "", false);
-      store.expireTerminal(appId);
+      AiEvent event = publish(historyId, "error", AGENT, truncate(message), null, null, null, null);
+      saveState(historyId, "error", AGENT, event.id(), "", List.of(), message, "", false);
+      store.expireTerminal(historyId);
     } finally {
       watcher.close();
       watcherThread.interrupt();
-      tasks.computeIfPresent(appId, (id, value) -> value == runtime ? null : value);
+      tasks.computeIfPresent(historyId, (id, value) -> value == runtime ? null : value);
     }
   }
 
-  private List<Message> history(long appId) {
+  private List<Message> history(long historyId) {
     List<HistoryMessage> rows =
-        new ArrayList<>(histories.history(appId, historyLimit, null, null).messageList());
+        new ArrayList<>(histories.history(historyId, historyLimit, null, null).messageList());
     Collections.reverse(rows);
     return rows.stream()
         .map(
@@ -429,7 +443,7 @@ public class AiService {
       String filename = trim(meta.path("filename").asText());
       if (filename.isEmpty()) filename = "unnamed file";
       if (meta.path("isBig").asBoolean(false)) {
-        return "User uploaded a large file. Search the project file when its contents are needed.\n"
+        return "User uploaded a large file. Search the history file when its contents are needed.\n"
             + "file_id: "
             + meta.path("fileId").asLong()
             + "\nfilename: "
@@ -448,7 +462,7 @@ public class AiService {
   }
 
   private AiEvent publish(
-      long appId,
+      long historyId,
       String type,
       String agent,
       String content,
@@ -460,7 +474,7 @@ public class AiService {
     AiEvent event =
         new AiEvent(
             "",
-            String.valueOf(appId),
+            String.valueOf(historyId),
             type,
             empty(agent),
             empty(content),
@@ -470,10 +484,10 @@ public class AiService {
             payloadJson,
             Instant.now().toEpochMilli(),
             "question".equals(type) ? parsePayloadQuestions(payloadJson) : List.of());
-    String id = store.addEvent(appId, event);
+    String id = store.addEvent(historyId, event);
     return new AiEvent(
         id,
-        event.projectId(),
+        event.historyId(),
         event.type(),
         event.agent(),
         event.content(),
@@ -485,11 +499,12 @@ public class AiService {
         event.questions());
   }
 
-  private String control(long appId, String type, String content, String targetId, Object payload) {
+  private String control(
+      long historyId, String type, String content, String targetId, Object payload) {
     AiEvent event =
         new AiEvent(
             "",
-            String.valueOf(appId),
+            String.valueOf(historyId),
             type,
             AGENT,
             empty(content),
@@ -499,11 +514,11 @@ public class AiService {
             payload == null ? "" : writeJson(payload),
             Instant.now().toEpochMilli(),
             List.of());
-    return store.addControl(appId, event);
+    return store.addControl(historyId, event);
   }
 
   private void saveState(
-      long appId,
+      long historyId,
       String status,
       String agent,
       String lastEventId,
@@ -513,7 +528,7 @@ public class AiService {
       String buffer,
       boolean cancelled) {
     store.saveState(
-        appId,
+        historyId,
         new AiState(
             true,
             status,
@@ -527,11 +542,11 @@ public class AiService {
             Instant.now().toEpochMilli()));
   }
 
-  private void markLifecycle(long appId, String status) {
-    AiState old = store.state(appId);
+  private void markLifecycle(long historyId, String status) {
+    AiState old = store.state(historyId);
     if (old != null)
       store.saveState(
-          appId,
+          historyId,
           new AiState(
               true,
               status,
@@ -586,7 +601,7 @@ public class AiService {
     }
   }
 
-  ToolCallback[] toolCallbacks(MesAiTools tools, String role, long appId) {
+  ToolCallback[] toolCallbacks(MesAiTools tools, String role, long historyId) {
     Set<String> common = Set.of("search_users");
     Set<String> work =
         Set.of(
@@ -659,7 +674,7 @@ public class AiService {
                     String target = UUID.randomUUID().toString();
                     String name = delegate.getToolDefinition().name();
                     publish(
-                        appId,
+                        historyId,
                         "tool_call",
                         AGENT,
                         "",
@@ -670,7 +685,7 @@ public class AiService {
                     try {
                       String result = delegate.call(input);
                       publish(
-                          appId,
+                          historyId,
                           "tool_result",
                           AGENT,
                           truncate(empty(result)),
@@ -681,7 +696,7 @@ public class AiService {
                       return result;
                     } catch (RuntimeException error) {
                       publish(
-                          appId,
+                          historyId,
                           "tool_result",
                           AGENT,
                           truncate(empty(error.getMessage())),
@@ -714,35 +729,33 @@ public class AiService {
     }
   }
 
-  public void authorize(long appId, Identity identity) {
-    requireApp(appId);
+  public void authorize(long historyId, Identity identity) {
+    requireHistory(historyId);
     if (identity == null || identity.userId() <= 0) throw new UnauthorizedException();
-    var app = apps.get(appId);
-    if (app == null) throw new IllegalArgumentException("app not found");
-    if (!identity.admin() && !Objects.equals(app.userId(), identity.userId()))
-      throw new IllegalStateException("forbidden: app owner or admin required");
+    historySessions.authorize(historyId, identity.userId(), identity.role());
   }
 
-  private Object lock(long appId) {
-    return tasks.computeIfAbsent(-appId, ignored -> new RuntimeTask(0, new Identity(0, ""), ""));
+  private Object lock(long historyId) {
+    return tasks.computeIfAbsent(
+        -historyId, ignored -> new RuntimeTask(0, new Identity(0, ""), ""));
   }
 
-  private boolean current(long appId, RuntimeTask task) {
-    return tasks.get(appId) == task
+  private boolean current(long historyId, RuntimeTask task) {
+    return tasks.get(historyId) == task
         && !task.cancelled
         && (task.task == null || !task.task.runtime().isCancelled());
   }
 
-  private void cancelRuntime(long appId) {
-    RuntimeTask task = tasks.remove(appId);
+  private void cancelRuntime(long historyId) {
+    RuntimeTask task = tasks.remove(historyId);
     if (task != null) {
       task.cancelled = true;
       if (task.task != null) task.task.cancel();
     }
   }
 
-  private static void requireApp(long appId) {
-    if (appId <= 0) throw new IllegalArgumentException("appId is required");
+  private static void requireHistory(long historyId) {
+    if (historyId <= 0) throw new IllegalArgumentException("historyId is required");
   }
 
   private static String trim(String value) {
@@ -804,7 +817,7 @@ public class AiService {
 
   public record AiEvent(
       String id,
-      String projectId,
+      String historyId,
       String type,
       String agent,
       String content,

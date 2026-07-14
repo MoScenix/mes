@@ -2,8 +2,6 @@ import { createRouter, createWebHistory } from 'vue-router'
 import UserLoginPage from '@/pages/user/UserLoginPage.vue'
 import UserRegisterPage from '@/pages/user/UserRegisterPage.vue'
 import UserManagePage from '@/pages/admin/UserManagePage.vue'
-import AppChatPage from '@/pages/app/AppChatPage.vue'
-import AppEditPage from '@/pages/app/AppEditPage.vue'
 import UserCenterPage from '@/pages/user/UserCenterPage.vue'
 import MESLayout from '@/components/mes/MESLayout.vue'
 import PurchaseWorkspace from '@/pages/mes/PurchaseWorkspace.vue'
@@ -57,16 +55,6 @@ const router = createRouter({
     {
       path: '/admin/userManage',
       redirect: '/mes/admin/users',
-    },
-    {
-      path: '/app/chat/:id',
-      name: '应用对话',
-      component: AppChatPage,
-    },
-    {
-      path: '/app/edit/:id',
-      name: '编辑应用',
-      component: AppEditPage,
     },
     {
       path: '/user/center',

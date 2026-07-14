@@ -31,8 +31,8 @@ public class RedisAiStore {
     this.maxReadCount = Math.max(1, maxReadCount);
   }
 
-  public AiState state(long appId) {
-    String raw = redis.opsForValue().get(key(appId, "state"));
+  public AiState state(long historyId) {
+    String raw = redis.opsForValue().get(key(historyId, "state"));
     if (raw == null) return null;
     try {
       return json.readValue(raw, AiState.class);
@@ -41,24 +41,24 @@ public class RedisAiStore {
     }
   }
 
-  public void saveState(long appId, AiState state) {
+  public void saveState(long historyId, AiState state) {
     try {
-      redis.opsForValue().set(key(appId, "state"), json.writeValueAsString(state));
+      redis.opsForValue().set(key(historyId, "state"), json.writeValueAsString(state));
     } catch (Exception e) {
       throw new IllegalStateException(e);
     }
   }
 
-  public void saveCheckpoint(long appId, Object checkpoint) {
+  public void saveCheckpoint(long historyId, Object checkpoint) {
     try {
-      redis.opsForValue().set(key(appId, "checkpoint"), json.writeValueAsString(checkpoint));
+      redis.opsForValue().set(key(historyId, "checkpoint"), json.writeValueAsString(checkpoint));
     } catch (Exception e) {
       throw new IllegalStateException(e);
     }
   }
 
-  public <T> T checkpoint(long appId, Class<T> type) {
-    String raw = redis.opsForValue().get(key(appId, "checkpoint"));
+  public <T> T checkpoint(long historyId, Class<T> type) {
+    String raw = redis.opsForValue().get(key(historyId, "checkpoint"));
     if (raw == null) return null;
     try {
       return json.readValue(raw, type);
@@ -67,16 +67,16 @@ public class RedisAiStore {
     }
   }
 
-  public void deleteCheckpoint(long appId) {
-    redis.delete(key(appId, "checkpoint"));
+  public void deleteCheckpoint(long historyId) {
+    redis.delete(key(historyId, "checkpoint"));
   }
 
-  public String addEvent(long appId, AiEvent event) {
-    return add(key(appId, "stream"), event);
+  public String addEvent(long historyId, AiEvent event) {
+    return add(key(historyId, "stream"), event);
   }
 
-  public String addControl(long appId, AiEvent event) {
-    return add(key(appId, "control"), event);
+  public String addControl(long historyId, AiEvent event) {
+    return add(key(historyId, "control"), event);
   }
 
   private String add(String key, AiEvent event) {
@@ -90,12 +90,12 @@ public class RedisAiStore {
     }
   }
 
-  public List<AiEvent> events(long appId, String lastId, long blockMs, int count) {
-    return read(key(appId, "stream"), lastId, blockMs, count);
+  public List<AiEvent> events(long historyId, String lastId, long blockMs, int count) {
+    return read(key(historyId, "stream"), lastId, blockMs, count);
   }
 
-  public List<AiEvent> controls(long appId, String lastId, long blockMs, int count) {
-    return read(key(appId, "control"), lastId, blockMs, count);
+  public List<AiEvent> controls(long historyId, String lastId, long blockMs, int count) {
+    return read(key(historyId, "control"), lastId, blockMs, count);
   }
 
   private List<AiEvent> read(String key, String lastId, long blockMs, int count) {
@@ -117,7 +117,7 @@ public class RedisAiStore {
         out.add(
             new AiEvent(
                 record.getId().getValue(),
-                e.projectId(),
+                e.historyId(),
                 e.type(),
                 e.agent(),
                 e.content(),
@@ -133,20 +133,20 @@ public class RedisAiStore {
     return out;
   }
 
-  public void resetEvents(long appId) {
-    redis.delete(key(appId, "stream"));
+  public void resetEvents(long historyId) {
+    redis.delete(key(historyId, "stream"));
   }
 
-  public void expireTerminal(long appId) {
+  public void expireTerminal(long historyId) {
     for (String suffix : List.of("state", "stream", "control", "checkpoint"))
-      redis.expire(key(appId, suffix), terminalTtl);
+      redis.expire(key(historyId, suffix), terminalTtl);
   }
 
   private static String normalize(String id) {
     return id == null || id.isBlank() || "0".equals(id) ? "0-0" : id;
   }
 
-  private static String key(long appId, String suffix) {
-    return "project:" + appId + ":" + suffix;
+  private static String key(long historyId, String suffix) {
+    return "history:" + historyId + ":" + suffix;
   }
 }

@@ -1,9 +1,8 @@
-package com.team10.mes.app.controller;
+package com.team10.mes.config;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-import com.team10.mes.app.service.StaticResourceProperties;
 import com.team10.mes.controller.HealthController;
 import java.nio.file.Files;
 import java.nio.file.Path;

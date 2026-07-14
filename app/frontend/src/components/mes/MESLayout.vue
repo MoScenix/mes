@@ -54,20 +54,28 @@ const isActive = (item: MesNavItem) => {
   const target = targetFor(item)
   if (route.path !== target.path) return false
   if (target.scanMode) return String(route.query.mode || '') === target.scanMode
-  return String(route.query.panel || '') === (target.panel || '') && String(route.query.view || '') === target.view
+  return (
+    String(route.query.panel || '') === (target.panel || '') &&
+    String(route.query.view || '') === target.view
+  )
 }
 
 const go = async (item: MesNavItem) => {
   const target = targetFor(item)
-  const query = target.scanMode ? { mode: target.scanMode } : target.panel ? { panel: target.panel, view: target.view } : { view: target.view }
+  const query = target.scanMode
+    ? { mode: target.scanMode }
+    : target.panel
+      ? { panel: target.panel, view: target.view }
+      : { view: target.view }
   const active = target.scanMode
     ? route.path === target.path && String(route.query.mode || '') === target.scanMode
-    : route.path === target.path && String(route.query.panel || '') === (target.panel || '') && String(route.query.view || '') === target.view
+    : route.path === target.path &&
+      String(route.query.panel || '') === (target.panel || '') &&
+      String(route.query.view || '') === target.view
   if (!active) {
     await router.push({ path: target.path, query })
   }
 }
-
 </script>
 
 <style scoped>

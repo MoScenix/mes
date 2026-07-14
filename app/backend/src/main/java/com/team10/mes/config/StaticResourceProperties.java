@@ -1,4 +1,4 @@
-package com.team10.mes.app.service;
+package com.team10.mes.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;

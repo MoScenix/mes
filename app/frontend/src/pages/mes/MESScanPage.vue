@@ -41,7 +41,7 @@ const title = computed(() => {
   if (mode.value === 'inspect') return '检测单体'
   return '扫描 MES 码'
 })
-const buttonText = computed(() => mode.value === 'detail' ? '打开' : '进入')
+const buttonText = computed(() => (mode.value === 'detail' ? '打开' : '进入'))
 const placeholder = computed(() => {
   if (mode.value === 'inbound' || mode.value === 'receive') return '扫描或输入流转单码'
   if (mode.value === 'inspect') return '扫描或输入工程单码'
@@ -61,15 +61,24 @@ const openCode = async (value: string) => {
     return
   }
   if (mode.value === 'inbound') {
-    await router.push({ path: '/mes/purchase', query: { panel: 'scan', flowId: String(parsed.id) } })
+    await router.push({
+      path: '/mes/purchase',
+      query: { panel: 'scan', flowId: String(parsed.id) },
+    })
     return
   }
   if (mode.value === 'receive') {
-    await router.push({ path: '/mes/worker', query: { panel: 'receive', flowId: String(parsed.id) } })
+    await router.push({
+      path: '/mes/worker',
+      query: { panel: 'receive', flowId: String(parsed.id) },
+    })
     return
   }
   if (mode.value === 'inspect') {
-    await router.push({ path: '/mes/worker', query: { panel: 'inspect', orderId: String(parsed.id) } })
+    await router.push({
+      path: '/mes/worker',
+      query: { panel: 'inspect', orderId: String(parsed.id) },
+    })
     return
   }
   await openDetail(parsed.kind, parsed.id)

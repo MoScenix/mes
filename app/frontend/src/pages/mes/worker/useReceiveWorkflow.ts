@@ -28,7 +28,10 @@ export const useReceiveWorkflow = () => {
   const receiveExpectedQuantity = computed(() => {
     const units = receiveFlow.value?.itemUnits || []
     if (units.length) return units.length
-    return (receiveFlow.value?.items || []).reduce((sum, item) => sum + (item.applyQuantity || 0), 0)
+    return (receiveFlow.value?.items || []).reduce(
+      (sum, item) => sum + (item.applyQuantity || 0),
+      0,
+    )
   })
 
   const receiveQuantityByItem = computed(() => {
@@ -158,7 +161,9 @@ export const useReceiveWorkflow = () => {
     receiveSubmitting.value = true
     try {
       for (const item of receiveFlow.value?.items || []) {
-        if ((receiveQuantityByItem.value.get(item.itemId || 0) || 0) !== (item.applyQuantity || 0)) {
+        if (
+          (receiveQuantityByItem.value.get(item.itemId || 0) || 0) !== (item.applyQuantity || 0)
+        ) {
           throw new Error(`物品 #${item.itemId} 的扫码数量与申请数量不一致`)
         }
       }

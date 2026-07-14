@@ -59,7 +59,10 @@ const scanLoop = async (detector: BarcodeDetectorLike) => {
       message.success('已扫码')
       const parsed = parseMesCode(rawValue)
       if (parsed.kind && parsed.id) {
-        await router.push({ path: '/mes/detail', query: { kind: parsed.kind, id: String(parsed.id) } })
+        await router.push({
+          path: '/mes/detail',
+          query: { kind: parsed.kind, id: String(parsed.id) },
+        })
       }
       return
     }

@@ -28,7 +28,8 @@ export const mesNavItems: MesNavItem[] = [
   {
     key: 'purchase-add',
     target: (role) => {
-      if (role === 'process_engineer') return { path: '/mes/processes', panel: 'items', view: 'catalog' }
+      if (role === 'process_engineer')
+        return { path: '/mes/processes', panel: 'items', view: 'catalog' }
       return { path: '/mes/purchase', panel: 'items', view: 'catalog' }
     },
     label: '物料',

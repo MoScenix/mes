@@ -41,7 +41,9 @@ let timer: ReturnType<typeof setTimeout> | undefined
 const toOption = (order: EngineeringOrderVO) => {
   const produced = order.producedQuantity ?? 0
   const expected = order.expectedQuantity ?? 0
-  const itemText = order.item?.name ? `${order.item.name} #${order.itemId}` : `物品 #${order.itemId || '-'}`
+  const itemText = order.item?.name
+    ? `${order.item.name} #${order.itemId}`
+    : `物品 #${order.itemId || '-'}`
   return {
     label: `${order.name || '工程单'} #${order.id} / ${itemText} / ${produced}/${expected}`,
     value: order.id || 0,

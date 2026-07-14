@@ -304,7 +304,10 @@ const consumeSummary = (record: ProcessVO) => {
   if (!items.length) return record.description || '-'
   return items
     .slice(0, 3)
-    .map((item) => `${item.consumeItem?.name || '物品'} #${item.consumeItemId} x ${item.quantity || 0}`)
+    .map(
+      (item) =>
+        `${item.consumeItem?.name || '物品'} #${item.consumeItemId} x ${item.quantity || 0}`,
+    )
     .join(' / ')
 }
 
@@ -322,13 +325,16 @@ const statusColor = (status?: DraftStatus) => {
   return 'default'
 }
 
-const formatTime = (t?: string) => t ? dayjs(t).format('YYYY-MM-DD HH:mm') : '-'
+const formatTime = (t?: string) => (t ? dayjs(t).format('YYYY-MM-DD HH:mm') : '-')
 
-watch(() => route.query.panel, () => {
-  searchText.value = ''
-  searchItemId.value = undefined
-  fetchData()
-})
+watch(
+  () => route.query.panel,
+  () => {
+    searchText.value = ''
+    searchItemId.value = undefined
+    fetchData()
+  },
+)
 
 onMounted(() => fetchData())
 </script>
@@ -367,7 +373,16 @@ onMounted(() => fetchData())
   padding-top: 14px;
 }
 
-.muted-text { color: var(--muted-foreground, #94a3b8); font-size: 13px; }
-.eng-jump-link { color: var(--primary, #2563eb); cursor: pointer; font-weight: 500; }
-.eng-jump-link:hover { text-decoration: underline; }
+.muted-text {
+  color: var(--muted-foreground, #94a3b8);
+  font-size: 13px;
+}
+.eng-jump-link {
+  color: var(--primary, #2563eb);
+  cursor: pointer;
+  font-weight: 500;
+}
+.eng-jump-link:hover {
+  text-decoration: underline;
+}
 </style>

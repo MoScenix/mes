@@ -61,7 +61,12 @@
             @pressEnter="handleSearch(modelValue)"
           />
           <a-tooltip title="扫码">
-            <a-button :size="size" class="scan-button command-scan-button" @click="openScanner" aria-label="扫码">
+            <a-button
+              :size="size"
+              class="scan-button command-scan-button"
+              @click="openScanner"
+              aria-label="扫码"
+            >
               <ScanOutlined />
             </a-button>
           </a-tooltip>
@@ -251,7 +256,9 @@ const scanLoop = async (detector: BarcodeDetectorLike) => {
 const openScanner = async () => {
   const supportsDetector = Boolean(window.BarcodeDetector)
   scannerOpen.value = props.scannerDisplay === 'modal'
-  scannerMessage.value = supportsDetector ? '打开摄像头后对准二维码' : '当前浏览器不支持自动识别，请检查浏览器支持'
+  scannerMessage.value = supportsDetector
+    ? '打开摄像头后对准二维码'
+    : '当前浏览器不支持自动识别，请检查浏览器支持'
   await nextTick()
   try {
     stream.value = await navigator.mediaDevices.getUserMedia({
@@ -315,7 +322,10 @@ onMounted(() => {
   color: #1d1d1f;
   box-shadow: 0 24px 70px rgba(15, 23, 42, 0.12);
   cursor: pointer;
-  transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    transform 0.16s ease;
 }
 
 .scanner-compact-mode .scanner-only-trigger {
@@ -419,7 +429,9 @@ onMounted(() => {
   border-radius: 999px;
   background: #ffffff;
   box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
-  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
 }
 
 .surface-mode .code-command-input {

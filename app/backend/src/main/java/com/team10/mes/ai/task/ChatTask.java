@@ -17,7 +17,7 @@ public final class ChatTask implements Runnable {
     void mark(ChatTask task, String status);
   }
 
-  private final long appId;
+  private final long historyId;
   private final Identity identity;
   private final boolean resume;
   private final Runner runner;
@@ -27,8 +27,8 @@ public final class ChatTask implements Runnable {
   private volatile Thread executingThread;
 
   public ChatTask(
-      long appId, Identity identity, boolean resume, Runner runner, StateMarker marker) {
-    this.appId = appId;
+      long historyId, Identity identity, boolean resume, Runner runner, StateMarker marker) {
+    this.historyId = historyId;
     this.identity = identity;
     this.resume = resume;
     this.runner = runner;
@@ -77,8 +77,8 @@ public final class ChatTask implements Runnable {
     init().cancel();
   }
 
-  public long appId() {
-    return appId;
+  public long historyId() {
+    return historyId;
   }
 
   public Identity identity() {

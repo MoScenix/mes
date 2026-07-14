@@ -10,19 +10,17 @@
         @select-item="selectSearchItem"
         @clear="clearSearch"
       />
-      <a-button v-if="selectedType === 'itemUnits' || selectedType === 'engineering'" type="primary" @click="openCreate">
+      <a-button
+        v-if="selectedType === 'itemUnits' || selectedType === 'engineering'"
+        type="primary"
+        @click="openCreate"
+      >
         <PlusOutlined /> 新建
       </a-button>
     </div>
 
-    <ReceiveWorkflow
-      v-if="selectedType === 'receive'"
-      :flow-id="receiveFlowId"
-    />
-    <InspectWorkflow
-      v-else-if="selectedType === 'inspect'"
-      :order-id="inspectOrderId"
-    />
+    <ReceiveWorkflow v-if="selectedType === 'receive'" :flow-id="receiveFlowId" />
+    <InspectWorkflow v-else-if="selectedType === 'inspect'" :order-id="inspectOrderId" />
     <WorkerRecordList
       v-else
       :selected-type="selectedType"
@@ -51,7 +49,9 @@ const route = useRoute()
 
 const panelFromRoute = () => {
   const panel = String(route.query.panel || 'itemUnits')
-  return ['itemUnits', 'engineering', 'receive', 'inspect'].includes(panel) ? (panel as WorkerPanelType) : 'itemUnits'
+  return ['itemUnits', 'engineering', 'receive', 'inspect'].includes(panel)
+    ? (panel as WorkerPanelType)
+    : 'itemUnits'
 }
 
 const selectedType = ref<WorkerPanelType>(panelFromRoute())
@@ -73,13 +73,19 @@ const {
 } = useWorkerList(selectedType)
 
 const openCreate = () => {
-  router.push({ path: '/mes/create', query: { type: selectedType.value === 'engineering' ? 'engineering' : 'itemUnit' } })
+  router.push({
+    path: '/mes/create',
+    query: { type: selectedType.value === 'engineering' ? 'engineering' : 'itemUnit' },
+  })
 }
 
-watch(() => [route.query.panel, route.query.engineeringOrderId], () => {
-  selectedType.value = panelFromRoute()
-  fetchData()
-})
+watch(
+  () => [route.query.panel, route.query.engineeringOrderId],
+  () => {
+    selectedType.value = panelFromRoute()
+    fetchData()
+  },
+)
 
 onMounted(async () => {
   await fetchData()
@@ -87,6 +93,15 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.workspace-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
-.search-input { width: 280px; max-width: 100%; }
+.workspace-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.search-input {
+  width: 280px;
+  max-width: 100%;
+}
 </style>

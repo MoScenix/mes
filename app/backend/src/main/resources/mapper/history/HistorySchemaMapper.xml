@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.team10.mes.history.dal.HistorySchemaMapper">
+  <update id="createHistoryTable">
+    CREATE TABLE IF NOT EXISTS history (
+      id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+      created_at DATETIME(3) NULL,
+      updated_at DATETIME(3) NULL,
+      deleted_at DATETIME(3) NULL,
+      name VARCHAR(100) NULL,
+      user_id BIGINT NULL,
+      INDEX idx_history_user_updated (user_id, updated_at, id),
+      INDEX idx_history_deleted (deleted_at)
+    )
+  </update>
+
+  <select id="countColumn" resultType="int">
+    SELECT COUNT(*)
+    FROM information_schema.columns
+    WHERE table_schema = DATABASE() AND table_name = #{table} AND column_name = #{column}
+  </select>
+
+  <select id="countIndex" resultType="int">
+    SELECT COUNT(*)
+    FROM information_schema.statistics
+    WHERE table_schema = DATABASE() AND table_name = #{table} AND index_name = #{index}
+  </select>
+
+  <update id="addMessagesHistoryIdColumn">
+    ALTER TABLE messages ADD COLUMN history_id BIGINT UNSIGNED NULL
+  </update>
+
+  <update id="addMessagesUserIdColumn">
+    ALTER TABLE messages ADD COLUMN user_id BIGINT NULL
+  </update>
+
+  <update id="createMessagesHistoryTimeIndex">
+    CREATE INDEX idx_messages_history_time ON messages(history_id, created_at, id)
+  </update>
+
+  <update id="createMessagesUserTimeIndex">
+    CREATE INDEX idx_messages_user_time ON messages(user_id, created_at, id)
+  </update>
+</mapper>

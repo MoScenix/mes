@@ -18,7 +18,13 @@
       <template v-else-if="column.key === 'action'">
         <a-space class="row-actions" size="small">
           <a-button type="link" size="small" @click="$emit('view-detail', record)">详情</a-button>
-          <a-button v-if="showAddUnit && record.id" type="link" size="small" @click="$emit('add-unit', record)">添加单体</a-button>
+          <a-button
+            v-if="showAddUnit && record.id"
+            type="link"
+            size="small"
+            @click="$emit('add-unit', record)"
+            >添加单体</a-button
+          >
         </a-space>
       </template>
     </template>
@@ -51,7 +57,12 @@ const columns = [
   { title: 'ID', key: 'id', width: 80 },
   { title: '名称', dataIndex: 'name', width: 160 },
   { title: '单位', dataIndex: 'unit', width: 80 },
-  { title: '库存', key: 'totalCount', width: 60, customRender: ({ record }: any) => record.totalCount ?? 0 },
+  {
+    title: '库存',
+    key: 'totalCount',
+    width: 60,
+    customRender: ({ record }: any) => record.totalCount ?? 0,
+  },
   { title: '说明', dataIndex: 'description', ellipsis: true },
   { title: '更新时间', dataIndex: 'updateTime', width: 160 },
   { title: '操作', key: 'action', width: 140 },

@@ -1,4 +1,4 @@
-package com.team10.mes.app.dal;
+package com.team10.mes.history.dal;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -6,15 +6,19 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 @Mapper
-public interface AppMapper {
-  record AppRow(
-      Long id, String appName, Long userId, LocalDateTime createTime, LocalDateTime updateTime) {}
+public interface HistoryMapper {
+  record HistoryRow(
+      Long id,
+      String historyName,
+      Long userId,
+      LocalDateTime createTime,
+      LocalDateTime updateTime) {}
 
-  int insert(MutableApp app);
+  int insert(MutableHistory history);
 
-  AppRow find(long id);
+  HistoryRow find(long id);
 
-  List<AppRow> list(
+  List<HistoryRow> list(
       @Param("userId") Long userId,
       @Param("name") String name,
       @Param("limit") int limit,
@@ -24,9 +28,11 @@ public interface AppMapper {
 
   int rename(@Param("id") long id, @Param("name") String name);
 
+  int touch(long id);
+
   int softDelete(long id);
 
-  final class MutableApp {
+  final class MutableHistory {
     private Long id;
     private String name;
     private Long userId;
@@ -35,24 +41,24 @@ public interface AppMapper {
       return id;
     }
 
-    public void setId(Long v) {
-      id = v;
+    public void setId(Long id) {
+      this.id = id;
     }
 
     public String getName() {
       return name;
     }
 
-    public void setName(String v) {
-      name = v;
+    public void setName(String name) {
+      this.name = name;
     }
 
     public Long getUserId() {
       return userId;
     }
 
-    public void setUserId(Long v) {
-      userId = v;
+    public void setUserId(Long userId) {
+      this.userId = userId;
     }
   }
 }

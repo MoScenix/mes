@@ -16,11 +16,11 @@ public final class AiControlWatcher implements Runnable, AutoCloseable {
 
   @FunctionalInterface
   public interface ControlReader {
-    java.util.List<AiEvent> read(long appId, String cursor, long blockMs, int count);
+    java.util.List<AiEvent> read(long historyId, String cursor, long blockMs, int count);
   }
 
   private final ControlReader reader;
-  private final long appId;
+  private final long historyId;
   private final Handler handler;
   private final long blockMs;
   private final int count;
@@ -28,14 +28,19 @@ public final class AiControlWatcher implements Runnable, AutoCloseable {
   private String cursor;
 
   public AiControlWatcher(
-      RedisAiStore store, long appId, String cursor, long blockMs, int count, Handler handler) {
-    this(store::controls, appId, cursor, blockMs, count, handler);
+      RedisAiStore store, long historyId, String cursor, long blockMs, int count, Handler handler) {
+    this(store::controls, historyId, cursor, blockMs, count, handler);
   }
 
   AiControlWatcher(
-      ControlReader reader, long appId, String cursor, long blockMs, int count, Handler handler) {
+      ControlReader reader,
+      long historyId,
+      String cursor,
+      long blockMs,
+      int count,
+      Handler handler) {
     this.reader = reader;
-    this.appId = appId;
+    this.historyId = historyId;
     this.cursor = cursor == null || cursor.isBlank() ? "$" : cursor;
     this.blockMs = Math.max(1, blockMs);
     this.count = Math.max(1, count);
@@ -45,7 +50,7 @@ public final class AiControlWatcher implements Runnable, AutoCloseable {
   @Override
   public void run() {
     while (running.get() && !Thread.currentThread().isInterrupted()) {
-      for (AiEvent event : reader.read(appId, cursor, blockMs, count)) {
+      for (AiEvent event : reader.read(historyId, cursor, blockMs, count)) {
         cursor = event.id();
         switch (event.type()) {
           case "push" -> handler.onPush(event);

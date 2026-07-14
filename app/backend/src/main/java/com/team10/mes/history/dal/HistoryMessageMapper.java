@@ -8,19 +8,19 @@ import org.apache.ibatis.annotations.Param;
 
 @Mapper
 public interface HistoryMessageMapper {
-  HistoryMessage findById(@Param("appId") long appId, @Param("id") long id);
+  HistoryMessage findById(@Param("historyId") long historyId, @Param("id") long id);
 
   int insert(HistoryMessage message);
 
-  long count(@Param("appId") long appId);
+  long count(@Param("historyId") long historyId);
 
   List<HistoryMessage> page(
-      @Param("appId") long appId,
+      @Param("historyId") long historyId,
       @Param("before") LocalDateTime before,
       @Param("beforeId") Long beforeId,
       @Param("limit") int limit);
 
-  int delete(@Param("appId") long appId, @Param("id") long id);
+  int delete(@Param("historyId") long historyId, @Param("id") long id);
 
   int deleteById(long id);
 
@@ -28,7 +28,7 @@ public interface HistoryMessageMapper {
       @Param("id") Long id,
       @Param("message") String message,
       @Param("messageType") String messageType,
-      @Param("appId") Long appId,
+      @Param("historyId") Long historyId,
       @Param("userId") Long userId,
       @Param("lastCreateTime") LocalDateTime lastCreateTime,
       @Param("offset") long offset,
@@ -38,7 +38,7 @@ public interface HistoryMessageMapper {
       @Param("id") Long id,
       @Param("message") String message,
       @Param("messageType") String messageType,
-      @Param("appId") Long appId,
+      @Param("historyId") Long historyId,
       @Param("userId") Long userId,
       @Param("lastCreateTime") LocalDateTime lastCreateTime);
 }

@@ -34,7 +34,6 @@ md.set({
   },
 })
 
-
 const renderedHtml = computed(() => {
   const raw = md.render(props.content || '')
   return DOMPurify.sanitize(raw)
@@ -90,8 +89,16 @@ const renderedHtml = computed(() => {
   code {
     @apply bg-[var(--inline-code-bg)] text-[var(--inline-code-color)] px-1 py-0.5 rounded-md overflow-hidden;
 
-    font-family: 'JetBrains Mono Variable', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-      Liberation Mono, Courier New, monospace;
+    font-family:
+      'JetBrains Mono Variable',
+      ui-monospace,
+      SFMono-Regular,
+      Menlo,
+      Monaco,
+      Consolas,
+      Liberation Mono,
+      Courier New,
+      monospace;
 
     &:before {
       content: none;
