@@ -9,7 +9,7 @@ import {
   STOCK_STATUS_OUT_STOCK,
 } from '@/api/mesController'
 
-export const formatTime = (t?: string) => t ? dayjs(t).format('YYYY-MM-DD HH:mm') : '-'
+export const formatTime = (t?: string) => (t ? dayjs(t).format('YYYY-MM-DD HH:mm') : '-')
 
 export const flowTypeLabel = (s?: number) =>
   s === FLOW_TYPE_IN ? '入库' : s === FLOW_TYPE_OUT ? '出库' : '未知'
@@ -31,7 +31,13 @@ export const flowStatusLabel = (s?: number) => {
 }
 
 export const stockLabel = (s?: number) =>
-  s === STOCK_STATUS_IN_STOCK ? '在库' : s === STOCK_STATUS_OUT_STOCK ? '出库' : '未知'
+  s === STOCK_STATUS_IN_STOCK ? '在库' : s === STOCK_STATUS_OUT_STOCK ? '不在库' : '未知'
 
 export const qualityLabel = (s?: number) =>
-  s === QUALITY_STATUS_PENDING ? '待检测' : s === QUALITY_STATUS_QUALIFIED ? '合格' : s === QUALITY_STATUS_UNQUALIFIED ? '不合格' : '未知'
+  s === QUALITY_STATUS_PENDING
+    ? '待检测'
+    : s === QUALITY_STATUS_QUALIFIED
+      ? '合格'
+      : s === QUALITY_STATUS_UNQUALIFIED
+        ? '不合格'
+        : '未知'

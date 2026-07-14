@@ -39,7 +39,12 @@
               <dd>
                 <MesUserName v-if="row.userId" :id="row.userId" />
                 <MesItemName v-else-if="row.itemId || row.item" :id="row.itemId" :item="row.item" />
-                <button v-else-if="row.action" type="button" class="detail-link" @click="runRowAction(row.action)">
+                <button
+                  v-else-if="row.action"
+                  type="button"
+                  class="detail-link"
+                  @click="runRowAction(row.action)"
+                >
                   跳转
                 </button>
                 <span v-else>{{ row.value }}</span>
@@ -95,7 +100,6 @@
               </button>
             </div>
           </section>
-
         </template>
       </a-spin>
     </section>
@@ -156,11 +160,20 @@ const route = useRoute()
 const router = useRouter()
 const loading = ref(false)
 const error = ref('')
-const detail = ref<InventoryFlowVO | ItemUnitVO | EngineeringOrderVO | WorkOrderVO | ItemVO | ProcessVO>()
+const detail = ref<
+  InventoryFlowVO | ItemUnitVO | EngineeringOrderVO | WorkOrderVO | ItemVO | ProcessVO
+>()
 const traceLoading = ref(false)
 const traceOrder = ref<EngineeringOrderVO>()
 const traceFlows = ref<InventoryFlowVO[]>([])
-const detailKinds: MesDetailKind[] = ['FLOW', 'ITEM_UNIT', 'ENGINEERING_ORDER', 'WORK_ORDER', 'ITEM', 'PROCESS']
+const detailKinds: MesDetailKind[] = [
+  'FLOW',
+  'ITEM_UNIT',
+  'ENGINEERING_ORDER',
+  'WORK_ORDER',
+  'ITEM',
+  'PROCESS',
+]
 const scannableKinds: MesCodeKind[] = ['FLOW', 'ITEM_UNIT', 'ENGINEERING_ORDER']
 
 const kind = computed(() => {
@@ -183,14 +196,20 @@ const titleByKind: Record<MesDetailKind, string> = {
 }
 
 const titleName = computed(() => {
-  const current = detail.value as (InventoryFlowVO | EngineeringOrderVO | WorkOrderVO | ItemVO | ProcessVO) | undefined
+  const current = detail.value as
+    | (InventoryFlowVO | EngineeringOrderVO | WorkOrderVO | ItemVO | ProcessVO)
+    | undefined
   return current && 'name' in current ? current.name : ''
 })
 const title = computed(() => {
   if (!kind.value || !id.value) return 'MES 对象'
-  return titleName.value ? `${titleName.value} #${id.value}` : `${titleByKind[kind.value]} #${id.value}`
+  return titleName.value
+    ? `${titleName.value} #${id.value}`
+    : `${titleByKind[kind.value]} #${id.value}`
 })
-const codeValue = computed(() => (codeKind.value && id.value ? makeMesCode(codeKind.value, id.value) : ''))
+const codeValue = computed(() =>
+  codeKind.value && id.value ? makeMesCode(codeKind.value, id.value) : '',
+)
 
 const copyCode = async () => {
   if (!codeValue.value) return
@@ -200,7 +219,7 @@ const copyCode = async () => {
 
 const stockText = (status?: StockStatus) => {
   if (status === StockStatus.InStock) return '在库'
-  if (status === StockStatus.OutStock) return '出库'
+  if (status === StockStatus.OutStock) return '不在库'
   return '未知'
 }
 
@@ -328,7 +347,9 @@ const loadItemUnitTrace = async (unit: ItemUnitVO) => {
   traceLoading.value = true
   try {
     const [orderRes, flowRes] = await Promise.all([
-      unit.engineeringOrderId ? getEngineeringOrder({ id: unit.engineeringOrderId }) : Promise.resolve(undefined),
+      unit.engineeringOrderId
+        ? getEngineeringOrder({ id: unit.engineeringOrderId })
+        : Promise.resolve(undefined),
       listInventoryFlow({
         itemUnitId: unit.id,
         scope: MesListScope.All,
@@ -778,5 +799,4 @@ dd {
     padding: 14px;
   }
 }
-
 </style>

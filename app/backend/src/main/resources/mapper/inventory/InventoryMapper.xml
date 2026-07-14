@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.team10.mes.inventory.dal.InventoryMapper">
+  <insert id="insertItem" useGeneratedKeys="true" keyProperty="id">INSERT INTO items(name,unit,description,total_count,in_stock_count,reserved_count,out_stock_count,pending_count,qualified_count,unqualified_count,available_count,created_at,updated_at) VALUES(#{name},#{unit},#{description},0,0,0,0,0,0,0,0,NOW(),NOW())</insert>
+  <update id="updateItem">UPDATE items SET name=#{name},unit=#{unit},description=#{description},updated_at=NOW() WHERE id=#{id} AND deleted_at IS NULL</update>
+  <select id="item" resultType="map">SELECT * FROM items WHERE id=#{id} AND deleted_at IS NULL</select>
+  <select id="items" resultType="map">SELECT * FROM items WHERE deleted_at IS NULL <if test="name!=null and name!=''">AND name LIKE CONCAT(#{name},'%')</if> ORDER BY updated_at DESC,id DESC LIMIT #{limit} OFFSET #{offset}</select>
+  <insert id="insertProcess" useGeneratedKeys="true" keyProperty="id">INSERT INTO processes(item_id,owner_user_id,name,description,status,created_at,updated_at) VALUES(#{itemId},#{ownerUserId},#{name},#{description},1,NOW(),NOW())</insert>
+  <update id="updateProcess">UPDATE processes SET item_id=#{itemId},owner_user_id=#{ownerUserId},name=#{name},description=#{description},updated_at=NOW() WHERE id=#{id} AND status=1 AND deleted_at IS NULL</update>
+  <insert id="insertProcessItem">INSERT INTO process_items(process_id,consume_item_id,quantity,created_at,updated_at) VALUES(#{processId},#{consumeItemId},#{quantity},NOW(),NOW())</insert>
+  <update id="deleteProcessItems">UPDATE process_items SET deleted_at=NOW(),updated_at=NOW() WHERE process_id=#{id} AND deleted_at IS NULL</update>
+  <select id="processItems" resultType="map">SELECT * FROM process_items WHERE process_id=#{id} AND deleted_at IS NULL ORDER BY id</select>
+  <select id="process" resultType="map">SELECT p.*,i.name item_name,i.unit item_unit FROM processes p JOIN items i ON i.id=p.item_id WHERE p.id=#{id} AND p.deleted_at IS NULL</select>
+  <select id="processes" resultType="map">SELECT p.*,i.name item_name,i.unit item_unit FROM processes p JOIN items i ON i.id=p.item_id WHERE p.deleted_at IS NULL <if test="ownerUserId!=null">AND p.owner_user_id=#{ownerUserId}</if><if test="itemId!=null">AND p.item_id=#{itemId}</if><if test="status!=null">AND p.status=#{status}</if> ORDER BY p.updated_at DESC,p.id DESC LIMIT #{limit} OFFSET #{offset}</select>
+  <insert id="insertUnit" useGeneratedKeys="true" keyProperty="id">INSERT INTO item_units(item_id,engineering_order_id,stock_status,quality_status,description,created_at,updated_at) VALUES(#{itemId},#{engineeringOrderId},3,#{qualityStatus},#{description},NOW(),NOW())</insert>
+  <update id="updateUnit">UPDATE item_units SET stock_status=#{stockStatus},quality_status=#{qualityStatus},updated_at=NOW() WHERE id=#{id} AND deleted_at IS NULL</update>
+  <select id="unit" resultType="map">SELECT u.*,i.name item_name FROM item_units u JOIN items i ON i.id=u.item_id WHERE u.id=#{id} AND u.deleted_at IS NULL</select>
+  <select id="units" resultType="map">SELECT u.*,i.name item_name FROM item_units u JOIN items i ON i.id=u.item_id WHERE u.deleted_at IS NULL <if test="itemId!=null">AND u.item_id=#{itemId}</if><if test="stockStatus!=null">AND u.stock_status=#{stockStatus}</if><if test="qualityStatus!=null">AND u.quality_status=#{qualityStatus}</if><if test="orderId!=null">AND u.engineering_order_id=#{orderId}</if> ORDER BY u.updated_at DESC,u.id DESC LIMIT #{limit} OFFSET #{offset}</select>
+  <insert id="insertFlow" useGeneratedKeys="true" keyProperty="id">INSERT INTO inventory_flows(from_user_id,to_user_id,flow_type,flow_status,name,description,approved_by,created_at,updated_at) VALUES(#{fromUserId},#{toUserId},#{flowType},1,#{name},#{description},0,NOW(),NOW())</insert>
+  <update id="updateFlow">UPDATE inventory_flows SET from_user_id=#{fromUserId},to_user_id=#{toUserId},flow_type=#{flowType},name=#{name},description=#{description},updated_at=NOW() WHERE id=#{id} AND flow_status=1 AND deleted_at IS NULL</update>
+  <insert id="insertFlowItem">INSERT INTO inventory_flow_items(inventory_flow_id,item_id,apply_quantity,finished_quantity,created_at,updated_at) VALUES(#{flowId},#{itemId},#{applyQuantity},0,NOW(),NOW())</insert>
+  <update id="deleteFlowItems">UPDATE inventory_flow_items SET deleted_at=NOW(),updated_at=NOW() WHERE inventory_flow_id=#{id} AND deleted_at IS NULL</update>
+  <delete id="deleteFlowUnits">DELETE FROM inventory_flow_item_units WHERE inventory_flow_id=#{id}</delete>
+  <insert id="bindFlowUnit">INSERT INTO inventory_flow_item_units(inventory_flow_id,item_unit_id) VALUES(#{flowId},#{unitId})</insert>
+  <select id="flowItems" resultType="map">SELECT * FROM inventory_flow_items WHERE inventory_flow_id=#{id} AND deleted_at IS NULL</select>
+  <select id="flowUnits" resultType="map">SELECT u.* FROM item_units u JOIN inventory_flow_item_units x ON x.item_unit_id=u.id WHERE x.inventory_flow_id=#{id} AND u.deleted_at IS NULL</select>
+  <select id="flow" resultType="map">SELECT * FROM inventory_flows WHERE id=#{id} AND deleted_at IS NULL</select>
+  <select id="flows" resultType="map">
+    SELECT DISTINCT f.*
+    FROM inventory_flows f
+    LEFT JOIN inventory_flow_items fi ON fi.inventory_flow_id=f.id AND fi.deleted_at IS NULL
+    LEFT JOIN items i ON i.id=fi.item_id
+    WHERE f.deleted_at IS NULL
+    <if test="userId!=null and isTo">AND f.to_user_id=#{userId}</if>
+    <if test="userId!=null and !isTo">AND f.from_user_id=#{userId}</if>
+    <if test="status!=null">AND f.flow_status=#{status}</if>
+    <if test="draftOwnerUserId!=null">
+      AND (f.flow_status!=1<if test="draftOwnerUserId &gt; 0"> OR f.from_user_id=#{draftOwnerUserId}</if>)
+    </if>
+    <if test="name!=null and name!=''">AND f.name LIKE CONCAT(#{name},'%')</if>
+    <if test="itemUnitId!=null">AND EXISTS (SELECT 1 FROM inventory_flow_item_units fx WHERE fx.inventory_flow_id=f.id AND fx.item_unit_id=#{itemUnitId})</if>
+    ORDER BY f.updated_at DESC,f.id DESC LIMIT #{limit} OFFSET #{offset}
+  </select>
+  <insert id="insertOrder" useGeneratedKeys="true" keyProperty="id">INSERT INTO engineering_orders(leader_user_id,process_id,item_id,name,expected_quantity,qualified_quantity,unqualified_quantity,produced_quantity,status,description,created_at,updated_at) VALUES(#{leaderUserId},#{processId},#{itemId},#{name},#{expectedQuantity},0,0,0,1,#{description},NOW(),NOW())</insert>
+  <update id="updateOrder">UPDATE engineering_orders SET leader_user_id=#{leaderUserId},process_id=#{processId},item_id=#{itemId},name=#{name},expected_quantity=#{expectedQuantity},description=#{description},updated_at=NOW() WHERE id=#{id} AND status=1 AND deleted_at IS NULL</update>
+  <select id="order" resultType="map">SELECT e.*,i.name item_name,p.name process_name FROM engineering_orders e JOIN items i ON i.id=e.item_id JOIN processes p ON p.id=e.process_id WHERE e.id=#{id} AND e.deleted_at IS NULL</select>
+  <select id="orders" resultType="map">SELECT e.*,i.name item_name,p.name process_name FROM engineering_orders e JOIN items i ON i.id=e.item_id JOIN processes p ON p.id=e.process_id WHERE e.deleted_at IS NULL <if test="leaderId!=null">AND e.leader_user_id=#{leaderId}</if><if test="itemId!=null">AND e.item_id=#{itemId}</if><if test="processId!=null">AND e.process_id=#{processId}</if><if test="status!=null">AND e.status=#{status}</if> ORDER BY e.updated_at DESC,e.id DESC LIMIT #{limit} OFFSET #{offset}</select>
+  <update id="transition">UPDATE ${table} SET ${statusColumn}=#{next},updated_at=NOW() WHERE id=#{id} AND ${statusColumn}=#{expected} AND deleted_at IS NULL</update>
+  <update id="softDelete">UPDATE ${table} SET deleted_at=NOW(),updated_at=NOW() WHERE id=#{id} AND ${statusColumn}=1 AND deleted_at IS NULL</update>
+  <update id="auditFlow">UPDATE inventory_flows SET flow_status=#{status},approved_by=#{by},approved_at=NOW(),updated_at=NOW() WHERE id=#{id} AND flow_status=2 AND deleted_at IS NULL</update>
+  <update id="setUnitStock">UPDATE item_units SET stock_status=#{status},updated_at=NOW() WHERE id=#{id} AND deleted_at IS NULL</update>
+  <update id="finishFlowItems">UPDATE inventory_flow_items SET finished_quantity=(SELECT COUNT(*) FROM inventory_flow_item_units x JOIN item_units u ON u.id=x.item_unit_id WHERE x.inventory_flow_id=#{id} AND u.item_id=inventory_flow_items.item_id),updated_at=NOW() WHERE inventory_flow_id=#{id} AND deleted_at IS NULL</update>
+</mapper>

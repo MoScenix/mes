@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.team10.mes.history.dal.HistoryMessageMapper">
+  <select id="findById" resultType="com.team10.mes.history.model.HistoryMessage">SELECT id,app_id AS appId,role,content,created_at AS createTime,updated_at AS updateTime,is_file AS isFile FROM messages WHERE id=#{id} AND app_id=#{appId}</select>
+  <insert id="insert" useGeneratedKeys="true" keyProperty="id">INSERT INTO messages(app_id,role,content,is_file,created_at,updated_at) VALUES(#{appId},#{role},#{content},#{isFile},NOW(),NOW())</insert>
+  <select id="count" resultType="long">SELECT COUNT(*) FROM messages WHERE app_id=#{appId}</select>
+  <select id="page" resultType="com.team10.mes.history.model.HistoryMessage">SELECT id,app_id AS appId,role,content,created_at AS createTime,updated_at AS updateTime,is_file AS isFile FROM messages WHERE app_id=#{appId}<if test="before != null"> AND (created_at &lt; #{before} OR (created_at = #{before} AND id &lt; #{beforeId}))</if> ORDER BY created_at DESC,id DESC LIMIT #{limit}</select>
+  <delete id="delete">DELETE FROM messages WHERE app_id=#{appId} AND id=#{id}</delete>
+  <delete id="deleteById">DELETE FROM messages WHERE id=#{id}</delete>
+  <sql id="adminFilters">
+    <where>
+      <if test="id != null">AND m.id=#{id}</if>
+      <if test="message != null and message != ''">AND m.content LIKE CONCAT('%',#{message},'%')</if>
+      <if test="messageType != null and messageType != ''">AND m.role=#{messageType}</if>
+      <if test="appId != null">AND m.app_id=#{appId}</if>
+      <if test="userId != null">AND a.user_id=#{userId}</if>
+      <if test="lastCreateTime != null">AND m.created_at &lt; #{lastCreateTime}</if>
+    </where>
+  </sql>
+  <select id="adminPage" resultType="com.team10.mes.history.model.HistoryMessage">SELECT m.id,m.app_id AS appId,a.user_id AS userId,m.role,m.content,m.created_at AS createTime,m.updated_at AS updateTime,m.is_file AS isFile FROM messages m JOIN apps a ON a.id=m.app_id <include refid="adminFilters"/> ORDER BY m.created_at DESC,m.id DESC LIMIT #{limit} OFFSET #{offset}</select>
+  <select id="adminCount" resultType="long">SELECT COUNT(*) FROM messages m JOIN apps a ON a.id=m.app_id <include refid="adminFilters"/></select>
+</mapper>

@@ -1,0 +1,91 @@
+spring:
+  application:
+    name: mes-monolith
+  datasource:
+    url: ${MYSQL_DSN:jdbc:mysql://127.0.0.1:3306/industrial_fault_tree_ai?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false}
+    username: ${MYSQL_USER:root}
+    password: ${MYSQL_PASSWORD:root123456}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  servlet:
+    multipart:
+      max-file-size: 200MB
+      max-request-size: 200MB
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      username: ${REDIS_USERNAME:}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DB:0}
+  session:
+    store-type: redis
+    timeout: ${SESSION_TIMEOUT:24h}
+    redis:
+      namespace: ${SESSION_NAMESPACE:team10:session}
+  ai:
+    openai:
+      api-key: ${DASHSCOPE_API_KEY:}
+      base-url: ${AI_BASE_URL:https://dashscope.aliyuncs.com/compatible-mode}
+      chat:
+        options:
+          model: ${AI_MODEL:qwen3.7-max}
+          max-tokens: ${AI_MAX_TOKENS:8192}
+          temperature: ${AI_TEMPERATURE:0.7}
+          top-p: ${AI_TOP_P:0.7}
+mes:
+  user:
+    cache-ttl: ${USER_CACHE_TTL:1h}
+  static:
+    root: ${STATIC_ROOT:static}
+  file:
+    big-threshold-bytes: ${FILE_BIG_THRESHOLD_BYTES:12000}
+    chunk-min-size: ${FILE_CHUNK_MIN_SIZE:200}
+    chunk-max-size: ${FILE_CHUNK_MAX_SIZE:400}
+  document:
+    root: ${DOCUMENT_ROOT:static/document}
+    elasticsearch:
+      url: ${ELASTICSEARCH_URL:http://127.0.0.1:9200}
+      index: ${ELASTICSEARCH_INDEX:document_chunks}
+      username: ${ELASTICSEARCH_USERNAME:}
+      password: ${ELASTICSEARCH_PASSWORD:}
+    milvus:
+      url: ${MILVUS_URL:http://127.0.0.1:19530}
+      collection: ${MILVUS_COLLECTION:document_chunks}
+      username: ${MILVUS_USERNAME:}
+      password: ${MILVUS_PASSWORD:}
+    embedding:
+      base-url: ${EMBEDDING_BASE_URL:https://dashscope.aliyuncs.com/compatible-mode/v1}
+      api-key: ${DASHSCOPE_API_KEY:}
+      model: ${EMBEDDING_MODEL:text-embedding-v1}
+      dimensions: ${EMBEDDING_DIMENSIONS:1536}
+  ai:
+    history-limit: ${AI_HISTORY_LIMIT:20}
+    system-prompt: ${AI_SYSTEM_PROMPT:}
+    workpool:
+      min-workers: ${AI_WORKPOOL_MIN_WORKERS:1}
+      max-workers: ${AI_WORKPOOL_MAX_WORKERS:4}
+      queue-size: ${AI_WORKPOOL_QUEUE_SIZE:128}
+      scale-up-threshold: ${AI_WORKPOOL_SCALE_UP_THRESHOLD:4}
+      scale-down-threshold: ${AI_WORKPOOL_SCALE_DOWN_THRESHOLD:0}
+      idle-timeout-seconds: ${AI_WORKPOOL_IDLE_TIMEOUT_SECONDS:30}
+    redis:
+      terminal-ttl-seconds: ${AI_TERMINAL_TTL_SECONDS:10}
+      max-block-ms: ${AI_STREAM_MAX_BLOCK_MS:30000}
+      max-read-count: ${AI_STREAM_MAX_READ_COUNT:100}
+    control:
+      block-ms: ${AI_CONTROL_BLOCK_MS:1000}
+      read-count: ${AI_CONTROL_READ_COUNT:10}
+
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    session:
+      cookie:
+        name: TEAM10_SESSION
+        http-only: true
+        same-site: lax
+
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+  mapper-locations: classpath*:mapper/**/*.xml

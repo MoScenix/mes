@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.team10.mes.workorder.dal.WorkOrderMapper">
+  <sql id="columns">id, from_user_id, to_user_id, name, description, status, read_status, created_at, updated_at</sql>
+  <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO work_order(from_user_id,to_user_id,name,description,status,read_status,created_at,updated_at)
+    VALUES(#{fromUserId},#{toUserId},#{name},#{description},1,1,NOW(),NOW())
+  </insert>
+  <select id="find" resultType="com.team10.mes.workorder.dal.WorkOrderMapper$WorkOrderRow">SELECT <include refid="columns"/> FROM work_order WHERE id=#{id} AND deleted_at IS NULL</select>
+  <update id="updateDraft">UPDATE work_order SET from_user_id=#{fromUserId},to_user_id=#{toUserId},name=#{name},description=#{description},updated_at=NOW() WHERE id=#{id} AND status=1 AND deleted_at IS NULL</update>
+  <update id="deleteDraft">UPDATE work_order SET deleted_at=NOW(),updated_at=NOW() WHERE id=#{id} AND status=1 AND deleted_at IS NULL</update>
+  <update id="submit">UPDATE work_order SET status=2,updated_at=NOW() WHERE id=#{id} AND status=1 AND deleted_at IS NULL</update>
+  <update id="markRead">UPDATE work_order SET read_status=2,updated_at=NOW() WHERE id=#{id} AND deleted_at IS NULL</update>
+  <sql id="filters">
+    <choose>
+      <when test="isTo">AND to_user_id=#{userId}</when>
+      <otherwise>AND from_user_id=#{userId}</otherwise>
+    </choose>
+    <if test="status != null and status != 0">AND status=#{status}</if>
+    <if test="(status == null or status == 0) and isTo">AND status != 1</if>
+    <if test="unread">AND read_status=1</if>
+    <if test="namePrefix != null and namePrefix != ''">AND name LIKE CONCAT(#{namePrefix}, '%')</if>
+    <if test="since != null">AND updated_at &gt; #{since}</if>
+  </sql>
+  <select id="list" resultType="com.team10.mes.workorder.dal.WorkOrderMapper$WorkOrderRow">
+    SELECT <include refid="columns"/> FROM work_order WHERE deleted_at IS NULL <include refid="filters"/>
+    <if test="cursorTime != null and cursorId != null and cursorId &gt; 0">AND (updated_at &lt; #{cursorTime} OR (updated_at=#{cursorTime} AND id &lt; #{cursorId}))</if>
+    ORDER BY updated_at DESC,id DESC LIMIT #{limit} OFFSET #{offset}
+  </select>
+  <select id="count" resultType="long">SELECT COUNT(*) FROM work_order WHERE deleted_at IS NULL <include refid="filters"/></select>
+</mapper>

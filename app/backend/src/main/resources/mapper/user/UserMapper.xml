@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.team10.mes.user.dal.UserMapper">
+  <select id="findById" resultType="map">select id,name,user_account as userAccount,password_hash as passwordHash,user_avatar as userAvatar,user_profile as userProfile,user_role as userRole,created_at as createdAt,updated_at as updatedAt from user where id=#{id} and deleted_at is null</select>
+  <select id="findByAccount" resultType="map">select id,name,user_account as userAccount,password_hash as passwordHash,user_avatar as userAvatar,user_profile as userProfile,user_role as userRole,created_at as createdAt,updated_at as updatedAt from user where user_account=#{account} and deleted_at is null limit 1</select>
+  <select id="countByAccount" resultType="int">select count(*) from user where user_account=#{account}</select>
+  <insert id="insert" useGeneratedKeys="true" keyProperty="id">insert into user(name,password_hash,user_account,user_avatar,user_profile,user_role,created_at,updated_at) values(#{name},#{passwordHash},#{account},#{avatar},#{profile},#{role},now(),now())</insert>
+  <update id="update">UPDATE user <set><if test="userName!=null and userName!=''">name=#{userName},</if><if test="userAvatar!=null and userAvatar!=''">user_avatar=#{userAvatar},</if><if test="userProfile!=null and userProfile!=''">user_profile=#{userProfile},</if><if test="userRole!=null and userRole!=''">user_role=#{userRole},</if>updated_at=NOW()</set> WHERE id=#{id} AND deleted_at IS NULL</update>
+  <update id="softDelete">update user set deleted_at=now(),updated_at=now() where id=#{id} and deleted_at is null</update>
+  <select id="page" resultType="map">select id,name,user_account as userAccount,user_avatar as userAvatar,user_profile as userProfile,user_role as userRole,created_at as createdAt,updated_at as updatedAt from user where deleted_at is null and name like concat(#{name},'%') and user_account like concat(#{account},'%') order by id desc limit #{offset},#{size}</select>
+  <select id="pageCount" resultType="long">select count(*) from user where deleted_at is null and name like concat(#{name},'%') and user_account like concat(#{account},'%')</select>
+</mapper>

@@ -168,10 +168,18 @@
             </a-form-item>
             <div class="form-row">
               <a-form-item label="预计产量">
-                <a-input-number v-model:value="engineeringForm.expectedQuantity" :min="1" class="wide" />
+                <a-input-number
+                  v-model:value="engineeringForm.expectedQuantity"
+                  :min="1"
+                  class="wide"
+                />
               </a-form-item>
               <a-form-item label="合格目标">
-                <a-input-number v-model:value="engineeringForm.qualifiedQuantity" :min="0" class="wide" />
+                <a-input-number
+                  v-model:value="engineeringForm.qualifiedQuantity"
+                  :min="0"
+                  class="wide"
+                />
               </a-form-item>
             </div>
             <a-form-item label="说明">
@@ -197,9 +205,9 @@
         <footer v-if="type" class="form-actions">
           <a-button
             type="primary"
-            :html-type="canSaveDraft ? 'button' : 'submit'"
+            html-type="button"
             :loading="saving || savingDraft"
-            @click="canSaveDraft ? submitDraft() : undefined"
+            @click="canSaveDraft ? submitDraft() : submit()"
           >
             提交
           </a-button>
@@ -218,6 +226,7 @@ import {
   FLOW_TYPE_OUT,
   QUALITY_STATUS_PENDING,
   QUALITY_STATUS_QUALIFIED,
+  QUALITY_STATUS_UNQUALIFIED,
   STOCK_STATUS_OUT_STOCK,
   DraftStatus,
   MesListScope,
@@ -257,7 +266,9 @@ const savingDraft = ref(false)
 const leaving = ref(false)
 const draftId = ref<number | undefined>(Number(route.query.id || 0) || undefined)
 const type = computed(() => String(route.query.type || '') as CreateType)
-const canSaveDraft = computed(() => ['flow', 'process', 'engineering', 'workOrder'].includes(type.value))
+const canSaveDraft = computed(() =>
+  ['flow', 'process', 'engineering', 'workOrder'].includes(type.value),
+)
 
 const titleMap: Record<CreateType, string> = {
   item: '新建物品类型',
@@ -269,7 +280,7 @@ const titleMap: Record<CreateType, string> = {
 }
 
 const title = computed(() => titleMap[type.value] || '新建')
-const initialStockStatus = Number(route.query.stockStatus || 0) || STOCK_STATUS_OUT_STOCK
+const initialStockStatus = STOCK_STATUS_OUT_STOCK
 const initialQualityStatus = Number(route.query.qualityStatus || 0) || QUALITY_STATUS_PENDING
 
 const itemForm = reactive({ name: '', unit: '个', description: '' })
@@ -278,7 +289,8 @@ const unitForm = reactive({
   stockStatus: initialStockStatus,
   qualityStatus: initialQualityStatus,
   description: '',
-  engineeringOrderId: Number(route.query.engineeringOrderId || 0) || undefined as number | undefined,
+  engineeringOrderId:
+    Number(route.query.engineeringOrderId || 0) || (undefined as number | undefined),
 })
 const flowForm = reactive({
   name: '',
@@ -295,8 +307,8 @@ const processForm = reactive({
 })
 const engineeringForm = reactive({
   name: '',
-  itemId: Number(route.query.itemId || 0) || undefined as number | undefined,
-  processId: Number(route.query.processId || 0) || undefined as number | undefined,
+  itemId: Number(route.query.itemId || 0) || (undefined as number | undefined),
+  processId: Number(route.query.processId || 0) || (undefined as number | undefined),
   expectedQuantity: 1,
   qualifiedQuantity: 1,
   description: '',
@@ -308,11 +320,11 @@ const workOrderForm = reactive({
 })
 
 const stockOptions = [{ label: '不在库', value: STOCK_STATUS_OUT_STOCK }]
-const qualityOptions = computed(() => [
-  initialQualityStatus === QUALITY_STATUS_QUALIFIED
-    ? { label: '合格', value: QUALITY_STATUS_QUALIFIED }
-    : { label: '待检测', value: QUALITY_STATUS_PENDING },
-])
+const qualityOptions = [
+  { label: '待检测', value: QUALITY_STATUS_PENDING },
+  { label: '合格', value: QUALITY_STATUS_QUALIFIED },
+  { label: '不合格', value: QUALITY_STATUS_UNQUALIFIED },
+]
 const flowTypeOptions = [
   { label: '入库', value: FLOW_TYPE_IN },
   { label: '出库', value: FLOW_TYPE_OUT },
@@ -396,7 +408,10 @@ const loadEngineeringProcesses = async () => {
         value: item.id!,
         label: item.name ? `${item.name} #${item.id}` : `工艺 #${item.id}`,
       }))
-    if (engineeringForm.processId && !processOptions.value.some((item) => item.value === engineeringForm.processId)) {
+    if (
+      engineeringForm.processId &&
+      !processOptions.value.some((item) => item.value === engineeringForm.processId)
+    ) {
       engineeringForm.processId = undefined
     }
   } finally {
@@ -447,23 +462,35 @@ const hasContent = computed(() => {
     return Boolean(unitForm.itemId || unitForm.description.trim())
   }
   if (type.value === 'flow') {
-    return Boolean(flowForm.name.trim() || flowForm.toUserId || flowForm.description.trim() || normalizedFlowItems().length)
+    return Boolean(
+      flowForm.name.trim() ||
+        flowForm.toUserId ||
+        flowForm.description.trim() ||
+        normalizedFlowItems().length,
+    )
   }
   if (type.value === 'process') {
-    return Boolean(processForm.name.trim() || processForm.itemId || processForm.description.trim() || normalizedProcessItems().length)
+    return Boolean(
+      processForm.name.trim() ||
+        processForm.itemId ||
+        processForm.description.trim() ||
+        normalizedProcessItems().length,
+    )
   }
   if (type.value === 'engineering') {
     return Boolean(
       engineeringForm.name.trim() ||
-      engineeringForm.itemId ||
-      engineeringForm.processId ||
-      engineeringForm.description.trim() ||
-      engineeringForm.expectedQuantity !== 1 ||
-      engineeringForm.qualifiedQuantity !== 1,
+        engineeringForm.itemId ||
+        engineeringForm.processId ||
+        engineeringForm.description.trim() ||
+        engineeringForm.expectedQuantity !== 1 ||
+        engineeringForm.qualifiedQuantity !== 1,
     )
   }
   if (type.value === 'workOrder') {
-    return Boolean(workOrderForm.name.trim() || workOrderForm.toUserId || workOrderForm.description.trim())
+    return Boolean(
+      workOrderForm.name.trim() || workOrderForm.toUserId || workOrderForm.description.trim(),
+    )
   }
   return false
 })
@@ -526,6 +553,15 @@ const validateDraft = () => {
     return false
   }
   return true
+}
+
+const responseId = (data: unknown): number | undefined => {
+  if (typeof data === 'number' && data > 0) return data
+  if (data && typeof data === 'object' && 'id' in data) {
+    const id = Number((data as { id?: unknown }).id)
+    return id > 0 ? id : undefined
+  }
+  return undefined
 }
 
 const saveDraft = async (silent = false, syncRoute = true) => {
@@ -687,7 +723,11 @@ const confirmLeave = () =>
       content: canSaveDraft.value
         ? '当前填写内容还没有提交，可以先保存为草稿。'
         : '当前内容还没有提交，离开后不会保存。',
-      okText: canSaveDraft.value ? (draftId.value ? '更新草稿并退出' : '保存草稿并退出') : '放弃离开',
+      okText: canSaveDraft.value
+        ? draftId.value
+          ? '更新草稿并退出'
+          : '保存草稿并退出'
+        : '放弃离开',
       cancelText: canSaveDraft.value ? '不保存退出' : '继续编辑',
       okButtonProps: canSaveDraft.value ? {} : { danger: true },
       async onOk() {
@@ -746,9 +786,9 @@ const submitDraft = async () => {
         ? await submitInventoryFlow({ id: draftId.value })
         : type.value === 'process'
           ? await submitProcess({ id: draftId.value })
-        : type.value === 'engineering'
-          ? await submitEngineeringOrder({ id: draftId.value })
-          : await submitWorkOrder({ id: draftId.value })
+          : type.value === 'engineering'
+            ? await submitEngineeringOrder({ id: draftId.value })
+            : await submitWorkOrder({ id: draftId.value })
     if (res.data.code !== 0) {
       message.error(res.data.message || '提交失败')
       return
@@ -775,7 +815,11 @@ const submit = async () => {
         return
       }
       const res = await addItem(itemForm)
-      id = res.data.data
+      if (res.data.code !== 0) {
+        message.error(res.data.message || '提交失败')
+        return
+      }
+      id = responseId(res.data.data)
     } else if (type.value === 'itemUnit') {
       if (!unitForm.itemId) {
         message.warning('请选择物品')
@@ -785,7 +829,11 @@ const submit = async () => {
         return
       }
       const res = await addItemUnit(unitForm)
-      id = res.data.data
+      if (res.data.code !== 0) {
+        message.error(res.data.message || '提交失败')
+        return
+      }
+      id = responseId(res.data.data)
     } else if (type.value === 'engineering') {
       if (!engineeringForm.itemId) {
         message.warning('请选择生产物品')
@@ -814,6 +862,8 @@ const submit = async () => {
     if (id) {
       message.success('已提交')
       await exitAfterSubmit()
+    } else {
+      message.error('提交失败：服务端未返回记录 ID')
     }
   } finally {
     saving.value = false
@@ -844,7 +894,10 @@ watch(
   () => unitForm.itemId,
   (itemId) => {
     if (!selectedUnitEngineeringOrder.value || !itemId) return
-    if (selectedUnitEngineeringOrder.value.itemId && selectedUnitEngineeringOrder.value.itemId !== itemId) {
+    if (
+      selectedUnitEngineeringOrder.value.itemId &&
+      selectedUnitEngineeringOrder.value.itemId !== itemId
+    ) {
       unitForm.engineeringOrderId = undefined
       selectedUnitEngineeringOrder.value = undefined
     }

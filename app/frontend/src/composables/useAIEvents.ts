@@ -114,7 +114,12 @@ export function useAIEvents(appId: Ref<any>, options?: { onDone?: () => void }) 
   }
 
   function isActiveStatus(status?: string) {
-    return status === 'queued' || status === 'running' || status === 'waiting_answer' || status === 'interrupted'
+    return (
+      status === 'queued' ||
+      status === 'running' ||
+      status === 'waiting_answer' ||
+      status === 'interrupted'
+    )
   }
 
   function setLocalState(status: API.AIStatusType, patch: Partial<API.AIState> = {}) {
@@ -129,7 +134,12 @@ export function useAIEvents(appId: Ref<any>, options?: { onDone?: () => void }) 
   }
 
   function restoreRunningMessage(state: API.AIState) {
-    if (!isActiveStatus(state.status) || state.status === 'waiting_answer' || state.status === 'interrupted') return
+    if (
+      !isActiveStatus(state.status) ||
+      state.status === 'waiting_answer' ||
+      state.status === 'interrupted'
+    )
+      return
     const last = messages.value[messages.value.length - 1]
     if (last?.type === 'ai') {
       last.loading = true
@@ -239,7 +249,9 @@ export function useAIEvents(appId: Ref<any>, options?: { onDone?: () => void }) 
       case 'tool_result': {
         const msg = ensureAIMessage(event)
         if (!msg.toolCalls) msg.toolCalls = []
-        const tool = msg.toolCalls.find((item) => item.name === event.name || item.id === event.targetId)
+        const tool = msg.toolCalls.find(
+          (item) => item.name === event.name || item.id === event.targetId,
+        )
         if (tool) {
           tool.status = 'success'
           tool.result = event.content || ''
@@ -388,7 +400,13 @@ export function useAIEvents(appId: Ref<any>, options?: { onDone?: () => void }) 
   async function sendMessage(content: string) {
     if (!appId.value || !content.trim() || isGenerating.value) return false
     messages.value.push({ id: `user-${Date.now()}`, type: 'user', content: content.trim() })
-    messages.value.push({ id: `ai-${Date.now()}`, type: 'ai', content: '', loading: true, toolCalls: [] })
+    messages.value.push({
+      id: `ai-${Date.now()}`,
+      type: 'ai',
+      content: '',
+      loading: true,
+      toolCalls: [],
+    })
     currentQuestion.value = null
     isGenerating.value = true
     lastEventId = '0'
@@ -412,7 +430,13 @@ export function useAIEvents(appId: Ref<any>, options?: { onDone?: () => void }) 
     lastEventId = id
     finishAIMessage()
     messages.value.push({ id, type: 'user', content: content.trim(), isPush: true })
-    messages.value.push({ id: `ai-${Date.now()}`, type: 'ai', content: '', loading: true, toolCalls: [] })
+    messages.value.push({
+      id: `ai-${Date.now()}`,
+      type: 'ai',
+      content: '',
+      loading: true,
+      toolCalls: [],
+    })
     setLocalState('running', { lastEventId: id })
     return true
   }
@@ -461,6 +485,19 @@ export function useAIEvents(appId: Ref<any>, options?: { onDone?: () => void }) 
   }
 }
 
+function normalizeQuestionItem(value: any): AIQuestionItem | null {
+  if (typeof value === 'string') {
+    const question = value.trim()
+    return question ? { question, options: [] } : null
+  }
+  const question = String(value?.question || value?.content || '').trim()
+  if (!question) return null
+  const options = Array.isArray(value?.options)
+    ? value.options.map((option: any) => String(option).trim()).filter(Boolean)
+    : []
+  return { question, options }
+}
+
 function normalizeQuestion(source: API.AIEvent | API.AIPendingInterrupt): AIQuestion {
   const payload = parseMaybeJSON(source.payloadJson)
   const contentValue = parseMaybeJSON(source.content)
@@ -481,18 +518,7 @@ function normalizeQuestion(source: API.AIEvent | API.AIPendingInterrupt): AIQues
 
 function normalizeQuestionItems(value: any): AIQuestionItem[] {
   if (!Array.isArray(value)) return []
-  return value
-    .map((item) => {
-      if (typeof item === 'string') {
-        return { question: item.trim(), options: [] }
-      }
-      const question = String(item?.question || item?.content || '').trim()
-      const options = Array.isArray(item?.options)
-        ? item.options.map((option: any) => String(option).trim()).filter(Boolean)
-        : []
-      return { question, options }
-    })
-    .filter((item) => item.question)
+  return value.map(normalizeQuestionItem).filter((item): item is AIQuestionItem => Boolean(item))
 }
 
 function parseMaybeJSON(value?: string): any {
@@ -501,7 +527,8 @@ function parseMaybeJSON(value?: string): any {
   for (let i = 0; i < 2; i++) {
     if (typeof current !== 'string') return current
     const trimmed = current.trim()
-    if (!trimmed.startsWith('{') && !trimmed.startsWith('[') && !trimmed.startsWith('"')) return current
+    if (!trimmed.startsWith('{') && !trimmed.startsWith('[') && !trimmed.startsWith('"'))
+      return current
     try {
       current = JSON.parse(trimmed)
     } catch {

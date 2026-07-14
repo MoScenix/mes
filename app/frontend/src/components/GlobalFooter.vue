@@ -3,12 +3,12 @@
     <div class="footer-content">
       <p class="copyright">
         <a
-          href="https://github.com/MoScenix"
+          href="https://github.com/10team"
           target="_blank"
           rel="noopener noreferrer"
           class="author-link"
         >
-          由MoScenix开发
+          由10team开发
         </a>
       </p>
     </div>

@@ -8,12 +8,8 @@ AGENTS.md
 CLAUDE.md
 .pnpm-store
 .m2/
-app/java-backend/target/
 app/*/target/
-common/target/
-java/**/target/
 .codex-home
 .claude
 test.sh
-test/
 start.sh

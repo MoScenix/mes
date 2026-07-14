@@ -116,7 +116,6 @@ import { PlusOutlined } from '@ant-design/icons-vue'
 import {
   deleteInventoryFlowDraft,
   QUALITY_STATUS_PENDING,
-  QUALITY_STATUS_QUALIFIED,
   STOCK_STATUS_IN_STOCK,
   STOCK_STATUS_OUT_STOCK,
   submitInventoryFlow,
@@ -131,7 +130,13 @@ import PurchaseFlowsList from './purchase/PurchaseFlowsList.vue'
 import PurchaseItemsList from './purchase/PurchaseItemsList.vue'
 import PurchaseItemUnitsList from './purchase/PurchaseItemUnitsList.vue'
 import PurchaseScanPanel from './purchase/PurchaseScanPanel.vue'
-import { flowStatusOptions, qualityFilterOptions, qualityOptions, stockFilterOptions, stockOptions } from './purchase/options'
+import {
+  flowStatusOptions,
+  qualityFilterOptions,
+  qualityOptions,
+  stockFilterOptions,
+  stockOptions,
+} from './purchase/options'
 import type { PurchasePanel } from './purchase/types'
 import { usePurchaseList } from './purchase/usePurchaseList'
 import { usePurchaseScan } from './purchase/usePurchaseScan'
@@ -141,7 +146,9 @@ const router = useRouter()
 
 const panelFromRoute = () => {
   const panel = String(route.query.panel || 'items')
-  return ['flows', 'items', 'itemUnits', 'scan'].includes(panel) ? (panel as PurchasePanel) : 'items'
+  return ['flows', 'items', 'itemUnits', 'scan'].includes(panel)
+    ? (panel as PurchasePanel)
+    : 'items'
 }
 
 const selectedType = ref<PurchasePanel>(panelFromRoute())
@@ -150,17 +157,12 @@ const searchItemId = ref<number>()
 const flowStatusFilter = ref<number>()
 const stockStatusFilter = ref<number>()
 const qualityStatusFilter = ref<number>()
-const engineeringOrderIdFilter = computed(() => Number(route.query.engineeringOrderId || 0) || undefined)
+const engineeringOrderIdFilter = computed(
+  () => Number(route.query.engineeringOrderId || 0) || undefined,
+)
 const flowIdFilter = computed(() => Number(route.query.flowId || 0) || undefined)
 
-const {
-  dataList,
-  loading,
-  loadingMore,
-  listPage,
-  fetchData,
-  loadMore,
-} = usePurchaseList({
+const { dataList, loading, loadingMore, listPage, fetchData, loadMore } = usePurchaseList({
   selectedType,
   searchText,
   searchItemId,
@@ -234,7 +236,6 @@ const openCreate = () => {
   const query: Record<string, string> = { type: typeMap[selectedType.value] }
   if (selectedType.value === 'itemUnits') {
     query.stockStatus = String(STOCK_STATUS_OUT_STOCK)
-    query.qualityStatus = String(QUALITY_STATUS_QUALIFIED)
   }
   router.push({ path: '/mes/create', query })
 }
@@ -282,7 +283,6 @@ const addUnitForItem = (item: ItemVO) => {
       type: 'itemUnit',
       itemId: String(item.id || ''),
       stockStatus: String(STOCK_STATUS_OUT_STOCK),
-      qualityStatus: String(QUALITY_STATUS_QUALIFIED),
     },
   })
 }
@@ -314,7 +314,8 @@ const deleteFlowDraft = async (record: InventoryFlowVO) => {
 }
 
 const viewDetail = (record: InventoryFlowVO | ItemVO | ItemUnitVO) => {
-  const kind = selectedType.value === 'flows' ? 'FLOW' : selectedType.value === 'items' ? 'ITEM' : 'ITEM_UNIT'
+  const kind =
+    selectedType.value === 'flows' ? 'FLOW' : selectedType.value === 'items' ? 'ITEM' : 'ITEM_UNIT'
   router.push({ path: '/mes/detail', query: { kind, id: String(record.id) } })
 }
 
