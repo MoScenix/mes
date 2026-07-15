@@ -68,10 +68,14 @@ const handleChange = (value?: number | string) => {
 const ensureSelectedLabel = async (id?: number) => {
   if (!id || options.value.some((item) => item.value === id)) return
   const res = await getEngineeringOrder({ id })
-  if (res.data.code === 0 && res.data.data) {
+  if (
+    res.data.code === 0 &&
+    res.data.data?.status === DraftStatus.Submitted &&
+    acceptOrder(res.data.data)
+  ) {
     options.value = [toOption(res.data.data), ...options.value]
   } else {
-    options.value = [{ label: `工程单 #${id}`, value: id }, ...options.value]
+    emit('update:modelValue', undefined)
   }
 }
 
@@ -89,11 +93,11 @@ const handleSearch = (query: string) => {
       const numericId = Number(text)
       if (Number.isFinite(numericId) && numericId > 0) {
         const res = await getEngineeringOrder({ id: numericId })
-        if (res.data.code === 0 && res.data.data) {
+        if (res.data.code === 0 && res.data.data?.status === DraftStatus.Submitted) {
           options.value = [res.data.data].filter(acceptOrder).map(toOption)
           return
         }
-        options.value = [{ label: `工程单 #${numericId}`, value: numericId }]
+        options.value = []
         return
       }
 

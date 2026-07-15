@@ -152,7 +152,6 @@ public final class MesAiTools {
                     Map.<String, Object>of(
                         "itemId", x.itemId(), "applyQuantity", x.applyQuantity()))
             .toList());
-    m.put("itemUnitIds", in.itemUnitIds());
     return inventory.createFlow(m);
   }
 
@@ -355,11 +354,9 @@ public final class MesAiTools {
       @JsonProperty("to_user_id") long toUserId,
       @JsonProperty("flow_type") String flowType,
       String description,
-      List<FlowItem> items,
-      @JsonProperty("item_unit_ids") List<Long> itemUnitIds) {
+      List<FlowItem> items) {
     public InventoryFlowInput {
       items = items == null ? List.of() : items;
-      itemUnitIds = itemUnitIds == null ? List.of() : itemUnitIds;
     }
   }
 

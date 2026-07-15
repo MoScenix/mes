@@ -43,9 +43,11 @@ public interface InventoryMapper {
 
   List<Map<String, Object>> units(
       @Param("itemId") Long itemId,
+      @Param("itemName") String itemName,
       @Param("stockStatus") Integer stockStatus,
       @Param("qualityStatus") Integer qualityStatus,
       @Param("orderId") Long orderId,
+      @Param("flowId") Long flowId,
       @Param("offset") long offset,
       @Param("limit") long limit);
 
@@ -60,6 +62,8 @@ public interface InventoryMapper {
   int deleteFlowUnits(long id);
 
   int bindFlowUnit(@Param("flowId") long flowId, @Param("unitId") long unitId);
+
+  int countFlowUnit(@Param("flowId") long flowId, @Param("unitId") long unitId);
 
   List<Map<String, Object>> flowItems(long id);
 
@@ -108,4 +112,30 @@ public interface InventoryMapper {
   int setUnitStock(@Param("id") long id, @Param("status") int status);
 
   int finishFlowItems(long id);
+
+  int addUnitItemCounts(
+      @Param("id") long id,
+      @Param("stockStatus") int stockStatus,
+      @Param("qualityStatus") int qualityStatus);
+
+  int changeUnitItemCounts(
+      @Param("id") long id,
+      @Param("oldStockStatus") int oldStockStatus,
+      @Param("newStockStatus") int newStockStatus,
+      @Param("oldQualityStatus") int oldQualityStatus,
+      @Param("newQualityStatus") int newQualityStatus);
+
+  int addUnitOrderCounts(@Param("id") long id, @Param("qualityStatus") int qualityStatus);
+
+  int changeUnitOrderCounts(
+      @Param("id") long id,
+      @Param("oldQualityStatus") int oldQualityStatus,
+      @Param("newQualityStatus") int newQualityStatus);
+
+  int reserveItem(@Param("id") long id, @Param("quantity") long quantity);
+
+  int completeItemFlow(
+      @Param("id") long id,
+      @Param("flowType") int flowType,
+      @Param("qualified") boolean qualified);
 }

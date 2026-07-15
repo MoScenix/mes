@@ -2,7 +2,7 @@
   <div class="workspace-page">
     <div class="workspace-header">
       <MesListSearchPicker
-        v-if="selectedType !== 'receive' && selectedType !== 'inspect'"
+        v-if="selectedType !== 'receive' && selectedType !== 'inspect' && selectedType !== 'scan'"
         v-model="searchText"
         placeholder="搜索 MES 码或物品名"
         class="search-input"
@@ -21,6 +21,16 @@
 
     <ReceiveWorkflow v-if="selectedType === 'receive'" :flow-id="receiveFlowId" />
     <InspectWorkflow v-else-if="selectedType === 'inspect'" :order-id="inspectOrderId" />
+    <PurchaseScanPanel
+      v-else-if="selectedType === 'scan'"
+      v-model:flow-code="scanFlowCode"
+      v-model:scan-value="scanValue"
+      :scan-flow="scanFlow"
+      :operation-key="scanOperationKey"
+      @load-flow="loadScanFlow"
+      @add-scan-input="addScanInput"
+      @back="backToInboundScan"
+    />
     <WorkerRecordList
       v-else
       :selected-type="selectedType"
@@ -40,16 +50,18 @@ import { PlusOutlined } from '@ant-design/icons-vue'
 import MesListSearchPicker from '@/components/mes/MesListSearchPicker.vue'
 import ReceiveWorkflow from './worker/ReceiveWorkflow.vue'
 import InspectWorkflow from './worker/InspectWorkflow.vue'
+import PurchaseScanPanel from './purchase/PurchaseScanPanel.vue'
 import WorkerRecordList from './worker/WorkerRecordList.vue'
 import { useWorkerList } from './worker/useWorkerList'
 import type { WorkerPanelType } from './worker/types'
+import { usePurchaseScan } from './purchase/usePurchaseScan'
 
 const router = useRouter()
 const route = useRoute()
 
 const panelFromRoute = () => {
   const panel = String(route.query.panel || 'itemUnits')
-  return ['itemUnits', 'engineering', 'receive', 'inspect'].includes(panel)
+  return ['itemUnits', 'engineering', 'receive', 'inspect', 'scan'].includes(panel)
     ? (panel as WorkerPanelType)
     : 'itemUnits'
 }
@@ -58,6 +70,16 @@ const selectedType = ref<WorkerPanelType>(panelFromRoute())
 
 const receiveFlowId = computed(() => Number(route.query.flowId || 0) || undefined)
 const inspectOrderId = computed(() => Number(route.query.orderId || 0) || undefined)
+const {
+  scanFlowCode,
+  scanFlow,
+  scanValue,
+  scanOperationKey,
+  loadScanFlowById,
+  loadScanFlow,
+  addScanInput,
+  backToInboundScan,
+} = usePurchaseScan(route, router)
 
 const {
   searchText,
@@ -79,16 +101,20 @@ const openCreate = () => {
   })
 }
 
-watch(
-  () => [route.query.panel, route.query.engineeringOrderId],
-  () => {
-    selectedType.value = panelFromRoute()
-    fetchData()
-  },
-)
+const syncPanel = async () => {
+  selectedType.value = panelFromRoute()
+  if (selectedType.value === 'scan') {
+    const flowId = Number(route.query.flowId || 0)
+    if (flowId > 0) await loadScanFlowById(flowId)
+    return
+  }
+  await fetchData()
+}
+
+watch(() => [route.query.panel, route.query.engineeringOrderId, route.query.flowId], syncPanel)
 
 onMounted(async () => {
-  await fetchData()
+  await syncPanel()
 })
 </script>
 

@@ -15,6 +15,8 @@ public interface UserMapper {
 
   int insert(Map<String, Object> user);
 
+  int restoreByAccount(Map<String, Object> user);
+
   int update(Map<String, Object> user);
 
   int softDelete(Long id);

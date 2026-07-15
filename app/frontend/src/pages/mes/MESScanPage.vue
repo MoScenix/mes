@@ -23,13 +23,17 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import CodeTool from '@/components/mes/CodeTool.vue'
+import { useLoginUserStore } from '@/stores/loginUser'
+import { normalizeMesRole } from '@/utils/mesRole'
 import { parseMesCode, type MesCodeKind } from '@/utils/mesCode'
 
 const route = useRoute()
 const router = useRouter()
+const loginUserStore = useLoginUserStore()
 const scanValue = ref('')
 const codeKinds: MesCodeKind[] = ['FLOW', 'ITEM_UNIT', 'ENGINEERING_ORDER']
 const mode = computed(() => String(route.query.mode || 'detail'))
+const role = computed(() => normalizeMesRole(loginUserStore.loginUser.userRole))
 const expectedKind = computed<MesCodeKind | undefined>(() => {
   if (mode.value === 'inbound' || mode.value === 'receive') return 'FLOW'
   if (mode.value === 'inspect') return 'ENGINEERING_ORDER'
@@ -62,7 +66,7 @@ const openCode = async (value: string) => {
   }
   if (mode.value === 'inbound') {
     await router.push({
-      path: '/mes/purchase',
+      path: role.value === 'worker' ? '/mes/worker' : '/mes/purchase',
       query: { panel: 'scan', flowId: String(parsed.id) },
     })
     return

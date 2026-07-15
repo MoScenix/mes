@@ -404,6 +404,7 @@ const rows = computed<DetailRow[]>(() => {
     return [
       { label: '编号', value: String(order.id ?? '-') },
       { label: '名称', value: order.name || '-' },
+      { label: '状态', value: processStatusText(order.status) },
       { label: '生产物品', itemId: order.itemId, item: order.item },
       { label: '预计数量', value: String(order.expectedQuantity ?? 0) },
       { label: '合格数量', value: String(order.qualifiedQuantity ?? 0) },

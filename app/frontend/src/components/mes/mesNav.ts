@@ -47,7 +47,7 @@ export const mesNavItems: MesNavItem[] = [
     key: 'purchase-scan',
     target: { path: '/mes/scan', view: 'inbound', scanMode: 'inbound' },
     label: '扫描入库',
-    roles: ['purchase'],
+    roles: ['purchase', 'worker'],
     icon: InboxOutlined,
   },
   {

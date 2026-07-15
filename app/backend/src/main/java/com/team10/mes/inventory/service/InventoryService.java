@@ -246,16 +246,59 @@ public class InventoryService {
     }
   }
 
+  @Transactional
   public Map<String, Object> addUnit(Map<String, Object> r) {
     required(r, "itemId", "qualityStatus");
-    r.putIfAbsent("engineeringOrderId", null);
+    long itemId = num(r, "itemId", 0);
+    long orderId = num(r, "engineeringOrderId", 0);
+    require(dal.item(itemId), "item");
+    int qualityStatus = (int) num(r, "qualityStatus", 0);
+    if (!validQualityStatus(qualityStatus))
+      throw new IllegalArgumentException("invalid item unit quality status");
+    r.putIfAbsent("stockStatus", 3);
+    int stockStatus = (int) num(r, "stockStatus", 3);
+    if (!validStockStatus(stockStatus))
+      throw new IllegalArgumentException("invalid item unit stock status");
+    if (orderId > 0) {
+      var order = require(dal.order(orderId), "engineering order");
+      if (num(order, "status", 0) != 2)
+        throw new IllegalStateException("only submitted engineering order can be bound");
+      if (num(order, "item_id", 0) != itemId)
+        throw new IllegalStateException("item unit item must match engineering order item");
+      if (num(order, "produced_quantity", 0) + 1 > num(order, "expected_quantity", 0))
+        throw new IllegalStateException("engineering order produced quantity exceeds expected quantity");
+      r.put("engineeringOrderId", orderId);
+    } else {
+      r.putIfAbsent("engineeringOrderId", null);
+    }
     r.putIfAbsent("description", "");
     dal.insertUnit(r);
+    changed(dal.addUnitItemCounts(itemId, stockStatus, qualityStatus), "item not found");
+    if (orderId > 0)
+      changed(dal.addUnitOrderCounts(orderId, qualityStatus), "engineering order not found");
     return result(Map.of("id", r.get("id")));
   }
 
+  @Transactional
   public Map<String, Object> updateUnit(Map<String, Object> r) {
+    Map<String, Object> current = require(dal.unit(num(r, "id", 0)), "item unit");
+    int stockStatus = (int) num(r, "stockStatus", 0);
+    int qualityStatus = (int) num(r, "qualityStatus", 0);
+    if (!validStockStatus(stockStatus) || !validQualityStatus(qualityStatus))
+      throw new IllegalArgumentException("invalid item unit status");
     changed(dal.updateUnit(r), "item unit not found");
+    long itemId = num(current, "item_id", 0);
+    int oldStockStatus = (int) num(current, "stock_status", 0);
+    int oldQualityStatus = (int) num(current, "quality_status", 0);
+    changed(
+        dal.changeUnitItemCounts(
+            itemId, oldStockStatus, stockStatus, oldQualityStatus, qualityStatus),
+        "item not found");
+    long orderId = num(current, "engineering_order_id", 0);
+    if (orderId > 0 && oldQualityStatus != qualityStatus)
+      changed(
+          dal.changeUnitOrderCounts(orderId, oldQualityStatus, qualityStatus),
+          "engineering order not found");
     return result(true);
   }
 
@@ -268,9 +311,11 @@ public class InventoryService {
         page(
             dal.units(
                 optionalLong(q, "itemId"),
+                (String) q.get("itemNamePrefix"),
                 optionalInt(q, "stockStatus"),
                 optionalInt(q, "qualityStatus"),
                 optionalLong(q, "engineeringOrderId"),
+                optionalLong(q, "inventoryFlowId"),
                 offset(q),
                 size(q)),
             q));
@@ -305,10 +350,25 @@ public class InventoryService {
     return result(true);
   }
 
+  @Transactional
   public Map<String, Object> auditFlow(Map<String, Object> r) {
-    int next = Boolean.TRUE.equals(r.get("approved")) ? 3 : 4;
+    long id = num(r, "id", 0);
+    boolean approved = Boolean.TRUE.equals(r.get("approved"));
+    var flow = require(dal.flow(id), "inventory flow");
+    if (num(flow, "flow_status", 0) != 2)
+      throw new IllegalStateException("only submitted flow can be audited");
+    if (approved && num(flow, "flow_type", 0) == 2) {
+      for (Map<String, Object> item : dal.flowItems(id)) {
+        long itemId = num(item, "item_id", 0);
+        long quantity = num(item, "apply_quantity", 0);
+        if (itemId <= 0 || quantity <= 0)
+          throw new IllegalStateException("invalid flow item");
+        changed(dal.reserveItem(itemId, quantity), "insufficient available item quantity");
+      }
+    }
+    int next = approved ? 3 : 4;
     changed(
-        dal.auditFlow(num(r, "id", 0), num(r, "approvedBy", 0), next),
+        dal.auditFlow(id, num(r, "approvedBy", 0), next),
         "only submitted flow can be audited");
     return result(true);
   }
@@ -318,12 +378,53 @@ public class InventoryService {
     var f = require(dal.flow(id), "inventory flow");
     if (num(f, "flow_status", 0) != 3)
       throw new IllegalStateException("only approved flow can be completed");
+    if (ids == null || ids.isEmpty()) throw new IllegalArgumentException("item unit ids are required");
     int stock = num(f, "flow_type", 0) == 1 ? 1 : 3;
+    Map<Long, Map<String, Object>> completedUnits = new HashMap<>();
+    for (Map<String, Object> unit : dal.flowUnits(id)) completedUnits.put(num(unit, "id", 0), unit);
+    Map<Long, Map<String, Object>> detailByItem = new HashMap<>();
+    for (Map<String, Object> item : dal.flowItems(id)) {
+      long itemId = num(item, "item_id", 0);
+      if (itemId <= 0) continue;
+      detailByItem.put(itemId, item);
+    }
+    if (detailByItem.isEmpty()) throw new IllegalStateException("flow items are required");
+    Set<Long> selected = new HashSet<>();
+    Map<Long, Long> finishedInRequest = new HashMap<>();
     for (long uid : ids) {
+      if (!selected.add(uid)) throw new IllegalStateException("duplicated item unit");
+      if (completedUnits.containsKey(uid))
+        throw new IllegalStateException("item unit has already been completed in this flow");
+      Map<String, Object> unit = require(dal.unit(uid), "item unit");
+      long itemId = num(unit, "item_id", 0);
+      Map<String, Object> detail = detailByItem.get(itemId);
+      if (detail == null)
+        throw new IllegalStateException("item unit does not belong to current flow item");
+      long nextFinished =
+          num(detail, "finished_quantity", 0) + finishedInRequest.getOrDefault(itemId, 0L) + 1;
+      if (nextFinished > num(detail, "apply_quantity", 0))
+        throw new IllegalStateException("flow item quantity exceeded");
+      if (num(f, "flow_type", 0) == 1) {
+        if (num(unit, "stock_status", 0) != 3)
+          throw new IllegalStateException("only out-stock units can be received");
+        if (num(unit, "quality_status", 0) != 2)
+          throw new IllegalStateException("only qualified units can be received");
+      } else {
+        if (num(unit, "stock_status", 0) != 1)
+          throw new IllegalStateException("only in-stock units can be released");
+        if (num(unit, "quality_status", 0) != 2)
+          throw new IllegalStateException("only qualified units can be released");
+      }
       dal.bindFlowUnit(id, uid);
       dal.setUnitStock(uid, stock);
+      changed(
+          dal.completeItemFlow(itemId, (int) num(f, "flow_type", 0), num(unit, "quality_status", 0) == 2),
+          "item not found");
+      finishedInRequest.put(itemId, finishedInRequest.getOrDefault(itemId, 0L) + 1);
+      completedUnits.put(uid, unit);
     }
     dal.finishFlowItems(id);
+    validateFlowProgress(id);
     return result(true);
   }
 
@@ -363,7 +464,6 @@ public class InventoryService {
       x.put("flowId", id);
       dal.insertFlowItem(x);
     }
-    for (var uid : listLong(r, "itemUnitIds")) dal.bindFlowUnit(id, uid);
   }
 
   public Map<String, Object> createOrder(Map<String, Object> r) {
@@ -392,7 +492,7 @@ public class InventoryService {
 
   public Map<String, Object> order(long id) {
     var r = require(dal.order(id), "engineering order");
-    r.put("itemUnits", dal.units(null, null, null, id, 0, 100));
+    r.put("itemUnits", dal.units(null, null, null, null, id, null, 0, 100));
     return resultView(r);
   }
 
@@ -430,6 +530,21 @@ public class InventoryService {
   private static List<Long> listLong(Map<String, Object> r, String k) {
     return ((List<Object>) r.getOrDefault(k, List.of()))
         .stream().map(x -> Long.parseLong(x.toString())).toList();
+  }
+
+  private void validateFlowProgress(long id) {
+    for (Map<String, Object> item : dal.flowItems(id)) {
+      if (num(item, "finished_quantity", 0) > num(item, "apply_quantity", 0))
+        throw new IllegalStateException("flow item quantity exceeded");
+    }
+  }
+
+  private static boolean validStockStatus(int status) {
+    return status == 1 || status == 2 || status == 3;
+  }
+
+  private static boolean validQualityStatus(int status) {
+    return status == 1 || status == 2 || status == 3;
   }
 
   private static Map<String, Object> page(List<Map<String, Object>> rows, Map<String, Object> q) {

@@ -12,16 +12,29 @@
   <select id="processItems" resultType="map">SELECT * FROM process_items WHERE process_id=#{id} AND deleted_at IS NULL ORDER BY id</select>
   <select id="process" resultType="map">SELECT p.*,i.name item_name,i.unit item_unit FROM processes p JOIN items i ON i.id=p.item_id WHERE p.id=#{id} AND p.deleted_at IS NULL</select>
   <select id="processes" resultType="map">SELECT p.*,i.name item_name,i.unit item_unit FROM processes p JOIN items i ON i.id=p.item_id WHERE p.deleted_at IS NULL <if test="ownerUserId!=null">AND p.owner_user_id=#{ownerUserId}</if><if test="itemId!=null">AND p.item_id=#{itemId}</if><if test="status!=null">AND p.status=#{status}</if> ORDER BY p.updated_at DESC,p.id DESC LIMIT #{limit} OFFSET #{offset}</select>
-  <insert id="insertUnit" useGeneratedKeys="true" keyProperty="id">INSERT INTO item_units(item_id,engineering_order_id,stock_status,quality_status,description,created_at,updated_at) VALUES(#{itemId},#{engineeringOrderId},3,#{qualityStatus},#{description},NOW(),NOW())</insert>
+  <insert id="insertUnit" useGeneratedKeys="true" keyProperty="id">INSERT INTO item_units(item_id,engineering_order_id,stock_status,quality_status,description,created_at,updated_at) VALUES(#{itemId},#{engineeringOrderId},#{stockStatus},#{qualityStatus},#{description},NOW(),NOW())</insert>
   <update id="updateUnit">UPDATE item_units SET stock_status=#{stockStatus},quality_status=#{qualityStatus},updated_at=NOW() WHERE id=#{id} AND deleted_at IS NULL</update>
   <select id="unit" resultType="map">SELECT u.*,i.name item_name FROM item_units u JOIN items i ON i.id=u.item_id WHERE u.id=#{id} AND u.deleted_at IS NULL</select>
-  <select id="units" resultType="map">SELECT u.*,i.name item_name FROM item_units u JOIN items i ON i.id=u.item_id WHERE u.deleted_at IS NULL <if test="itemId!=null">AND u.item_id=#{itemId}</if><if test="stockStatus!=null">AND u.stock_status=#{stockStatus}</if><if test="qualityStatus!=null">AND u.quality_status=#{qualityStatus}</if><if test="orderId!=null">AND u.engineering_order_id=#{orderId}</if> ORDER BY u.updated_at DESC,u.id DESC LIMIT #{limit} OFFSET #{offset}</select>
+  <select id="units" resultType="map">
+    SELECT DISTINCT u.*,i.name item_name
+    FROM item_units u
+    JOIN items i ON i.id=u.item_id
+    <if test="flowId!=null">JOIN inventory_flow_item_units fx ON fx.item_unit_id=u.id AND fx.inventory_flow_id=#{flowId}</if>
+    WHERE u.deleted_at IS NULL
+    <if test="itemId!=null">AND u.item_id=#{itemId}</if>
+    <if test="itemName!=null and itemName!=''">AND i.name LIKE CONCAT(#{itemName},'%')</if>
+    <if test="stockStatus!=null">AND u.stock_status=#{stockStatus}</if>
+    <if test="qualityStatus!=null">AND u.quality_status=#{qualityStatus}</if>
+    <if test="orderId!=null">AND u.engineering_order_id=#{orderId}</if>
+    ORDER BY u.updated_at DESC,u.id DESC LIMIT #{limit} OFFSET #{offset}
+  </select>
   <insert id="insertFlow" useGeneratedKeys="true" keyProperty="id">INSERT INTO inventory_flows(from_user_id,to_user_id,flow_type,flow_status,name,description,approved_by,created_at,updated_at) VALUES(#{fromUserId},#{toUserId},#{flowType},1,#{name},#{description},0,NOW(),NOW())</insert>
   <update id="updateFlow">UPDATE inventory_flows SET from_user_id=#{fromUserId},to_user_id=#{toUserId},flow_type=#{flowType},name=#{name},description=#{description},updated_at=NOW() WHERE id=#{id} AND flow_status=1 AND deleted_at IS NULL</update>
   <insert id="insertFlowItem">INSERT INTO inventory_flow_items(inventory_flow_id,item_id,apply_quantity,finished_quantity,created_at,updated_at) VALUES(#{flowId},#{itemId},#{applyQuantity},0,NOW(),NOW())</insert>
   <update id="deleteFlowItems">UPDATE inventory_flow_items SET deleted_at=NOW(),updated_at=NOW() WHERE inventory_flow_id=#{id} AND deleted_at IS NULL</update>
   <delete id="deleteFlowUnits">DELETE FROM inventory_flow_item_units WHERE inventory_flow_id=#{id}</delete>
-  <insert id="bindFlowUnit">INSERT INTO inventory_flow_item_units(inventory_flow_id,item_unit_id) VALUES(#{flowId},#{unitId})</insert>
+  <insert id="bindFlowUnit">INSERT INTO inventory_flow_item_units(inventory_flow_id,item_unit_id) SELECT #{flowId},#{unitId} FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM inventory_flow_item_units WHERE inventory_flow_id=#{flowId} AND item_unit_id=#{unitId})</insert>
+  <select id="countFlowUnit" resultType="int">SELECT COUNT(*) FROM inventory_flow_item_units WHERE inventory_flow_id=#{flowId} AND item_unit_id=#{unitId}</select>
   <select id="flowItems" resultType="map">SELECT * FROM inventory_flow_items WHERE inventory_flow_id=#{id} AND deleted_at IS NULL</select>
   <select id="flowUnits" resultType="map">SELECT u.* FROM item_units u JOIN inventory_flow_item_units x ON x.item_unit_id=u.id WHERE x.inventory_flow_id=#{id} AND u.deleted_at IS NULL</select>
   <select id="flow" resultType="map">SELECT * FROM inventory_flows WHERE id=#{id} AND deleted_at IS NULL</select>
@@ -49,5 +62,61 @@
   <update id="softDelete">UPDATE ${table} SET deleted_at=NOW(),updated_at=NOW() WHERE id=#{id} AND ${statusColumn}=1 AND deleted_at IS NULL</update>
   <update id="auditFlow">UPDATE inventory_flows SET flow_status=#{status},approved_by=#{by},approved_at=NOW(),updated_at=NOW() WHERE id=#{id} AND flow_status=2 AND deleted_at IS NULL</update>
   <update id="setUnitStock">UPDATE item_units SET stock_status=#{status},updated_at=NOW() WHERE id=#{id} AND deleted_at IS NULL</update>
-  <update id="finishFlowItems">UPDATE inventory_flow_items SET finished_quantity=(SELECT COUNT(*) FROM inventory_flow_item_units x JOIN item_units u ON u.id=x.item_unit_id WHERE x.inventory_flow_id=#{id} AND u.item_id=inventory_flow_items.item_id),updated_at=NOW() WHERE inventory_flow_id=#{id} AND deleted_at IS NULL</update>
+  <update id="finishFlowItems">UPDATE inventory_flow_items SET finished_quantity=(SELECT COUNT(DISTINCT x.item_unit_id) FROM inventory_flow_item_units x JOIN item_units u ON u.id=x.item_unit_id WHERE x.inventory_flow_id=#{id} AND u.item_id=inventory_flow_items.item_id),updated_at=NOW() WHERE inventory_flow_id=#{id} AND deleted_at IS NULL</update>
+  <update id="addUnitItemCounts">
+    UPDATE items SET
+      total_count=total_count+1,
+      in_stock_count=in_stock_count+IF(#{stockStatus}=1,1,0),
+      reserved_count=reserved_count+IF(#{stockStatus}=2,1,0),
+      out_stock_count=out_stock_count+IF(#{stockStatus}=3,1,0),
+      pending_count=pending_count+IF(#{qualityStatus}=1,1,0),
+      qualified_count=qualified_count+IF(#{qualityStatus}=2,1,0),
+      unqualified_count=unqualified_count+IF(#{qualityStatus}=3,1,0),
+      available_count=available_count+IF(#{stockStatus}=1 AND #{qualityStatus}=2,1,0),
+      updated_at=NOW()
+    WHERE id=#{id} AND deleted_at IS NULL
+  </update>
+  <update id="changeUnitItemCounts">
+    UPDATE items SET
+      in_stock_count=in_stock_count-IF(#{oldStockStatus}=1,1,0)+IF(#{newStockStatus}=1,1,0),
+      reserved_count=reserved_count-IF(#{oldStockStatus}=2,1,0)+IF(#{newStockStatus}=2,1,0),
+      out_stock_count=out_stock_count-IF(#{oldStockStatus}=3,1,0)+IF(#{newStockStatus}=3,1,0),
+      pending_count=pending_count-IF(#{oldQualityStatus}=1,1,0)+IF(#{newQualityStatus}=1,1,0),
+      qualified_count=qualified_count-IF(#{oldQualityStatus}=2,1,0)+IF(#{newQualityStatus}=2,1,0),
+      unqualified_count=unqualified_count-IF(#{oldQualityStatus}=3,1,0)+IF(#{newQualityStatus}=3,1,0),
+      available_count=available_count-IF(#{oldStockStatus}=1 AND #{oldQualityStatus}=2,1,0)+IF(#{newStockStatus}=1 AND #{newQualityStatus}=2,1,0),
+      updated_at=NOW()
+    WHERE id=#{id} AND deleted_at IS NULL
+  </update>
+  <update id="addUnitOrderCounts">
+    UPDATE engineering_orders SET
+      produced_quantity=produced_quantity+1,
+      qualified_quantity=qualified_quantity+IF(#{qualityStatus}=2,1,0),
+      unqualified_quantity=unqualified_quantity+IF(#{qualityStatus}=3,1,0),
+      updated_at=NOW()
+    WHERE id=#{id} AND deleted_at IS NULL
+  </update>
+  <update id="changeUnitOrderCounts">
+    UPDATE engineering_orders SET
+      qualified_quantity=qualified_quantity-IF(#{oldQualityStatus}=2,1,0)+IF(#{newQualityStatus}=2,1,0),
+      unqualified_quantity=unqualified_quantity-IF(#{oldQualityStatus}=3,1,0)+IF(#{newQualityStatus}=3,1,0),
+      updated_at=NOW()
+    WHERE id=#{id} AND deleted_at IS NULL
+  </update>
+  <update id="reserveItem">
+    UPDATE items SET
+      available_count=available_count-#{quantity},
+      reserved_count=reserved_count+#{quantity},
+      updated_at=NOW()
+    WHERE id=#{id} AND deleted_at IS NULL AND available_count&gt;=#{quantity}
+  </update>
+  <update id="completeItemFlow">
+    UPDATE items SET
+      in_stock_count=in_stock_count+IF(#{flowType}=1,1,-1),
+      out_stock_count=out_stock_count+IF(#{flowType}=1,-1,1),
+      reserved_count=GREATEST(0,reserved_count-IF(#{flowType}=2,1,0)),
+      available_count=available_count+IF(#{flowType}=1 AND #{qualified},1,0),
+      updated_at=NOW()
+    WHERE id=#{id} AND deleted_at IS NULL
+  </update>
 </mapper>

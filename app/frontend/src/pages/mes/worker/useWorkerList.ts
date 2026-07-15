@@ -31,7 +31,12 @@ export const useWorkerList = (selectedType: Ref<WorkerPanelType>) => {
   }
 
   const fetchData = async (next = false) => {
-    if (selectedType.value === 'receive' || selectedType.value === 'inspect') return
+    if (
+      selectedType.value === 'receive' ||
+      selectedType.value === 'inspect' ||
+      selectedType.value === 'scan'
+    )
+      return
     if (next) loadingMore.value = true
     else loading.value = true
     try {

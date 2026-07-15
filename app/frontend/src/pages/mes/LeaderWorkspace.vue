@@ -64,26 +64,16 @@
         <template v-else-if="column.key === 'action'">
           <a-space class="row-actions" size="small">
             <a-button type="link" size="small" @click="viewDetail(record)">详情</a-button>
-            <a-button
-              v-if="selectedType === 'flows' && record.flowStatus === 1"
-              type="link"
-              size="small"
-              @click="editFlowDraft(record)"
-            >
+            <a-button v-if="canEditDraft(record)" type="link" size="small" @click="editDraft(record)">
               编辑
             </a-button>
-            <a-button
-              v-if="selectedType === 'flows' && record.flowStatus === 1"
-              type="link"
-              size="small"
-              @click="submitFlowDraft(record)"
-            >
+            <a-button v-if="canEditDraft(record)" type="link" size="small" @click="submitDraft(record)">
               提交
             </a-button>
             <a-popconfirm
-              v-if="selectedType === 'flows' && record.flowStatus === 1"
+              v-if="canEditDraft(record)"
               title="删除这个草稿？"
-              @confirm="deleteFlowDraft(record)"
+              @confirm="deleteDraft(record)"
             >
               <a-button type="link" danger size="small">删除</a-button>
             </a-popconfirm>
@@ -190,12 +180,14 @@ import { message } from 'ant-design-vue'
 import {
   FLOW_TYPE_IN,
   FLOW_TYPE_OUT,
+  DraftStatus,
   MesListScope,
   listInventoryFlow,
   listEngineeringOrder,
   listWorkOrder,
   createInventoryFlowDraft,
   deleteInventoryFlowDraft,
+  deleteEngineeringOrderDraft,
   submitInventoryFlow,
   createEngineeringOrder,
   submitEngineeringOrder,
@@ -280,6 +272,7 @@ const engColumns = [
     width: 170,
     customRender: ({ record }: any) => `${record.item?.name || '物品'} #${record.itemId}`,
   },
+  { title: '状态', dataIndex: 'status', width: 90 },
   { title: '预计', dataIndex: 'expectedQuantity', width: 80 },
   { title: '已产出', dataIndex: 'producedQuantity', width: 80 },
   { title: '说明', dataIndex: 'description', ellipsis: true },
@@ -378,15 +371,28 @@ const viewDetail = (record: any) => {
   router.push({ path: '/mes/detail', query: { kind, id: String(record.id) } })
 }
 
-const editFlowDraft = (record: any) => {
-  router.push({ path: '/mes/create', query: { type: 'flow', id: String(record.id) } })
+const canEditDraft = (record: any) =>
+  (selectedType.value === 'flows' && record.flowStatus === 1) ||
+  (selectedType.value === 'engineering' && record.status === DraftStatus.Draft)
+
+const editDraft = (record: any) => {
+  router.push({
+    path: '/mes/create',
+    query: {
+      type: selectedType.value === 'engineering' ? 'engineering' : 'flow',
+      id: String(record.id),
+    },
+  })
 }
 
-const submitFlowDraft = async (record: any) => {
+const submitDraft = async (record: any) => {
   if (!record.id) return
-  const res = await submitInventoryFlow({ id: record.id })
+  const res =
+    selectedType.value === 'engineering'
+      ? await submitEngineeringOrder({ id: record.id })
+      : await submitInventoryFlow({ id: record.id })
   if (res.data.code === 0) {
-    message.success('流转单已提交')
+    message.success(selectedType.value === 'engineering' ? '工程单已提交' : '流转单已提交')
     fetchData()
   } else {
     message.error(res.data.message || '提交失败')
@@ -419,9 +425,12 @@ const deleteWorkOrderDraftRow = async (record: any) => {
   }
 }
 
-const deleteFlowDraft = async (record: any) => {
+const deleteDraft = async (record: any) => {
   if (!record.id) return
-  const res = await deleteInventoryFlowDraft({ id: record.id })
+  const res =
+    selectedType.value === 'engineering'
+      ? await deleteEngineeringOrderDraft({ id: record.id })
+      : await deleteInventoryFlowDraft({ id: record.id })
   if (res.data.code === 0) {
     message.success('草稿已删除')
     fetchData()
@@ -536,8 +545,15 @@ const handleCreateWO = async () => {
 const formatTime = (t?: string) => (t ? dayjs(t).format('YYYY-MM-DD HH:mm') : '-')
 const statusColor = (s?: number) =>
   s === 1 ? 'default' : s === 2 ? 'blue' : s === 3 ? 'green' : 'red'
-const statusLabel = (s?: number) =>
-  s === 1 ? '草稿' : s === 2 ? '待处理' : s === 3 ? '已通过' : '已拒绝'
+const statusLabel = (s?: number) => {
+  if (selectedType.value === 'engineering') {
+    if (s === DraftStatus.Draft) return '草稿'
+    if (s === DraftStatus.Submitted) return '已提交'
+    if (s === DraftStatus.Done) return '已完成'
+    return '未知'
+  }
+  return s === 1 ? '草稿' : s === 2 ? '待处理' : s === 3 ? '已通过' : '已拒绝'
+}
 
 watch(
   () => route.query.panel,

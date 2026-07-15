@@ -264,6 +264,7 @@ const router = useRouter()
 const saving = ref(false)
 const savingDraft = ref(false)
 const leaving = ref(false)
+const submitted = ref(false)
 const draftId = ref<number | undefined>(Number(route.query.id || 0) || undefined)
 const type = computed(() => String(route.query.type || '') as CreateType)
 const canSaveDraft = computed(() =>
@@ -455,6 +456,7 @@ const normalizedProcessItems = () =>
     .map((item) => ({ consumeItemId: item.consumeItemId, quantity: item.quantity }))
 
 const hasContent = computed(() => {
+  if (submitted.value) return false
   if (type.value === 'item') {
     return Boolean(itemForm.name.trim() || itemForm.description.trim() || itemForm.unit !== '个')
   }
@@ -593,11 +595,16 @@ const saveDraft = async (silent = false, syncRoute = true) => {
       return false
     }
     const wasUpdate = Boolean(draftId.value)
-    if (!draftId.value && typeof res?.data?.data === 'number') {
-      draftId.value = res.data.data
+    const createdId = responseId(res?.data?.data)
+    if (!draftId.value && createdId) {
+      draftId.value = createdId
       if (syncRoute) {
         await router.replace({ query: { ...route.query, id: String(draftId.value) } })
       }
+    }
+    if (!draftId.value) {
+      message.error('草稿保存失败：服务端未返回记录 ID')
+      return false
     }
     if (!silent) {
       message.success(wasUpdate ? '草稿已更新' : '草稿已保存')
@@ -761,7 +768,7 @@ const exitAfterSubmit = async () => {
     return
   }
   if (type.value === 'workOrder') {
-    await router.push({ path: '/mes/workorders', query: { view: 'workOrders' } })
+    await router.push({ path: '/mes/workorders', query: { mode: 'sent' } })
     return
   }
   if (type.value === 'item') {
@@ -772,7 +779,7 @@ const exitAfterSubmit = async () => {
     await router.push({ path: '/mes/purchase', query: { panel: 'itemUnits', view: 'units' } })
     return
   }
-  await router.push({ path: '/mes/purchase', query: { panel: 'flows', view: 'purchase' } })
+  await router.push({ path: '/mes/purchase', query: { panel: 'flows', view: 'flows' } })
 }
 
 const submitDraft = async () => {
@@ -793,6 +800,7 @@ const submitDraft = async () => {
       message.error(res.data.message || '提交失败')
       return
     }
+    submitted.value = true
     message.success('已提交')
     await exitAfterSubmit()
   } finally {
@@ -860,6 +868,7 @@ const submit = async () => {
       if (id) await submitWorkOrder({ id })
     }
     if (id) {
+      submitted.value = true
       message.success('已提交')
       await exitAfterSubmit()
     } else {

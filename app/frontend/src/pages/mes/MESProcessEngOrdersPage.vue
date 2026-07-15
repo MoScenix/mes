@@ -56,7 +56,7 @@
 import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import dayjs from 'dayjs'
-import { listEngineeringOrder, type EngineeringOrderVO } from '@/api/mesController'
+import { DraftStatus, listEngineeringOrder, type EngineeringOrderVO } from '@/api/mesController'
 
 const route = useRoute()
 const router = useRouter()
@@ -87,6 +87,7 @@ const loadEngOrders = async (next = false) => {
   try {
     const res = await listEngineeringOrder({
       processId: pid,
+      status: DraftStatus.Submitted,
       pageSize: 30,
       cursorUpdatedAt: next ? cursorUpdatedAt : undefined,
       cursorId: next ? cursorId : undefined,
