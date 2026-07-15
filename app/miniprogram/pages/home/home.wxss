@@ -1,0 +1,32 @@
+.home-page { min-height: 100vh; background: #f8fafc; }
+.safe-top { height: env(safe-area-inset-top); background: #fff; }
+.home-header { height: 116rpx; padding: 0 30rpx; display: flex; align-items: center; justify-content: space-between; background: #fff; border-bottom: 1rpx solid #edf0f4; box-sizing: border-box; }
+.brand-row { display: flex; align-items: center; min-width: 0; }
+.mini-mark { width: 72rpx; height: 72rpx; border-radius: 18rpx; background: #2563eb; color: #fff; font-size: 23rpx; font-weight: 700; line-height: 72rpx; text-align: center; }
+.brand-copy { margin-left: 20rpx; display: flex; flex-direction: column; }
+.brand-title { font-size: 30rpx; font-weight: 650; line-height: 1.2; }
+.brand-user { margin-top: 8rpx; color: #94a3b8; font-size: 22rpx; }
+.header-scan { width: 76rpx; height: 76rpx; padding: 0; display: flex; align-items: center; justify-content: center; background: #f1f5f9; border-radius: 20rpx; }
+.scan-corners { position: relative; width: 38rpx; height: 38rpx; }
+.scan-corners .corner { position: absolute; width: 12rpx; height: 12rpx; border-color: #334155; border-style: solid; }
+.scan-corners .c1 { left: 0; top: 0; border-width: 4rpx 0 0 4rpx; }
+.scan-corners .c2 { right: 0; top: 0; border-width: 4rpx 4rpx 0 0; }
+.scan-corners .c3 { left: 0; bottom: 0; border-width: 0 0 4rpx 4rpx; }
+.scan-corners .c4 { right: 0; bottom: 0; border-width: 0 4rpx 4rpx 0; }
+.home-content { padding-top: 54rpx; }
+.intro { display: flex; flex-direction: column; margin-bottom: 40rpx; }
+.intro-title { font-size: 46rpx; font-weight: 700; line-height: 1.25; }
+.intro-subtitle { margin-top: 12rpx; color: #94a3b8; font-size: 26rpx; }
+.action-list { display: flex; flex-direction: column; gap: 22rpx; }
+.action-row { height: 150rpx; padding: 0 28rpx; display: flex; align-items: center; text-align: left; }
+.action-icon { width: 84rpx; height: 84rpx; flex: 0 0 84rpx; border-radius: 22rpx; display: flex; align-items: center; justify-content: center; font-size: 30rpx; font-weight: 700; }
+.inbound { color: #047857; background: #ecfdf5; }
+.outbound { color: #b45309; background: #fffbeb; }
+.inspect { color: #1d4ed8; background: #eff6ff; }
+.action-copy { margin-left: 24rpx; display: flex; flex: 1; min-width: 0; flex-direction: column; }
+.action-title { font-size: 31rpx; font-weight: 650; }
+.action-desc { margin-top: 10rpx; color: #94a3b8; font-size: 23rpx; }
+.chevron { color: #cbd5e1; font-size: 48rpx; font-weight: 300; }
+.general-hint { margin: 52rpx 0 22rpx; display: flex; align-items: center; gap: 18rpx; color: #a0aec0; font-size: 22rpx; }
+.hint-line { height: 1rpx; flex: 1; background: #e2e8f0; }
+.logout-button { background: transparent; color: #94a3b8; font-size: 24rpx; }

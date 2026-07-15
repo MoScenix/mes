@@ -1,0 +1,8 @@
+.auth-page { display: flex; flex-direction: column; justify-content: center; }
+.brand-mark { width: 104rpx; height: 104rpx; margin: 0 auto 30rpx; border-radius: 24rpx; background: #2563eb; color: #fff; font-size: 34rpx; font-weight: 700; line-height: 104rpx; text-align: center; box-shadow: 0 18rpx 42rpx rgba(37, 99, 235, .2); }
+.auth-copy { display: flex; flex-direction: column; align-items: center; margin-bottom: 52rpx; }
+.auth-title { font-size: 44rpx; line-height: 1.25; font-weight: 700; }
+.auth-subtitle { margin-top: 12rpx; color: #94a3b8; font-size: 26rpx; }
+.auth-form { padding: 44rpx 36rpx 34rpx; }
+.form-field { display: block; margin-bottom: 34rpx; }
+.link-button { margin-top: 22rpx; background: transparent; color: #2563eb; font-size: 26rpx; }

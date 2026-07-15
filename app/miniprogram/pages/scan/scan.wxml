@@ -1,0 +1,35 @@
+<view class="page-shell scan-page">
+  <view class="scan-copy">
+    <text class="scan-title">{{title}}</text>
+    <text class="scan-subtitle">{{subtitle}}</text>
+  </view>
+
+  <view wx:if="{{detail}}" class="surface detail-panel">
+    <view class="detail-head"><text class="detail-kind">{{detail.kindLabel}}</text><text class="detail-id">#{{detail.id}}</text></view>
+    <text class="detail-name">{{detail.name}}</text>
+    <view wx:for="{{detail.rows}}" wx:key="label" class="detail-row"><text>{{item.label}}</text><text>{{item.value}}</text></view>
+  </view>
+
+  <view wx:if="{{context}}" class="surface context-panel">
+    <view class="context-top"><text class="context-label">当前{{context.kindLabel}}</text><button class="reset-button" bindtap="reset">重新扫描</button></view>
+    <text class="context-title">{{context.name}} #{{context.id}}</text>
+    <text class="context-progress" wx:if="{{context.progress}}">{{context.progress}}</text>
+  </view>
+
+  <view wx:if="{{unit}}" class="surface unit-panel">
+    <text class="unit-label">待检测单体</text>
+    <text class="unit-title">{{unit.itemName || '物料单体'}} #{{unit.id}}</text>
+    <view class="quality-actions">
+      <button class="secondary-button" loading="{{submitting}}" data-quality="2" bindtap="submitQuality">标记合格</button>
+      <button class="secondary-button danger-button" loading="{{submitting}}" data-quality="3" bindtap="submitQuality">标记不合格</button>
+    </view>
+  </view>
+
+  <button wx:if="{{showScanButton}}" class="scan-trigger" loading="{{scanning}}" bindtap="startScan">
+    <view class="large-scan-icon"><view class="corner c1"></view><view class="corner c2"></view><view class="corner c3"></view><view class="corner c4"></view><view class="scan-line"></view></view>
+    <text class="scan-button-title">{{buttonText}}</text>
+    <text class="scan-button-help">调用微信扫码识别二维码</text>
+  </button>
+
+  <view wx:if="{{lastMessage}}" class="result-message">{{lastMessage}}</view>
+</view>

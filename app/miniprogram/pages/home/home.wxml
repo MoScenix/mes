@@ -1,0 +1,44 @@
+<view class="home-page">
+  <view class="safe-top"></view>
+  <view class="home-header">
+    <view class="brand-row">
+      <view class="mini-mark">MES</view>
+      <view class="brand-copy"><text class="brand-title">移动工作台</text><text class="brand-user">{{userName}}</text></view>
+    </view>
+    <button class="header-scan" aria-label="通用扫码" bindtap="openGeneralScan">
+      <view class="scan-corners"><view class="corner c1"></view><view class="corner c2"></view><view class="corner c3"></view><view class="corner c4"></view></view>
+    </button>
+  </view>
+
+  <view class="page-shell home-content">
+    <view class="intro">
+      <text class="intro-title">今天要处理什么？</text>
+      <text class="intro-subtitle">选择业务后直接扫描对应单据</text>
+    </view>
+
+    <view class="action-list">
+      <button class="action-row surface" data-mode="inbound" bindtap="openMode">
+        <view class="action-icon inbound"><text>入</text></view>
+        <view class="action-copy"><text class="action-title">扫描入库</text><text class="action-desc">流转单 → 合格单体</text></view>
+        <text class="chevron">›</text>
+      </button>
+      <button class="action-row surface" data-mode="receive" bindtap="openMode">
+        <view class="action-icon outbound"><text>出</text></view>
+        <view class="action-copy"><text class="action-title">领取货物</text><text class="action-desc">出库流转单 → 在库单体</text></view>
+        <text class="chevron">›</text>
+      </button>
+      <button class="action-row surface" data-mode="inspect" bindtap="openMode">
+        <view class="action-icon inspect"><text>检</text></view>
+        <view class="action-copy"><text class="action-title">检测单体</text><text class="action-desc">工程单 → 待检测单体</text></view>
+        <text class="chevron">›</text>
+      </button>
+    </view>
+
+    <view class="general-hint">
+      <view class="hint-line"></view>
+      <text>右上角可扫描任意 MES 对象码</text>
+      <view class="hint-line"></view>
+    </view>
+    <button class="logout-button" bindtap="logout">退出登录</button>
+  </view>
+</view>
