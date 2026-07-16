@@ -29,14 +29,10 @@
       </template>
     </template>
   </a-table>
-  <div v-if="items.length" class="list-more">
-    <MesInfiniteTrigger :has-more="hasMore" :loading="loadingMore" @load="$emit('load-more')" />
-  </div>
 </template>
 
 <script setup lang="ts">
 import type { ItemVO } from '@/api/mesController'
-import MesInfiniteTrigger from '@/components/mes/MesInfiniteTrigger.vue'
 import { formatTime } from './display'
 
 defineProps<{

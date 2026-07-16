@@ -234,6 +234,8 @@ public class InventoryService {
                 optionalLong(q, "ownerUserId"),
                 optionalLong(q, "itemId"),
                 optionalInt(q, "status"),
+                (String) q.get("namePrefix"),
+                (String) q.get("createdDate"),
                 offset(q),
                 size(q)),
             q));
@@ -319,6 +321,7 @@ public class InventoryService {
                 optionalInt(q, "qualityStatus"),
                 optionalLong(q, "engineeringOrderId"),
                 optionalLong(q, "inventoryFlowId"),
+                (String) q.get("createdDate"),
                 offset(q),
                 size(q)),
             q));
@@ -440,19 +443,24 @@ public class InventoryService {
 
   public Map<String, Object> flows(Map<String, Object> q) {
     if (Boolean.TRUE.equals(q.get("onlyDraft"))) q.put("flowStatus", 1);
+    List<Map<String, Object>> rows =
+        dal.flows(
+            optionalLong(q, "userId"),
+            Boolean.TRUE.equals(q.get("isTo")),
+            optionalInt(q, "flowStatus"),
+            optionalInt(q, "businessType"),
+            Objects.toString(q.getOrDefault("keyword", q.get("namePrefix")), null),
+            (String) q.get("createdDate"),
+            optionalLong(q, "itemUnitId"),
+            q.containsKey("draftOwnerUserId") ? num(q, "draftOwnerUserId", 0) : null,
+            offset(q),
+            size(q));
+    for (Map<String, Object> row : rows) {
+      long flowId = num(row, "id", 0);
+      if (flowId > 0) row.put("items", dal.flowItems(flowId));
+    }
     return resultView(
-        page(
-            dal.flows(
-                optionalLong(q, "userId"),
-                Boolean.TRUE.equals(q.get("isTo")),
-                optionalInt(q, "flowStatus"),
-                optionalInt(q, "businessType"),
-                (String) q.get("namePrefix"),
-                optionalLong(q, "itemUnitId"),
-                q.containsKey("draftOwnerUserId") ? num(q, "draftOwnerUserId", 0) : null,
-                offset(q),
-                size(q)),
-            q));
+        page(rows, q));
   }
 
   private void validateFlow(Map<String, Object> r) {
@@ -503,7 +511,7 @@ public class InventoryService {
 
   public Map<String, Object> order(long id) {
     var r = require(dal.order(id), "engineering order");
-    r.put("itemUnits", dal.units(null, null, null, null, id, null, 0, 100));
+    r.put("itemUnits", dal.units(null, null, null, null, id, null, null, 0, 100));
     return resultView(r);
   }
 
@@ -517,6 +525,8 @@ public class InventoryService {
                 optionalInt(q, "status"),
                 optionalInt(q, "progressStatus"),
                 optionalLong(q, "draftOwnerLeaderId"),
+                Objects.toString(q.getOrDefault("keyword", q.get("namePrefix")), null),
+                (String) q.get("createdDate"),
                 offset(q),
                 size(q)),
             q));

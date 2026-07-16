@@ -17,6 +17,14 @@
         :options="businessTypeOptions"
         @change="fetchData()"
       />
+      <a-date-picker
+        v-if="selectedType === 'audit' || selectedType === 'flows'"
+        v-model:value="createdDate"
+        value-format="YYYY-MM-DD"
+        placeholder="创建日期"
+        allow-clear
+        @change="fetchData()"
+      />
       <a-button v-if="selectedType === 'workOrders'" type="primary" @click="createWorkOrder">
         新建工单
       </a-button>
@@ -96,9 +104,15 @@
         @load-more="loadMore"
       />
     </template>
-    <div v-if="selectedType !== 'workOrders' && dataList.length" class="list-more">
-      <MesInfiniteTrigger :has-more="listPage.hasMore" :loading="loadingMore" @load="loadMore" />
-    </div>
+    <a-pagination
+      v-if="selectedType !== 'workOrders' && dataList.length"
+      class="page-pagination"
+      :current="currentPage"
+      :page-size="listPage.pageSize"
+      :total="(currentPage - 1) * listPage.pageSize + dataList.length + (listPage.hasMore ? 1 : 0)"
+      :show-size-changer="false"
+      @change="changePage"
+    />
 
     <!-- 审批 Modal -->
     <a-modal
@@ -143,7 +157,6 @@ import { parseMesCode } from '@/utils/mesCode'
 import MesListSearchPicker from '@/components/mes/MesListSearchPicker.vue'
 import MesUserName from '@/components/mes/MesUserName.vue'
 import WorkOrderMailList from '@/components/mes/WorkOrderMailList.vue'
-import MesInfiniteTrigger from '@/components/mes/MesInfiniteTrigger.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -157,6 +170,7 @@ const panelFromRoute = () => {
 }
 const selectedType = ref<DataType>(panelFromRoute())
 const businessTypeFilter = ref<FlowBusinessType>()
+const createdDate = ref<string>()
 const businessTypeOptions = [
   { label: '采购入库', value: FlowBusinessType.PurchaseInbound },
   { label: '申请货物', value: FlowBusinessType.MaterialRequest },
@@ -166,7 +180,7 @@ const businessTypeOptions = [
 const searchText = ref('')
 const searchItemId = ref<number>()
 const onTypeChange = () => {
-  fetchData()
+  changePage(1)
 }
 const onSearch = (value: string) => {
   const parsed = parseMesCode(value)
@@ -175,17 +189,17 @@ const onSearch = (value: string) => {
     return
   }
   searchItemId.value = undefined
-  fetchData()
+  changePage(1)
 }
 const selectSearchItem = (item: ItemVO) => {
   searchText.value = item.name || ''
   searchItemId.value = item.id
-  fetchData()
+  changePage(1)
 }
 const clearSearch = () => {
   searchText.value = ''
   searchItemId.value = undefined
-  fetchData()
+  changePage(1)
 }
 
 const auditColumns = [
@@ -239,6 +253,7 @@ const woColumns = [
 const dataList = ref<any[]>([])
 const loading = ref(false)
 const loadingMore = ref(false)
+const currentPage = ref(1)
 const listPage = reactive({
   pageSize: 30,
   hasMore: false,
@@ -260,26 +275,27 @@ const fetchData = async (next = false) => {
   if (next) loadingMore.value = true
   else loading.value = true
   try {
-    const p = { pageSize: listPage.pageSize }
+    const p = {
+      pageNum: next ? currentPage.value + 1 : currentPage.value,
+      pageSize: listPage.pageSize,
+    }
     let res: any
     if (selectedType.value === 'audit') {
       res = await listInventoryFlow({
         ...p,
         flowStatus: FLOW_STATUS_SUBMITTED,
-        itemNamePrefix: searchText.value.trim() || undefined,
+        keyword: searchText.value.trim() || undefined,
+        createdDate: createdDate.value,
         scope: MesListScope.Audit,
         businessType: businessTypeFilter.value,
-        cursorUpdatedAt: next ? listPage.nextCursorUpdatedAt : undefined,
-        cursorId: next ? listPage.nextCursorId : undefined,
       })
     } else if (selectedType.value === 'flows') {
       res = await listInventoryFlow({
         ...p,
-        itemNamePrefix: searchText.value.trim() || undefined,
+        keyword: searchText.value.trim() || undefined,
+        createdDate: createdDate.value,
         scope: MesListScope.All,
         businessType: businessTypeFilter.value,
-        cursorUpdatedAt: next ? listPage.nextCursorUpdatedAt : undefined,
-        cursorId: next ? listPage.nextCursorId : undefined,
       })
     } else if (selectedType.value === 'inventory') {
       res = await listItems({
@@ -297,9 +313,8 @@ const fetchData = async (next = false) => {
       })
     }
     if (res.data.code === 0 && res.data.data) {
-      dataList.value = next
-        ? [...dataList.value, ...(res.data.data.records ?? [])]
-        : (res.data.data.records ?? [])
+      dataList.value = res.data.data.records ?? []
+      currentPage.value = p.pageNum
       syncCursor(res.data.data)
     }
   } finally {
@@ -311,6 +326,10 @@ const fetchData = async (next = false) => {
 const loadMore = () => {
   if (!listPage.hasMore) return
   fetchData(true)
+}
+const changePage = (page: number) => {
+  currentPage.value = page
+  fetchData()
 }
 
 const viewDetail = (record: any) => {
@@ -412,6 +431,7 @@ onMounted(fetchData)
   width: 280px;
   max-width: 100%;
 }
+.page-pagination { margin-top: 18px; text-align: right; }
 .id-link {
   color: var(--primary);
   cursor: pointer;

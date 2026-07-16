@@ -63,6 +63,11 @@ public class AiService {
         search_processes_by_item to find its processes. Never invent or omit process_id. If the user
         has not specified a process and the search result does not identify one unambiguously, use
         ask_user so the user can choose or provide the process id.
+
+        MES enum values must exactly follow each tool parameter description. For inventory flows:
+        purchase_inbound=1 and production_inbound=3 are inbound (flow_type=in/1), while
+        material_request=2 is outbound (flow_type=out/2). Never send translated Chinese enum text,
+        an undocumented number, or a business_type/flow_type combination that conflicts.
         """;
 
   private final RedisAiStore store;

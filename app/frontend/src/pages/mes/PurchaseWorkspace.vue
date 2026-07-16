@@ -14,6 +14,13 @@
       </div>
       <div v-if="selectedType !== 'scan'" class="header-right">
         <div class="header-filters">
+          <a-date-picker
+            v-model:value="createdDateValue"
+            placeholder="创建日期"
+            value-format="YYYY-MM-DD"
+            allow-clear
+            @change="fetchData()"
+          />
           <a-select
             v-if="selectedType === 'flows'"
             v-model:value="flowStatusFilter"
@@ -91,6 +98,15 @@
       @delete-draft="deleteFlowDraft"
       @load-more="loadMore"
     />
+    <a-pagination
+      v-if="selectedType !== 'scan' && dataList.length"
+      class="page-pagination"
+      :current="currentPage"
+      :page-size="listPage.pageSize"
+      :total="(currentPage - 1) * listPage.pageSize + dataList.length + (listPage.hasMore ? 1 : 0)"
+      :show-size-changer="false"
+      @change="changePage"
+    />
 
     <a-modal
       v-model:open="editOpen"
@@ -159,6 +175,7 @@ const searchText = ref('')
 const searchItemId = ref<number>()
 const flowStatusFilter = ref<number>()
 const onlyDraft = ref(false)
+const createdDateValue = ref<string>()
 const flowBusinessType = computed(() => Number(route.query.businessType || 0) || undefined)
 const stockStatusFilter = ref<number>()
 const qualityStatusFilter = ref<number>()
@@ -167,13 +184,14 @@ const engineeringOrderIdFilter = computed(
 )
 const flowIdFilter = computed(() => Number(route.query.flowId || 0) || undefined)
 
-const { dataList, loading, loadingMore, listPage, fetchData, loadMore } = usePurchaseList({
+const { dataList, loading, loadingMore, listPage, currentPage, fetchData, loadMore, changePage } = usePurchaseList({
   selectedType,
   searchText,
   searchItemId,
   flowStatusFilter,
   onlyDraft,
   flowBusinessType,
+  createdDate: createdDateValue,
   stockStatusFilter,
   qualityStatusFilter,
   engineeringOrderId: engineeringOrderIdFilter,
@@ -197,7 +215,7 @@ const onTypeChange = () => {
   flowStatusFilter.value = undefined
   stockStatusFilter.value = undefined
   qualityStatusFilter.value = undefined
-  fetchData()
+  changePage(1)
 }
 
 const syncPanel = () => {
@@ -212,19 +230,19 @@ const onSearch = (value: string) => {
     return
   }
   searchItemId.value = undefined
-  fetchData()
+  changePage(1)
 }
 
 const selectSearchItem = (item: ItemVO) => {
   searchText.value = item.name || ''
   searchItemId.value = item.id
-  fetchData()
+  changePage(1)
 }
 
 const clearSearch = () => {
   searchText.value = ''
   searchItemId.value = undefined
-  fetchData()
+  changePage(1)
 }
 
 const createButtonText = computed(() => {
@@ -346,6 +364,7 @@ onMounted(async () => {
 .workspace-page {
   position: relative;
 }
+.page-pagination { margin-top: 18px; text-align: right; }
 
 .workspace-header {
   display: flex;

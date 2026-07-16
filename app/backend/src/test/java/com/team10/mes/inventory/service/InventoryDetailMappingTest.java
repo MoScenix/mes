@@ -100,7 +100,7 @@ class InventoryDetailMappingTest {
   void traceListPassesItemUnitIdToMapperAndMapsFlowRows() {
     when(
             mapper.flows(
-                isNull(), eq(false), isNull(), isNull(), isNull(), eq(9L), isNull(), eq(0L), eq(50L)))
+                isNull(), eq(false), isNull(), isNull(), isNull(), isNull(), eq(9L), isNull(), eq(0L), eq(50L)))
         .thenReturn(List.of(row("id", 5L, "flow_type", 2, "flow_status", 3)));
 
     Map<String, Object> page =
@@ -109,7 +109,7 @@ class InventoryDetailMappingTest {
     Map<String, Object> flow = first(page, "records");
     assertEquals(2, flow.get("flowType"));
     assertEquals(3, flow.get("flowStatus"));
-    verify(mapper).flows(null, false, null, null, null, 9L, null, 0L, 50L);
+    verify(mapper).flows(null, false, null, null, null, null, 9L, null, 0L, 50L);
   }
 
   @Test
@@ -122,12 +122,12 @@ class InventoryDetailMappingTest {
 
     when(
             mapper.flows(
-                isNull(), eq(false), isNull(), isNull(), isNull(), isNull(), eq(0L), eq(0L), eq(30L)))
+                isNull(), eq(false), isNull(), isNull(), isNull(), isNull(), isNull(), eq(0L), eq(0L), eq(30L)))
         .thenReturn(List.of(row("id", 8L, "from_user_id", 13L, "flow_type", 2, "flow_status", 2)));
 
     Map<String, Object> page = data(service.flows(scoped));
     assertEquals(1, ((List<?>) page.get("records")).size());
-    verify(mapper).flows(null, false, null, null, null, null, 0L, 0L, 30L);
+    verify(mapper).flows(null, false, null, null, null, null, null, 0L, 0L, 30L);
   }
 
   @Test

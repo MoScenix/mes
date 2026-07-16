@@ -11,7 +11,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { onBeforeUnmount, ref, watch } from 'vue'
 import type { ItemVO } from '@/api/mesController'
 
 const props = defineProps<{
@@ -28,16 +28,24 @@ const emit = defineEmits<{
 }>()
 
 const innerValue = ref(props.modelValue || '')
+let searchTimer: ReturnType<typeof setTimeout> | undefined
 
 const updateValue = (value: string) => {
   innerValue.value = value
   emit('update:modelValue', value)
+  if (searchTimer) clearTimeout(searchTimer)
   if (!value.trim()) {
     emit('clear')
+    return
   }
+  searchTimer = setTimeout(() => submitCurrent(value), 300)
 }
 
 const submitCurrent = (value?: string) => {
+  if (searchTimer) {
+    clearTimeout(searchTimer)
+    searchTimer = undefined
+  }
   const text = String(value ?? innerValue.value).trim()
   innerValue.value = text
   emit('update:modelValue', text)
@@ -47,6 +55,10 @@ const submitCurrent = (value?: string) => {
   }
   emit('search', text)
 }
+
+onBeforeUnmount(() => {
+  if (searchTimer) clearTimeout(searchTimer)
+})
 
 watch(
   () => props.modelValue,

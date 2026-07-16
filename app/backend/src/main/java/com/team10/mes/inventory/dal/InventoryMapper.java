@@ -32,6 +32,8 @@ public interface InventoryMapper {
       @Param("ownerUserId") Long ownerUserId,
       @Param("itemId") Long itemId,
       @Param("status") Integer status,
+      @Param("keyword") String keyword,
+      @Param("createdDate") String createdDate,
       @Param("offset") long offset,
       @Param("limit") long limit);
 
@@ -48,6 +50,7 @@ public interface InventoryMapper {
       @Param("qualityStatus") Integer qualityStatus,
       @Param("orderId") Long orderId,
       @Param("flowId") Long flowId,
+      @Param("createdDate") String createdDate,
       @Param("offset") long offset,
       @Param("limit") long limit);
 
@@ -76,7 +79,8 @@ public interface InventoryMapper {
       @Param("isTo") boolean isTo,
       @Param("status") Integer status,
       @Param("businessType") Integer businessType,
-      @Param("name") String name,
+      @Param("keyword") String keyword,
+      @Param("createdDate") String createdDate,
       @Param("itemUnitId") Long itemUnitId,
       @Param("draftOwnerUserId") Long draftOwnerUserId,
       @Param("offset") long offset,
@@ -95,6 +99,8 @@ public interface InventoryMapper {
       @Param("status") Integer status,
       @Param("progressStatus") Integer progressStatus,
       @Param("draftOwnerLeaderId") Long draftOwnerLeaderId,
+      @Param("keyword") String keyword,
+      @Param("createdDate") String createdDate,
       @Param("offset") long offset,
       @Param("limit") long limit);
 

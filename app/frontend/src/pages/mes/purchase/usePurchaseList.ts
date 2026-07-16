@@ -11,6 +11,7 @@ type UsePurchaseListOptions = {
   flowStatusFilter: Ref<number | undefined>
   onlyDraft: Ref<boolean>
   flowBusinessType: Ref<number | undefined>
+  createdDate: Ref<string | undefined>
   stockStatusFilter: Ref<number | undefined>
   qualityStatusFilter: Ref<number | undefined>
   engineeringOrderId: Ref<number | undefined>
@@ -22,6 +23,7 @@ export function usePurchaseList(options: UsePurchaseListOptions) {
   const dataList = ref<any[]>([])
   const loading = ref(false)
   const loadingMore = ref(false)
+  const currentPage = ref(1)
   const listPage = reactive({
     pageSize: 30,
     hasMore: false,
@@ -45,31 +47,29 @@ export function usePurchaseList(options: UsePurchaseListOptions) {
     else loading.value = true
     try {
       const type = options.selectedType.value
-      const params = { pageSize: listPage.pageSize }
+      const pageNum = next ? currentPage.value + 1 : currentPage.value
+      const params = { pageNum, pageSize: listPage.pageSize }
       let res: any
 
       if (type === 'flows') {
         res = await listInventoryFlow({
           ...params,
-          itemNamePrefix: options.searchText.value.trim() || undefined,
+          keyword: options.searchText.value.trim() || undefined,
+          createdDate: options.createdDate.value,
           scope: ['admin', 'administrator', '管理员'].includes(
             String(loginUserStore.loginUser.userRole || '').toLowerCase(),
           )
             ? MesListScope.All
             : MesListScope.Mine,
-          flowStatus: options.flowStatusFilter.value,
+          flowStatus: options.onlyDraft.value ? 1 : options.flowStatusFilter.value,
           onlyDraft: options.onlyDraft.value || undefined,
           businessType: options.flowBusinessType.value,
-          cursorUpdatedAt: next ? listPage.nextCursorUpdatedAt : undefined,
-          cursorId: next ? listPage.nextCursorId : undefined,
         })
       } else if (type === 'items') {
         const namePrefix = options.searchText.value.trim() || undefined
         res = await listItems({
           ...params,
           namePrefix,
-          cursorUpdatedAt: next ? listPage.nextCursorUpdatedAt : undefined,
-          cursorId: next ? listPage.nextCursorId : undefined,
         })
       } else {
         res = await listItemUnit({
@@ -82,15 +82,13 @@ export function usePurchaseList(options: UsePurchaseListOptions) {
           qualityStatus: options.qualityStatusFilter.value,
           engineeringOrderId: options.engineeringOrderId.value,
           inventoryFlowId: options.flowId.value,
-          cursorUpdatedAt: next ? listPage.nextCursorUpdatedAt : undefined,
-          cursorId: next ? listPage.nextCursorId : undefined,
+          createdDate: options.createdDate.value,
         })
       }
 
       if (res.data.code === 0 && res.data.data) {
-        dataList.value = next
-          ? [...dataList.value, ...(res.data.data.records ?? [])]
-          : (res.data.data.records ?? [])
+        dataList.value = res.data.data.records ?? []
+        currentPage.value = pageNum
         syncCursor(res.data.data)
       } else {
         message.error(res.data.message || '获取数据失败')
@@ -106,11 +104,18 @@ export function usePurchaseList(options: UsePurchaseListOptions) {
     fetchData(true)
   }
 
+  const changePage = (page: number) => {
+    currentPage.value = page
+    fetchData()
+  }
+
   return {
     dataList,
     loading,
     loadingMore,
     listPage,
+    currentPage,
+    changePage,
     fetchData,
     loadMore,
   }

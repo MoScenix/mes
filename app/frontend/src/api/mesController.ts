@@ -236,6 +236,8 @@ export type ListInventoryFlowRequest = {
   onlyDraft?: boolean
   namePrefix?: string
   itemNamePrefix?: string
+  keyword?: string
+  createdDate?: string
   scope?: MesListScope
   itemUnitId?: number
   pageNum?: number
@@ -265,6 +267,8 @@ export type ListEngineeringOrderRequest = {
   itemId?: number
   namePrefix?: string
   itemNamePrefix?: string
+  keyword?: string
+  createdDate?: string
   scope?: MesListScope
   pageNum?: number
   pageSize?: number
@@ -295,6 +299,8 @@ export type ListProcessRequest = {
   itemId?: number
   namePrefix?: string
   itemNamePrefix?: string
+  keyword?: string
+  createdDate?: string
   scope?: MesListScope
   status?: DraftStatus
   pageNum?: number
@@ -364,6 +370,7 @@ export type ListItemUnitRequest = {
   qualityStatus?: QualityStatus
   engineeringOrderId?: number
   inventoryFlowId?: number
+  createdDate?: string
   cursorUpdatedAt?: string
   cursorId?: number
 }

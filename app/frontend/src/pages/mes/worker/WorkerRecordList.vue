@@ -92,7 +92,7 @@ const engColumns = [
     title: '生产物品',
     key: 'itemName',
     width: 170,
-    customRender: ({ record }: any) => `${record.item?.name || '物品'} #${record.itemId}`,
+    customRender: ({ record }: any) => `${record.itemName} #${record.itemId}`,
   },
   { title: '预计', dataIndex: 'expectedQuantity', width: 80 },
   { title: '已产出', dataIndex: 'producedQuantity', width: 80 },

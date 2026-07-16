@@ -23,7 +23,7 @@
               <a class="id-link" @click="viewEng(record)">#{{ record.id }}</a>
             </template>
             <template v-else-if="column.key === 'itemName'">
-              {{ record.item?.name || '物品' }} #{{ record.itemId }}
+              {{ record.itemName }} #{{ record.itemId }}
             </template>
             <template v-else-if="column.dataIndex === 'updateTime'">
               {{ formatTime(record.updateTime) }}

@@ -53,14 +53,10 @@
       </template>
     </template>
   </a-table>
-  <div v-if="flows.length" class="list-more">
-    <MesInfiniteTrigger :has-more="hasMore" :loading="loadingMore" @load="$emit('load-more')" />
-  </div>
 </template>
 
 <script setup lang="ts">
 import type { InventoryFlowVO } from '@/api/mesController'
-import MesInfiniteTrigger from '@/components/mes/MesInfiniteTrigger.vue'
 import { flowBusinessLabel, flowStatusColor, flowStatusLabel, formatTime } from './display'
 
 defineProps<{

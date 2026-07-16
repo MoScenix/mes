@@ -122,7 +122,8 @@ public final class MesAiTools {
   @Tool(name = "list_engineering_orders", description = "List engineering orders.")
   public Map<String, Object> listEngineeringOrders(ListOrdersInput in) {
     Map<String, Object> q = page(in.pageNum(), in.pageSize());
-    q.put("namePrefix", in.namePrefix());
+    q.put("keyword", in.keyword());
+    q.put("createdDate", in.createdDate());
     q.put("leaderUserId", admin && in.leaderUserId() > 0 ? in.leaderUserId() : userId);
     if (in.itemId() > 0) q.put("itemId", in.itemId());
     Integer progress = progressStatus(in.progressStatus());
@@ -163,9 +164,10 @@ public final class MesAiTools {
       name = "list_inventory_flows",
       description = "Get latest time-ordered inventory flows by scope and status.")
   public Map<String, Object> listInventoryFlows(ListFlowsInput in) {
-    Map<String, Object> q = page(1, limit(in.limit()));
+    Map<String, Object> q = page(in.pageNum(), in.pageSize());
     q.put("userId", admin && in.userId() > 0 ? in.userId() : userId);
-    q.put("namePrefix", in.namePrefix());
+    q.put("keyword", in.keyword());
+    q.put("createdDate", in.createdDate());
     Integer s = flowStatus(in.flowStatus());
     if (s != null) q.put("flowStatus", s);
     Integer businessType = flowBusinessTypeFilter(in.businessType());
@@ -222,7 +224,15 @@ public final class MesAiTools {
   public Map<String, Object> listPendingInventoryFlows(ListPendingInput in) {
     return listInventoryFlows(
         new ListFlowsInput(
-            in.limit(), in.namePrefix(), "to_me", "submitted", in.businessType(), false, in.userId()));
+            in.pageNum(),
+            in.pageSize(),
+            in.keyword(),
+            in.createdDate(),
+            "to_me",
+            "submitted",
+            in.businessType(),
+            false,
+            in.userId()));
   }
 
   @Tool(
@@ -393,12 +403,24 @@ public final class MesAiTools {
   }
 
   public record ListOrdersInput(
-      @JsonProperty("page_num") long pageNum,
-      @JsonProperty("page_size") long pageSize,
-      @JsonProperty("name_prefix") String namePrefix,
+      @JsonProperty("page_num")
+          @ToolParam(required = false, description = "Page number starting at 1; default is 1.")
+          long pageNum,
+      @JsonProperty("page_size")
+          @ToolParam(required = false, description = "Rows per page, from 1 to 100; default is 30.")
+          long pageSize,
+      String keyword,
+      @JsonProperty("created_date")
+          @ToolParam(required = false, description = "Optional creation date in YYYY-MM-DD format.")
+          String createdDate,
       @JsonProperty("leader_user_id") long leaderUserId,
       @JsonProperty("item_id") long itemId,
-      @JsonProperty("progress_status") String progressStatus,
+      @JsonProperty("progress_status")
+          @ToolParam(
+              required = false,
+              description =
+                  "Optional production progress: not_started (0, produced=0), in_progress (1), or completed (2, produced and qualified quantities both reach expected quantity).")
+          String progressStatus,
       @JsonProperty("only_draft") boolean onlyDraft) {}
 
   public record FlowItem(
@@ -407,8 +429,18 @@ public final class MesAiTools {
   public record InventoryFlowInput(
       String name,
       @JsonProperty("to_user_id") long toUserId,
-      @JsonProperty("flow_type") String flowType,
-      @JsonProperty("business_type") String businessType,
+      @JsonProperty("flow_type")
+          @ToolParam(
+              required = true,
+              description =
+                  "Inventory direction: in (database value 1) or out (database value 2). purchase_inbound and production_inbound must use in; material_request must use out.")
+          String flowType,
+      @JsonProperty("business_type")
+          @ToolParam(
+              required = true,
+              description =
+                  "Business type: purchase_inbound (database value 1, 采购入库), material_request (database value 2, 申请货物), or production_inbound (database value 3, 生产入库).")
+          String businessType,
       String description,
       List<FlowItem> items) {
     public InventoryFlowInput {
@@ -417,11 +449,30 @@ public final class MesAiTools {
   }
 
   public record ListFlowsInput(
-      long limit,
-      @JsonProperty("name_prefix") String namePrefix,
-      String scope,
-      @JsonProperty("flow_status") String flowStatus,
-      @JsonProperty("business_type") String businessType,
+      @JsonProperty("page_num")
+          @ToolParam(required = false, description = "Page number starting at 1; default is 1.")
+          long pageNum,
+      @JsonProperty("page_size")
+          @ToolParam(required = false, description = "Rows per page, from 1 to 100; default is 30.")
+          long pageSize,
+      String keyword,
+      @JsonProperty("created_date")
+          @ToolParam(required = false, description = "Optional creation date in YYYY-MM-DD format.")
+          String createdDate,
+      @ToolParam(required = false, description = "Optional scope hint; use mine, all, or to_me.")
+          String scope,
+      @JsonProperty("flow_status")
+          @ToolParam(
+              required = false,
+              description =
+                  "Optional flow status: draft (1), submitted (2), approved (3), or rejected (4).")
+          String flowStatus,
+      @JsonProperty("business_type")
+          @ToolParam(
+              required = false,
+              description =
+                  "Optional business type: purchase_inbound (1), material_request (2), or production_inbound (3).")
+          String businessType,
       @JsonProperty("only_draft") boolean onlyDraft,
       @JsonProperty("user_id") long userId) {}
 
@@ -443,15 +494,36 @@ public final class MesAiTools {
 
   public record ListUnitsInput(
       @JsonProperty("item_id") long itemId,
-      @JsonProperty("stock_status") String stockStatus,
-      @JsonProperty("quality_status") String qualityStatus,
+      @JsonProperty("stock_status")
+          @ToolParam(
+              required = false,
+              description = "Optional stock status: in_stock (1), reserved (2), or out_stock (3).")
+          String stockStatus,
+      @JsonProperty("quality_status")
+          @ToolParam(
+              required = false,
+              description = "Optional quality status: pending (1), qualified (2), or unqualified (3).")
+          String qualityStatus,
       @JsonProperty("page_num") long pageNum,
       @JsonProperty("page_size") long pageSize) {}
 
   public record ListPendingInput(
-      long limit,
-      @JsonProperty("name_prefix") String namePrefix,
-      @JsonProperty("business_type") String businessType,
+      @JsonProperty("page_num")
+          @ToolParam(required = false, description = "Page number starting at 1; default is 1.")
+          long pageNum,
+      @JsonProperty("page_size")
+          @ToolParam(required = false, description = "Rows per page, from 1 to 100; default is 30.")
+          long pageSize,
+      String keyword,
+      @JsonProperty("created_date")
+          @ToolParam(required = false, description = "Optional creation date in YYYY-MM-DD format.")
+          String createdDate,
+      @JsonProperty("business_type")
+          @ToolParam(
+              required = false,
+              description =
+                  "Optional business type: purchase_inbound (1), material_request (2), or production_inbound (3).")
+          String businessType,
       @JsonProperty("user_id") long userId) {}
 
   public record InventoryCheckInput(

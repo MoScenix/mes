@@ -10,6 +10,14 @@
         @clear="clearSearch"
       />
       <a-space>
+        <a-date-picker
+          v-if="selectedType !== 'workOrders'"
+          v-model:value="createdDate"
+          value-format="YYYY-MM-DD"
+          placeholder="创建日期"
+          allow-clear
+          @change="fetchData()"
+        />
         <a-select
           v-if="selectedType === 'engineering'"
           v-model:value="progressFilter"
@@ -97,9 +105,15 @@
         </template>
       </template>
     </a-table>
-    <div v-if="selectedType !== 'workOrders' && dataList.length" class="list-more">
-      <MesInfiniteTrigger :has-more="listPage.hasMore" :loading="loadingMore" @load="loadMore" />
-    </div>
+    <a-pagination
+      v-if="selectedType !== 'workOrders' && dataList.length"
+      class="page-pagination"
+      :current="currentPage"
+      :page-size="listPage.pageSize"
+      :total="(currentPage - 1) * listPage.pageSize + dataList.length + (listPage.hasMore ? 1 : 0)"
+      :show-size-changer="false"
+      @change="changePage"
+    />
 
     <a-modal
       v-if="false"
@@ -220,7 +234,6 @@ import { useLoginUserStore } from '@/stores/loginUser'
 import MesListSearchPicker from '@/components/mes/MesListSearchPicker.vue'
 import MesUserName from '@/components/mes/MesUserName.vue'
 import WorkOrderMailList from '@/components/mes/WorkOrderMailList.vue'
-import MesInfiniteTrigger from '@/components/mes/MesInfiniteTrigger.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -241,6 +254,7 @@ const panelFromRoute = () => {
 const selectedType = ref<DataType>(panelFromRoute())
 const onlyDraft = ref(false)
 const progressFilter = ref<ProductionProgressStatus>()
+const createdDate = ref<string>()
 const flowBusinessType = computed(() => Number(route.query.businessType || 0) || undefined)
 const progressOptions = [
   { label: '未开始', value: ProductionProgressStatus.NotStarted },
@@ -251,7 +265,7 @@ const progressOptions = [
 const searchText = ref('')
 const searchItemId = ref<number>()
 const onTypeChange = () => {
-  fetchData()
+  changePage(1)
 }
 const onSearch = (value: string) => {
   const parsed = parseMesCode(value)
@@ -260,17 +274,17 @@ const onSearch = (value: string) => {
     return
   }
   searchItemId.value = undefined
-  fetchData()
+  changePage(1)
 }
 const selectSearchItem = (item: ItemVO) => {
   searchText.value = item.name || ''
   searchItemId.value = item.id
-  fetchData()
+  changePage(1)
 }
 const clearSearch = () => {
   searchText.value = ''
   searchItemId.value = undefined
-  fetchData()
+  changePage(1)
 }
 
 const flowColumns = [
@@ -308,7 +322,7 @@ const engColumns = [
     title: '物品',
     key: 'itemName',
     width: 170,
-    customRender: ({ record }: any) => `${record.item?.name || '物品'} #${record.itemId}`,
+    customRender: ({ record }: any) => `${record.itemName} #${record.itemId}`,
   },
   { title: '状态', dataIndex: 'status', width: 90 },
   { title: '生产进度', dataIndex: 'progressStatus', width: 100 },
@@ -336,6 +350,7 @@ const currentColumns = computed(() => {
 const dataList = ref<any[]>([])
 const loading = ref(false)
 const loadingMore = ref(false)
+const currentPage = ref(1)
 const listPage = reactive({
   pageSize: 30,
   hasMore: false,
@@ -358,9 +373,8 @@ const fetchData = async (next = false) => {
   else loading.value = true
   try {
     const baseParams = {
+      pageNum: next ? currentPage.value + 1 : currentPage.value,
       pageSize: listPage.pageSize,
-      cursorUpdatedAt: next ? listPage.nextCursorUpdatedAt : undefined,
-      cursorId: next ? listPage.nextCursorId : undefined,
     }
     const entitySearchParams = {
       ...baseParams,
@@ -371,7 +385,8 @@ const fetchData = async (next = false) => {
       res = await listEngineeringOrder({
         ...baseParams,
         itemId: searchItemId.value,
-        itemNamePrefix: searchItemId.value ? undefined : searchText.value.trim() || undefined,
+        keyword: searchItemId.value ? undefined : searchText.value.trim() || undefined,
+        createdDate: createdDate.value,
         scope: listScope.value,
         progressStatus: progressFilter.value,
         onlyDraft: onlyDraft.value || undefined,
@@ -381,16 +396,16 @@ const fetchData = async (next = false) => {
     } else {
       res = await listInventoryFlow({
         ...baseParams,
-        itemNamePrefix: searchText.value.trim() || undefined,
+        keyword: searchText.value.trim() || undefined,
+        createdDate: createdDate.value,
         scope: listScope.value,
         businessType: flowBusinessType.value,
         onlyDraft: onlyDraft.value || undefined,
       })
     }
     if (res.data.code === 0 && res.data.data) {
-      dataList.value = next
-        ? [...dataList.value, ...(res.data.data.records ?? [])]
-        : (res.data.data.records ?? [])
+      dataList.value = res.data.data.records ?? []
+      currentPage.value = baseParams.pageNum
       syncCursor(res.data.data)
     }
   } finally {
@@ -402,6 +417,10 @@ const fetchData = async (next = false) => {
 const loadMore = () => {
   if (!listPage.hasMore) return
   fetchData(true)
+}
+const changePage = (page: number) => {
+  currentPage.value = page
+  fetchData()
 }
 
 const viewDetail = (record: any) => {
@@ -629,6 +648,7 @@ onMounted(fetchData)
   width: 280px;
   max-width: 100%;
 }
+.page-pagination { margin-top: 18px; text-align: right; }
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
