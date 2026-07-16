@@ -63,9 +63,7 @@
   </a-spin>
 
   <div v-if="orders.length" class="pager">
-    <a-button :disabled="!hasMore" :loading="loadingMore" @click="emitLoadMore">
-      加载更多
-    </a-button>
+    <MesInfiniteTrigger :has-more="hasMore" :loading="loadingMore" @load="emitLoadMore" />
   </div>
 </template>
 
@@ -73,6 +71,7 @@
 import type { WorkOrderVO } from '@/api/mesController'
 import { WorkOrderStatus } from '@/api/mesController'
 import MesUserName from '@/components/mes/MesUserName.vue'
+import MesInfiniteTrigger from '@/components/mes/MesInfiniteTrigger.vue'
 
 const props = withDefaults(
   defineProps<{

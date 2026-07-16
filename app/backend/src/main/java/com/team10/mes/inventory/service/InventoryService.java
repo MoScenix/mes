@@ -57,7 +57,10 @@ public class InventoryService {
     Map<String, Object> q = new HashMap<>(source);
     int scope = (int) num(q, "scope", 0), status = (int) num(q, "status", 0);
     if (scope == 1) q.put("leaderUserId", uid);
-    else if (scope == 2 || scope == 4) q.remove("leaderUserId");
+    else if (scope == 2 || scope == 4) {
+      q.remove("leaderUserId");
+      q.put("draftOwnerLeaderId", uid);
+    }
     else if (!admin) {
       Long leader = optionalLong(q, "leaderUserId");
       if (leader != null && leader != uid)
@@ -74,7 +77,7 @@ public class InventoryService {
     if (admin && scope == 0) scope = 2;
     if (scope == 2) {
       q.remove("userId");
-      q.put("draftOwnerUserId", 0L);
+      q.put("draftOwnerUserId", admin ? uid : 0L);
     } else if (scope == 3) {
       q.remove("userId");
       q.put("draftOwnerUserId", 0L);
@@ -513,6 +516,7 @@ public class InventoryService {
                 optionalLong(q, "processId"),
                 optionalInt(q, "status"),
                 optionalInt(q, "progressStatus"),
+                optionalLong(q, "draftOwnerLeaderId"),
                 offset(q),
                 size(q)),
             q));

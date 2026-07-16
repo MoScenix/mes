@@ -98,8 +98,7 @@
       </template>
     </a-table>
     <div v-if="selectedType !== 'workOrders' && dataList.length" class="list-more">
-      <a-button v-if="listPage.hasMore" :loading="loadingMore" @click="loadMore">加载更多</a-button>
-      <span v-else class="muted-text">没有更多了</span>
+      <MesInfiniteTrigger :has-more="listPage.hasMore" :loading="loadingMore" @load="loadMore" />
     </div>
 
     <a-modal
@@ -221,10 +220,18 @@ import { useLoginUserStore } from '@/stores/loginUser'
 import MesListSearchPicker from '@/components/mes/MesListSearchPicker.vue'
 import MesUserName from '@/components/mes/MesUserName.vue'
 import WorkOrderMailList from '@/components/mes/WorkOrderMailList.vue'
+import MesInfiniteTrigger from '@/components/mes/MesInfiniteTrigger.vue'
 
 const router = useRouter()
 const route = useRoute()
 const loginUserStore = useLoginUserStore()
+const listScope = computed(() =>
+  ['admin', 'administrator', '管理员'].includes(
+    String(loginUserStore.loginUser.userRole || '').toLowerCase(),
+  )
+    ? MesListScope.All
+    : MesListScope.Mine,
+)
 
 type DataType = 'flows' | 'engineering' | 'workOrders'
 const panelFromRoute = () => {
@@ -365,7 +372,7 @@ const fetchData = async (next = false) => {
         ...baseParams,
         itemId: searchItemId.value,
         itemNamePrefix: searchItemId.value ? undefined : searchText.value.trim() || undefined,
-        scope: MesListScope.Mine,
+        scope: listScope.value,
         progressStatus: progressFilter.value,
         onlyDraft: onlyDraft.value || undefined,
       })
@@ -375,7 +382,7 @@ const fetchData = async (next = false) => {
       res = await listInventoryFlow({
         ...baseParams,
         itemNamePrefix: searchText.value.trim() || undefined,
-        scope: MesListScope.Mine,
+        scope: listScope.value,
         businessType: flowBusinessType.value,
         onlyDraft: onlyDraft.value || undefined,
       })

@@ -41,11 +41,8 @@
         <div v-if="engRows.length" class="mail-hint">
           <span>单击编号或详情进入工程单正文。</span>
         </div>
-        <div v-if="engHasMore" class="list-more">
-          <a-button :loading="loading" @click="loadMore">加载更多</a-button>
-        </div>
-        <div v-else-if="engRows.length" class="list-more">
-          <span class="muted-text">没有更多了</span>
+        <div v-if="engRows.length" class="list-more">
+          <MesInfiniteTrigger :has-more="engHasMore" :loading="loading" @load="loadMore" />
         </div>
       </a-spin>
     </section>
@@ -53,6 +50,7 @@
 </template>
 
 <script setup lang="ts">
+import MesInfiniteTrigger from '@/components/mes/MesInfiniteTrigger.vue'
 import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import dayjs from 'dayjs'

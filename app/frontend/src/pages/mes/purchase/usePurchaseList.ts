@@ -2,6 +2,7 @@ import { reactive, ref, type Ref } from 'vue'
 import { message } from 'ant-design-vue'
 import { listInventoryFlow, listItems, listItemUnit, MesListScope } from '@/api/mesController'
 import type { PurchasePanel } from './types'
+import { useLoginUserStore } from '@/stores/loginUser'
 
 type UsePurchaseListOptions = {
   selectedType: Ref<PurchasePanel>
@@ -17,6 +18,7 @@ type UsePurchaseListOptions = {
 }
 
 export function usePurchaseList(options: UsePurchaseListOptions) {
+  const loginUserStore = useLoginUserStore()
   const dataList = ref<any[]>([])
   const loading = ref(false)
   const loadingMore = ref(false)
@@ -50,7 +52,11 @@ export function usePurchaseList(options: UsePurchaseListOptions) {
         res = await listInventoryFlow({
           ...params,
           itemNamePrefix: options.searchText.value.trim() || undefined,
-          scope: MesListScope.Mine,
+          scope: ['admin', 'administrator', '管理员'].includes(
+            String(loginUserStore.loginUser.userRole || '').toLowerCase(),
+          )
+            ? MesListScope.All
+            : MesListScope.Mine,
           flowStatus: options.flowStatusFilter.value,
           onlyDraft: options.onlyDraft.value || undefined,
           businessType: options.flowBusinessType.value,

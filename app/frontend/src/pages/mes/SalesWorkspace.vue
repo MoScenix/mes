@@ -69,8 +69,7 @@
       </template>
     </a-table>
     <div v-if="dataList.length" class="list-more">
-      <a-button v-if="listPage.hasMore" :loading="loadingMore" @click="loadMore">加载更多</a-button>
-      <span v-else class="muted-text">没有更多了</span>
+      <MesInfiniteTrigger :has-more="listPage.hasMore" :loading="loadingMore" @load="loadMore" />
     </div>
 
     <a-modal
@@ -118,6 +117,7 @@ import {
 import { parseMesCode } from '@/utils/mesCode'
 import { useLoginUserStore } from '@/stores/loginUser'
 import MesListSearchPicker from '@/components/mes/MesListSearchPicker.vue'
+import MesInfiniteTrigger from '@/components/mes/MesInfiniteTrigger.vue'
 
 const router = useRouter()
 const loginUserStore = useLoginUserStore()

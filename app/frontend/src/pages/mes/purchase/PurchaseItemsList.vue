@@ -30,13 +30,13 @@
     </template>
   </a-table>
   <div v-if="items.length" class="list-more">
-    <a-button v-if="hasMore" :loading="loadingMore" @click="$emit('load-more')">加载更多</a-button>
-    <span v-else class="muted-text">没有更多了</span>
+    <MesInfiniteTrigger :has-more="hasMore" :loading="loadingMore" @load="$emit('load-more')" />
   </div>
 </template>
 
 <script setup lang="ts">
 import type { ItemVO } from '@/api/mesController'
+import MesInfiniteTrigger from '@/components/mes/MesInfiniteTrigger.vue'
 import { formatTime } from './display'
 
 defineProps<{

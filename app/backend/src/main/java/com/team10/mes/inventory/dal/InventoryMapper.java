@@ -94,6 +94,7 @@ public interface InventoryMapper {
       @Param("processId") Long processId,
       @Param("status") Integer status,
       @Param("progressStatus") Integer progressStatus,
+      @Param("draftOwnerLeaderId") Long draftOwnerLeaderId,
       @Param("offset") long offset,
       @Param("limit") long limit);
 

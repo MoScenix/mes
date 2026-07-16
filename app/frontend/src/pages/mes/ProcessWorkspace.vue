@@ -75,8 +75,7 @@
     </a-table>
 
     <div v-if="!isItemsPanel && dataList.length" class="list-more">
-      <a-button v-if="hasMore" :loading="loadingMore" @click="loadMore">加载更多</a-button>
-      <span v-else class="muted-text">没有更多了</span>
+      <MesInfiniteTrigger :has-more="hasMore" :loading="loadingMore" @load="loadMore" />
     </div>
   </div>
 </template>
@@ -100,6 +99,7 @@ import {
 } from '@/api/mesController'
 import MesItemName from '@/components/mes/MesItemName.vue'
 import MesListSearchPicker from '@/components/mes/MesListSearchPicker.vue'
+import MesInfiniteTrigger from '@/components/mes/MesInfiniteTrigger.vue'
 import { parseMesCode } from '@/utils/mesCode'
 import PurchaseItemsList from './purchase/PurchaseItemsList.vue'
 
