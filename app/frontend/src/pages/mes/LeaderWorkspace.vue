@@ -10,9 +10,20 @@
         @clear="clearSearch"
       />
       <a-space>
-        <a-button v-if="selectedType === 'flows'" @click="openCreateFlow">新建流转单</a-button>
+        <a-select
+          v-if="selectedType === 'engineering'"
+          v-model:value="progressFilter"
+          allow-clear
+          placeholder="生产进度"
+          :options="progressOptions"
+          @change="fetchData()"
+        />
+        <a-checkbox v-if="selectedType !== 'workOrders'" v-model:checked="onlyDraft" @change="fetchData()">
+          只看草稿
+        </a-checkbox>
+        <a-button v-if="selectedType === 'flows'" @click="openCreateFlow">新建业务单</a-button>
         <a-button v-else-if="selectedType === 'engineering'" type="primary" @click="openCreateEng"
-          >新建工程单</a-button
+          >新建生产计划</a-button
         >
         <a-button v-else type="primary" @click="openCreateWorkOrder">新建工单</a-button>
       </a-space>
@@ -45,13 +56,18 @@
         <template v-if="column.key === 'id'">
           <a class="id-link" @click="viewDetail(record)">#{{ record.id }}</a>
         </template>
-        <template v-else-if="column.dataIndex === 'flowType'">
-          <a-tag>{{ record.flowType === FLOW_TYPE_IN ? '入库' : '出库' }}</a-tag>
+        <template v-else-if="column.dataIndex === 'businessType'">
+          <a-tag>{{ businessTypeLabel(record.businessType) }}</a-tag>
         </template>
         <template v-else-if="column.dataIndex === 'flowStatus' || column.dataIndex === 'status'">
           <a-tag :color="statusColor(record[column.dataIndex])">{{
             statusLabel(record[column.dataIndex])
           }}</a-tag>
+        </template>
+        <template v-else-if="column.dataIndex === 'progressStatus'">
+          <a-tag :color="record.progressStatus === 2 ? 'green' : record.progressStatus === 1 ? 'blue' : 'default'">
+            {{ progressLabel(record.progressStatus) }}
+          </a-tag>
         </template>
         <template v-else-if="column.dataIndex === 'toUserId'">
           <MesUserName :id="record.toUserId" />
@@ -180,7 +196,10 @@ import { message } from 'ant-design-vue'
 import {
   FLOW_TYPE_IN,
   FLOW_TYPE_OUT,
+  FLOW_BUSINESS_MATERIAL_REQUEST,
+  FLOW_BUSINESS_PRODUCTION_INBOUND,
   DraftStatus,
+  ProductionProgressStatus,
   MesListScope,
   listInventoryFlow,
   listEngineeringOrder,
@@ -213,6 +232,14 @@ const panelFromRoute = () => {
   return ['flows', 'engineering', 'workOrders'].includes(panel) ? (panel as DataType) : 'flows'
 }
 const selectedType = ref<DataType>(panelFromRoute())
+const onlyDraft = ref(false)
+const progressFilter = ref<ProductionProgressStatus>()
+const flowBusinessType = computed(() => Number(route.query.businessType || 0) || undefined)
+const progressOptions = [
+  { label: '未开始', value: ProductionProgressStatus.NotStarted },
+  { label: '进行中', value: ProductionProgressStatus.InProgress },
+  { label: '已完成', value: ProductionProgressStatus.Completed },
+]
 
 const searchText = ref('')
 const searchItemId = ref<number>()
@@ -242,7 +269,7 @@ const clearSearch = () => {
 const flowColumns = [
   { title: 'ID', key: 'id', width: 80 },
   { title: '名称', dataIndex: 'name', width: 180, ellipsis: true },
-  { title: '类型', dataIndex: 'flowType', width: 80 },
+  { title: '业务类型', dataIndex: 'businessType', width: 110 },
   { title: '状态', dataIndex: 'flowStatus', width: 80 },
   { title: '描述', dataIndex: 'description', ellipsis: true },
   {
@@ -262,6 +289,10 @@ const flowProgressText = (record: any) => {
   const applied = items.reduce((sum: number, item: any) => sum + (item.applyQuantity || 0), 0)
   return `${finished}/${applied}`
 }
+const businessTypeLabel = (type?: number) =>
+  type === 1 ? '采购入库' : type === 2 ? '申请货物' : type === 3 ? '生产入库' : '未知'
+const progressLabel = (status?: number) =>
+  status === 0 ? '未开始' : status === 1 ? '进行中' : status === 2 ? '已完成' : '未知'
 
 const engColumns = [
   { title: 'ID', key: 'id', width: 80 },
@@ -273,6 +304,7 @@ const engColumns = [
     customRender: ({ record }: any) => `${record.item?.name || '物品'} #${record.itemId}`,
   },
   { title: '状态', dataIndex: 'status', width: 90 },
+  { title: '生产进度', dataIndex: 'progressStatus', width: 100 },
   { title: '预计', dataIndex: 'expectedQuantity', width: 80 },
   { title: '已产出', dataIndex: 'producedQuantity', width: 80 },
   { title: '说明', dataIndex: 'description', ellipsis: true },
@@ -334,6 +366,8 @@ const fetchData = async (next = false) => {
         itemId: searchItemId.value,
         itemNamePrefix: searchItemId.value ? undefined : searchText.value.trim() || undefined,
         scope: MesListScope.Mine,
+        progressStatus: progressFilter.value,
+        onlyDraft: onlyDraft.value || undefined,
       })
     } else if (selectedType.value === 'workOrders') {
       res = await listWorkOrder({ ...entitySearchParams })
@@ -342,6 +376,8 @@ const fetchData = async (next = false) => {
         ...baseParams,
         itemNamePrefix: searchText.value.trim() || undefined,
         scope: MesListScope.Mine,
+        businessType: flowBusinessType.value,
+        onlyDraft: onlyDraft.value || undefined,
       })
     }
     if (res.data.code === 0 && res.data.data) {
@@ -444,12 +480,21 @@ const flowOpen = ref(false)
 const flowSaving = ref(false)
 const flowForm = reactive({ flowType: FLOW_TYPE_IN, description: '' })
 const openCreateFlow = () => {
-  router.push({ path: '/mes/create', query: { type: 'flow' } })
+  router.push({
+    path: '/mes/create',
+    query: { type: 'flow', businessType: String(flowBusinessType.value || 2) },
+  })
 }
 const handleCreateFlow = async () => {
   flowSaving.value = true
   try {
-    const res = await createInventoryFlowDraft({ ...flowForm })
+    const res = await createInventoryFlowDraft({
+      ...flowForm,
+      businessType:
+        flowForm.flowType === FLOW_TYPE_OUT
+          ? FLOW_BUSINESS_MATERIAL_REQUEST
+          : FLOW_BUSINESS_PRODUCTION_INBOUND,
+    })
     if (res.data.code === 0 && res.data.data) {
       await submitInventoryFlow({ id: res.data.data })
       message.success('流转单已提交')
@@ -556,7 +601,7 @@ const statusLabel = (s?: number) => {
 }
 
 watch(
-  () => route.query.panel,
+  () => [route.query.panel, route.query.businessType],
   () => {
     selectedType.value = panelFromRoute()
     onTypeChange()

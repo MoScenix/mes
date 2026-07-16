@@ -12,8 +12,8 @@
       <template v-if="column.key === 'id'">
         <a class="id-link" @click="$emit('view-detail', record)">#{{ record.id }}</a>
       </template>
-      <template v-else-if="column.dataIndex === 'flowType'">
-        <a-tag>{{ flowTypeLabel(record.flowType) }}</a-tag>
+      <template v-else-if="column.dataIndex === 'businessType'">
+        <a-tag>{{ flowBusinessLabel(record.businessType) }}</a-tag>
       </template>
       <template v-else-if="column.dataIndex === 'flowStatus'">
         <a-tag :color="flowStatusColor(record.flowStatus)">{{
@@ -61,7 +61,7 @@
 
 <script setup lang="ts">
 import type { InventoryFlowVO } from '@/api/mesController'
-import { flowStatusColor, flowStatusLabel, flowTypeLabel, formatTime } from './display'
+import { flowBusinessLabel, flowStatusColor, flowStatusLabel, formatTime } from './display'
 
 defineProps<{
   flows: InventoryFlowVO[]
@@ -81,7 +81,7 @@ defineEmits<{
 const columns = [
   { title: 'ID', key: 'id', width: 80 },
   { title: '名称', dataIndex: 'name', width: 180, ellipsis: true },
-  { title: '类型', dataIndex: 'flowType', width: 80 },
+  { title: '业务类型', dataIndex: 'businessType', width: 110 },
   { title: '状态', dataIndex: 'flowStatus', width: 80 },
   { title: '描述', dataIndex: 'description', ellipsis: true },
   {

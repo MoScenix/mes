@@ -17,6 +17,7 @@ import MESWorkOrdersPage from '@/pages/mes/MESWorkOrdersPage.vue'
 import MESCreatePage from '@/pages/mes/MESCreatePage.vue'
 import MESScanPage from '@/pages/mes/MESScanPage.vue'
 import MESProcessEngOrdersPage from '@/pages/mes/MESProcessEngOrdersPage.vue'
+import MESDashboardPage from '@/pages/mes/MESDashboardPage.vue'
 import { useLoginUserStore } from '@/stores/loginUser'
 
 async function requireLogin(to: any) {
@@ -71,6 +72,11 @@ const router = createRouter({
           path: '',
           name: 'MES 工作台入口',
           component: MESHomePage,
+        },
+        {
+          path: 'dashboard',
+          name: '智能生产看板',
+          component: MESDashboardPage,
         },
         {
           path: 'purchase',

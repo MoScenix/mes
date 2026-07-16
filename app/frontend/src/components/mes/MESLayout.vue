@@ -8,17 +8,20 @@
         </div>
       </div>
       <nav class="side-nav" aria-label="MES 功能">
-        <button
-          v-for="item in visibleNavItems"
-          :key="item.key"
-          class="side-nav-item"
-          :class="{ active: isActive(item) }"
-          type="button"
-          @click="go(item)"
-        >
-          <component :is="item.icon" />
-          <span>{{ item.label }}</span>
-        </button>
+        <section v-for="group in visibleNavGroups" :key="group.name" class="nav-group">
+          <div class="nav-group-title">{{ group.name }}</div>
+          <button
+            v-for="item in group.items"
+            :key="item.key"
+            class="side-nav-item"
+            :class="{ active: isActive(item) }"
+            type="button"
+            @click="go(item)"
+          >
+            <component :is="item.icon" />
+            <span>{{ item.label }}</span>
+          </button>
+        </section>
       </nav>
     </aside>
 
@@ -38,7 +41,12 @@ import { useRoute, useRouter } from 'vue-router'
 import { useLoginUserStore } from '@/stores/loginUser'
 import FloatingAssistant from '@/components/mes/FloatingAssistant.vue'
 import { normalizeMesRole } from '@/utils/mesRole'
-import { mesNavTargetFor, visibleMesNavItems, type MesNavItem } from '@/components/mes/mesNav'
+import {
+  mesNavGroups,
+  mesNavTargetFor,
+  visibleMesNavItems,
+  type MesNavItem,
+} from '@/components/mes/mesNav'
 
 const router = useRouter()
 const route = useRoute()
@@ -47,6 +55,11 @@ const loginUserStore = useLoginUserStore()
 const normalizedRole = computed(() => normalizeMesRole(loginUserStore.loginUser.userRole))
 
 const visibleNavItems = computed(() => visibleMesNavItems(normalizedRole.value))
+const visibleNavGroups = computed(() =>
+  mesNavGroups
+    .map((name) => ({ name, items: visibleNavItems.value.filter((item) => item.group === name) }))
+    .filter((group) => group.items.length),
+)
 
 const targetFor = (item: MesNavItem) => mesNavTargetFor(item, normalizedRole.value)
 
@@ -56,7 +69,8 @@ const isActive = (item: MesNavItem) => {
   if (target.scanMode) return String(route.query.mode || '') === target.scanMode
   return (
     String(route.query.panel || '') === (target.panel || '') &&
-    String(route.query.view || '') === target.view
+    String(route.query.view || '') === target.view &&
+    String(route.query.businessType || '') === (target.businessType || '')
   )
 }
 
@@ -65,13 +79,14 @@ const go = async (item: MesNavItem) => {
   const query = target.scanMode
     ? { mode: target.scanMode }
     : target.panel
-      ? { panel: target.panel, view: target.view }
+      ? { panel: target.panel, view: target.view, businessType: target.businessType }
       : { view: target.view }
   const active = target.scanMode
     ? route.path === target.path && String(route.query.mode || '') === target.scanMode
     : route.path === target.path &&
       String(route.query.panel || '') === (target.panel || '') &&
-      String(route.query.view || '') === target.view
+      String(route.query.view || '') === target.view &&
+      String(route.query.businessType || '') === (target.businessType || '')
   if (!active) {
     await router.push({ path: target.path, query })
   }
@@ -126,6 +141,17 @@ const go = async (item: MesNavItem) => {
   display: flex;
   flex-direction: column;
   gap: 2px;
+}
+
+.nav-group + .nav-group {
+  margin-top: 14px;
+}
+
+.nav-group-title {
+  padding: 0 10px 6px;
+  color: #8c8c8c;
+  font-size: 11px;
+  font-weight: 600;
 }
 
 .side-nav-item {

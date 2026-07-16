@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.team10.mes.inventory.dal.DashboardMapper">
+  <select id="productionSummary" resultType="map">
+    SELECT
+      COALESCE(SUM(CASE WHEN u.created_at &gt;= CURRENT_DATE THEN 1 ELSE 0 END), 0) today_production,
+      COALESCE(SUM(CASE WHEN u.created_at &gt;= DATE_SUB(CURRENT_DATE, INTERVAL WEEKDAY(CURRENT_DATE) DAY) THEN 1 ELSE 0 END), 0) week_production,
+      COALESCE((SELECT SUM(i.pending_count) FROM items i WHERE i.deleted_at IS NULL), 0) pending_inspection
+    FROM item_units u
+    WHERE u.deleted_at IS NULL AND u.engineering_order_id IS NOT NULL
+  </select>
+
+  <select id="planSummary" resultType="map">
+    SELECT
+      COALESCE(SUM(CASE WHEN e.produced_quantity=0 THEN 1 ELSE 0 END), 0) not_started,
+      COALESCE(SUM(CASE WHEN e.produced_quantity&gt;0 AND (e.produced_quantity&lt;e.expected_quantity OR e.qualified_quantity&lt;e.expected_quantity) THEN 1 ELSE 0 END), 0) in_progress,
+      COALESCE(SUM(CASE WHEN e.produced_quantity&gt;=e.expected_quantity AND e.qualified_quantity&gt;=e.expected_quantity THEN 1 ELSE 0 END), 0) completed,
+      COALESCE(SUM(e.expected_quantity), 0) expected_quantity,
+      COALESCE(SUM(LEAST(e.qualified_quantity, e.expected_quantity)), 0) completed_quantity
+    FROM engineering_orders e
+    WHERE e.deleted_at IS NULL AND e.status&gt;=2
+  </select>
+
+  <select id="dailyProduction" resultType="map">
+    SELECT DATE_FORMAT(u.created_at, '%Y-%m-%d') production_date, COUNT(*) quantity
+    FROM item_units u
+    WHERE u.deleted_at IS NULL
+      AND u.engineering_order_id IS NOT NULL
+      AND u.created_at &gt;= DATE_SUB(CURRENT_DATE, INTERVAL 6 DAY)
+    GROUP BY DATE_FORMAT(u.created_at, '%Y-%m-%d')
+    ORDER BY production_date
+  </select>
+</mapper>

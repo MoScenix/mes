@@ -22,6 +22,9 @@
             :options="flowStatusOptions"
             @change="fetchData()"
           />
+          <a-checkbox v-if="selectedType === 'flows'" v-model:checked="onlyDraft" @change="fetchData()">
+            只看草稿
+          </a-checkbox>
           <a-select
             v-if="selectedType === 'itemUnits'"
             v-model:value="stockStatusFilter"
@@ -155,6 +158,8 @@ const selectedType = ref<PurchasePanel>(panelFromRoute())
 const searchText = ref('')
 const searchItemId = ref<number>()
 const flowStatusFilter = ref<number>()
+const onlyDraft = ref(false)
+const flowBusinessType = computed(() => Number(route.query.businessType || 0) || undefined)
 const stockStatusFilter = ref<number>()
 const qualityStatusFilter = ref<number>()
 const engineeringOrderIdFilter = computed(
@@ -167,6 +172,8 @@ const { dataList, loading, loadingMore, listPage, fetchData, loadMore } = usePur
   searchText,
   searchItemId,
   flowStatusFilter,
+  onlyDraft,
+  flowBusinessType,
   stockStatusFilter,
   qualityStatusFilter,
   engineeringOrderId: engineeringOrderIdFilter,
@@ -234,6 +241,9 @@ const openCreate = () => {
     scan: 'flow',
   }
   const query: Record<string, string> = { type: typeMap[selectedType.value] }
+  if (selectedType.value === 'flows' && flowBusinessType.value) {
+    query.businessType = String(flowBusinessType.value)
+  }
   if (selectedType.value === 'itemUnits') {
     query.stockStatus = String(STOCK_STATUS_OUT_STOCK)
   }

@@ -107,6 +107,8 @@ import { message } from 'ant-design-vue'
 import {
   FLOW_TYPE_IN,
   FLOW_TYPE_OUT,
+  FLOW_BUSINESS_MATERIAL_REQUEST,
+  FLOW_BUSINESS_PURCHASE_INBOUND,
   MesListScope,
   listInventoryFlow,
   createInventoryFlowDraft,
@@ -252,7 +254,13 @@ const openCreateFlow = () => {
 const handleCreateFlow = async () => {
   flowSaving.value = true
   try {
-    const res = await createInventoryFlowDraft({ ...flowForm })
+    const res = await createInventoryFlowDraft({
+      ...flowForm,
+      businessType:
+        flowForm.flowType === FLOW_TYPE_OUT
+          ? FLOW_BUSINESS_MATERIAL_REQUEST
+          : FLOW_BUSINESS_PURCHASE_INBOUND,
+    })
     if (res.data.code === 0 && res.data.data) {
       await submitInventoryFlow({ id: res.data.data })
       message.success('流转单已提交')

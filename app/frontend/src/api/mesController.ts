@@ -19,6 +19,19 @@ export enum FlowType {
   Out = 2,
 }
 
+export enum FlowBusinessType {
+  Unknown = 0,
+  PurchaseInbound = 1,
+  MaterialRequest = 2,
+  ProductionInbound = 3,
+}
+
+export enum ProductionProgressStatus {
+  NotStarted = 0,
+  InProgress = 1,
+  Completed = 2,
+}
+
 export enum FlowStatus {
   Unknown = 0,
   Draft = 1,
@@ -153,6 +166,7 @@ export type InventoryFlowVO = {
   fromUserId?: number
   toUserId?: number
   flowType?: FlowType
+  businessType?: FlowBusinessType
   flowStatus?: FlowStatus
   description?: string
   approvedBy?: number
@@ -172,6 +186,7 @@ export type EngineeringOrderVO = {
   expectedQuantity?: number
   qualifiedQuantity?: number
   producedQuantity?: number
+  progressStatus?: ProductionProgressStatus
   description?: string
   itemUnits?: ItemUnitVO[]
   createTime?: string
@@ -198,6 +213,7 @@ export type CreateInventoryFlowDraftRequest = {
   name?: string
   toUserId?: number
   flowType?: FlowType
+  businessType?: FlowBusinessType
   description?: string
   items?: InventoryFlowItemRequest[]
   itemUnitIds?: number[]
@@ -216,6 +232,8 @@ export type ListInventoryFlowRequest = {
   userId?: number
   isTo?: boolean
   flowStatus?: FlowStatus
+  businessType?: FlowBusinessType
+  onlyDraft?: boolean
   namePrefix?: string
   itemNamePrefix?: string
   scope?: MesListScope
@@ -252,6 +270,8 @@ export type ListEngineeringOrderRequest = {
   pageSize?: number
   processId?: number
   status?: DraftStatus
+  progressStatus?: ProductionProgressStatus
+  onlyDraft?: boolean
   sinceTime?: string
   recentSeconds?: number
   cursorUpdatedAt?: string
@@ -365,8 +385,27 @@ export type UpdateItemUnitStatusRequest = {
 export type MesInventoryFlow = InventoryFlowVO
 export type MesItemUnit = ItemUnitVO
 
+export type DashboardOverview = {
+  todayProduction: number
+  weekProduction: number
+  pendingInspection: number
+  planCompletionRate: number
+  planExpectedQuantity: number
+  planCompletedQuantity: number
+  planStatus: {
+    notStarted: number
+    inProgress: number
+    completed: number
+  }
+  dailyProduction: Array<{ date: string; quantity: number }>
+  generatedAt: string
+}
+
 export const FLOW_TYPE_IN = FlowType.In
 export const FLOW_TYPE_OUT = FlowType.Out
+export const FLOW_BUSINESS_PURCHASE_INBOUND = FlowBusinessType.PurchaseInbound
+export const FLOW_BUSINESS_MATERIAL_REQUEST = FlowBusinessType.MaterialRequest
+export const FLOW_BUSINESS_PRODUCTION_INBOUND = FlowBusinessType.ProductionInbound
 export const FLOW_STATUS_SUBMITTED = FlowStatus.Submitted
 export const FLOW_STATUS_APPROVED = FlowStatus.Approved
 export const STOCK_STATUS_IN_STOCK = StockStatus.InStock
@@ -375,6 +414,12 @@ export const STOCK_STATUS_OUT_STOCK = StockStatus.OutStock
 export const QUALITY_STATUS_PENDING = QualityStatus.Pending
 export const QUALITY_STATUS_QUALIFIED = QualityStatus.Qualified
 export const QUALITY_STATUS_UNQUALIFIED = QualityStatus.Unqualified
+
+export async function getDashboardOverview() {
+  return request<BaseResponse<DashboardOverview>>('/mes/dashboard/overview', {
+    method: 'GET',
+  })
+}
 
 export async function createInventoryFlowDraft(body: CreateInventoryFlowDraftRequest) {
   return request<BaseResponse<number>>('/mes/inventory-flow/draft/create', {

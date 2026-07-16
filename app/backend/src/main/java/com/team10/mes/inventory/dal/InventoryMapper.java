@@ -75,6 +75,7 @@ public interface InventoryMapper {
       @Param("userId") Long userId,
       @Param("isTo") boolean isTo,
       @Param("status") Integer status,
+      @Param("businessType") Integer businessType,
       @Param("name") String name,
       @Param("itemUnitId") Long itemUnitId,
       @Param("draftOwnerUserId") Long draftOwnerUserId,
@@ -92,6 +93,7 @@ public interface InventoryMapper {
       @Param("itemId") Long itemId,
       @Param("processId") Long processId,
       @Param("status") Integer status,
+      @Param("progressStatus") Integer progressStatus,
       @Param("offset") long offset,
       @Param("limit") long limit);
 

@@ -14,6 +14,9 @@ export const formatTime = (t?: string) => (t ? dayjs(t).format('YYYY-MM-DD HH:mm
 export const flowTypeLabel = (s?: number) =>
   s === FLOW_TYPE_IN ? '入库' : s === FLOW_TYPE_OUT ? '出库' : '未知'
 
+export const flowBusinessLabel = (s?: number) =>
+  s === 1 ? '采购入库' : s === 2 ? '申请货物' : s === 3 ? '生产入库' : '未知'
+
 export const flowStatusColor = (s?: number) => {
   if (s === 1) return 'default'
   if (s === 2) return 'blue'

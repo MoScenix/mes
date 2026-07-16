@@ -1,6 +1,7 @@
 import {
   AppstoreOutlined,
   DatabaseOutlined,
+  DashboardOutlined,
   FileSearchOutlined,
   InboxOutlined,
   SafetyCertificateOutlined,
@@ -14,6 +15,7 @@ export type MesNavTarget = {
   panel?: string
   view: string
   scanMode?: string
+  businessType?: string
 }
 
 export type MesNavItem = {
@@ -22,9 +24,26 @@ export type MesNavItem = {
   target: MesNavTarget | ((role: MesRoleKey) => MesNavTarget)
   roles: MesRoleKey[]
   icon: typeof ShoppingCartOutlined
+  group: MesNavGroup
 }
 
+export type MesNavGroup =
+  | '原料采购'
+  | '生产管理'
+  | '仓库管理'
+  | '工艺管理'
+  | '扫码作业'
+  | '系统管理'
+
 export const mesNavItems: MesNavItem[] = [
+  {
+    key: 'production-dashboard',
+    target: { path: '/mes/dashboard', view: 'dashboard' },
+    label: '智能生产看板',
+    roles: ['leader'],
+    icon: DashboardOutlined,
+    group: '生产管理',
+  },
   {
     key: 'purchase-add',
     target: (role) => {
@@ -35,6 +54,7 @@ export const mesNavItems: MesNavItem[] = [
     label: '物料',
     roles: ['purchase', 'process_engineer'],
     icon: ShoppingCartOutlined,
+    group: '原料采购',
   },
   {
     key: 'purchase-units',
@@ -42,6 +62,7 @@ export const mesNavItems: MesNavItem[] = [
     label: '库存单体',
     roles: ['purchase'],
     icon: DatabaseOutlined,
+    group: '原料采购',
   },
   {
     key: 'purchase-scan',
@@ -49,17 +70,31 @@ export const mesNavItems: MesNavItem[] = [
     label: '扫描入库',
     roles: ['purchase', 'worker'],
     icon: InboxOutlined,
+    group: '扫码作业',
   },
   {
     key: 'inventory-flow',
-    target: (role) => {
-      if (role === 'sales') return { path: '/mes/sales', panel: 'flows', view: 'flows' }
-      if (role === 'leader') return { path: '/mes/leader', panel: 'flows', view: 'flows' }
-      return { path: '/mes/purchase', panel: 'flows', view: 'purchase' }
-    },
-    label: '流转单',
-    roles: ['purchase', 'sales', 'leader'],
+    target: { path: '/mes/purchase', panel: 'flows', view: 'purchase', businessType: '1' },
+    label: '采购入库',
+    roles: ['purchase'],
     icon: FileSearchOutlined,
+    group: '原料采购',
+  },
+  {
+    key: 'material-request',
+    target: { path: '/mes/leader', panel: 'flows', view: 'flows', businessType: '2' },
+    label: '申请货物',
+    roles: ['leader'],
+    icon: FileSearchOutlined,
+    group: '生产管理',
+  },
+  {
+    key: 'production-inbound',
+    target: { path: '/mes/leader', panel: 'flows', view: 'flows', businessType: '3' },
+    label: '成品入库',
+    roles: ['leader'],
+    icon: InboxOutlined,
+    group: '生产管理',
   },
   {
     key: 'worker-receive',
@@ -67,6 +102,7 @@ export const mesNavItems: MesNavItem[] = [
     label: '领取货物',
     roles: ['worker', 'sales'],
     icon: InboxOutlined,
+    group: '扫码作业',
   },
   {
     key: 'worker-inspect',
@@ -74,6 +110,7 @@ export const mesNavItems: MesNavItem[] = [
     label: '检验单品',
     roles: ['worker'],
     icon: SafetyCertificateOutlined,
+    group: '扫码作业',
   },
   {
     key: 'process-engineer-processes',
@@ -81,34 +118,39 @@ export const mesNavItems: MesNavItem[] = [
     label: '工艺管理',
     roles: ['process_engineer'],
     icon: AppstoreOutlined,
+    group: '工艺管理',
   },
   {
     key: 'leader-engineering',
     target: { path: '/mes/leader', panel: 'engineering', view: 'engineering' },
-    label: '工程单',
+    label: '生产计划',
     roles: ['leader'],
     icon: AppstoreOutlined,
+    group: '生产管理',
   },
   {
     key: 'warehouse-audit',
     target: { path: '/mes/warehouse', panel: 'audit', view: 'audit' },
-    label: '审批流转单',
+    label: '审批流水',
     roles: ['warehouse_admin'],
     icon: InboxOutlined,
+    group: '仓库管理',
   },
   {
     key: 'warehouse-flow',
     target: { path: '/mes/warehouse', panel: 'flows', view: 'flows' },
-    label: '流转单',
+    label: '流水审计',
     roles: ['warehouse_admin'],
     icon: FileSearchOutlined,
+    group: '仓库管理',
   },
   {
     key: 'warehouse-inventory',
     target: { path: '/mes/warehouse', panel: 'inventory', view: 'inventory' },
-    label: '物资情况',
+    label: '库存总览',
     roles: ['warehouse_admin'],
     icon: DatabaseOutlined,
+    group: '仓库管理',
   },
   {
     key: 'admin-users',
@@ -116,7 +158,17 @@ export const mesNavItems: MesNavItem[] = [
     label: '员工管理',
     roles: ['admin'],
     icon: UserOutlined,
+    group: '系统管理',
   },
+]
+
+export const mesNavGroups: MesNavGroup[] = [
+  '原料采购',
+  '生产管理',
+  '仓库管理',
+  '工艺管理',
+  '扫码作业',
+  '系统管理',
 ]
 
 export const visibleMesNavItems = (role: MesRoleKey) => {

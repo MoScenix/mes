@@ -8,6 +8,8 @@ type UsePurchaseListOptions = {
   searchText: Ref<string>
   searchItemId: Ref<number | undefined>
   flowStatusFilter: Ref<number | undefined>
+  onlyDraft: Ref<boolean>
+  flowBusinessType: Ref<number | undefined>
   stockStatusFilter: Ref<number | undefined>
   qualityStatusFilter: Ref<number | undefined>
   engineeringOrderId: Ref<number | undefined>
@@ -50,6 +52,8 @@ export function usePurchaseList(options: UsePurchaseListOptions) {
           itemNamePrefix: options.searchText.value.trim() || undefined,
           scope: MesListScope.Mine,
           flowStatus: options.flowStatusFilter.value,
+          onlyDraft: options.onlyDraft.value || undefined,
+          businessType: options.flowBusinessType.value,
           cursorUpdatedAt: next ? listPage.nextCursorUpdatedAt : undefined,
           cursorId: next ? listPage.nextCursorId : undefined,
         })

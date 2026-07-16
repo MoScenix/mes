@@ -125,6 +125,9 @@ public final class MesAiTools {
     q.put("namePrefix", in.namePrefix());
     q.put("leaderUserId", admin && in.leaderUserId() > 0 ? in.leaderUserId() : userId);
     if (in.itemId() > 0) q.put("itemId", in.itemId());
+    Integer progress = progressStatus(in.progressStatus());
+    if (progress != null) q.put("progressStatus", progress);
+    if (in.onlyDraft()) q.put("status", 1);
     return inventory.orders(q);
   }
 
@@ -143,6 +146,7 @@ public final class MesAiTools {
     m.put("fromUserId", userId);
     m.put("toUserId", in.toUserId());
     m.put("flowType", flowType(in.flowType()));
+    m.put("businessType", flowBusinessType(in.businessType()));
     m.put("description", in.description());
     m.put(
         "items",
@@ -164,6 +168,9 @@ public final class MesAiTools {
     q.put("namePrefix", in.namePrefix());
     Integer s = flowStatus(in.flowStatus());
     if (s != null) q.put("flowStatus", s);
+    Integer businessType = flowBusinessTypeFilter(in.businessType());
+    if (businessType != null) q.put("businessType", businessType);
+    if (in.onlyDraft()) q.put("flowStatus", 1);
     return inventory.flows(q);
   }
 
@@ -214,7 +221,8 @@ public final class MesAiTools {
       description = "List submitted inventory flows pending warehouse processing.")
   public Map<String, Object> listPendingInventoryFlows(ListPendingInput in) {
     return listInventoryFlows(
-        new ListFlowsInput(in.limit(), in.namePrefix(), "to_me", "submitted", in.userId()));
+        new ListFlowsInput(
+            in.limit(), in.namePrefix(), "to_me", "submitted", in.businessType(), false, in.userId()));
   }
 
   @Tool(
@@ -275,6 +283,21 @@ public final class MesAiTools {
     return "out".equalsIgnoreCase(s) ? 2 : 1;
   }
 
+  private static int flowBusinessType(String s) {
+    Integer type = flowBusinessTypeFilter(s);
+    if (type == null) throw new IllegalArgumentException("business_type is required");
+    return type;
+  }
+
+  private static Integer flowBusinessTypeFilter(String s) {
+    return switch (Objects.toString(s, "").toLowerCase()) {
+      case "purchase_inbound" -> 1;
+      case "material_request" -> 2;
+      case "production_inbound" -> 3;
+      default -> null;
+    };
+  }
+
   private static Integer stockStatus(String s) {
     return switch (Objects.toString(s, "").toLowerCase()) {
       case "in_stock" -> 1;
@@ -289,6 +312,15 @@ public final class MesAiTools {
       case "pending" -> 1;
       case "qualified" -> 2;
       case "unqualified" -> 3;
+      default -> null;
+    };
+  }
+
+  private static Integer progressStatus(String s) {
+    return switch (Objects.toString(s, "").toLowerCase()) {
+      case "not_started" -> 0;
+      case "in_progress" -> 1;
+      case "completed" -> 2;
       default -> null;
     };
   }
@@ -365,7 +397,9 @@ public final class MesAiTools {
       @JsonProperty("page_size") long pageSize,
       @JsonProperty("name_prefix") String namePrefix,
       @JsonProperty("leader_user_id") long leaderUserId,
-      @JsonProperty("item_id") long itemId) {}
+      @JsonProperty("item_id") long itemId,
+      @JsonProperty("progress_status") String progressStatus,
+      @JsonProperty("only_draft") boolean onlyDraft) {}
 
   public record FlowItem(
       @JsonProperty("item_id") long itemId, @JsonProperty("apply_quantity") long applyQuantity) {}
@@ -374,6 +408,7 @@ public final class MesAiTools {
       String name,
       @JsonProperty("to_user_id") long toUserId,
       @JsonProperty("flow_type") String flowType,
+      @JsonProperty("business_type") String businessType,
       String description,
       List<FlowItem> items) {
     public InventoryFlowInput {
@@ -386,6 +421,8 @@ public final class MesAiTools {
       @JsonProperty("name_prefix") String namePrefix,
       String scope,
       @JsonProperty("flow_status") String flowStatus,
+      @JsonProperty("business_type") String businessType,
+      @JsonProperty("only_draft") boolean onlyDraft,
       @JsonProperty("user_id") long userId) {}
 
   public record SearchItemsInput(
@@ -414,6 +451,7 @@ public final class MesAiTools {
   public record ListPendingInput(
       long limit,
       @JsonProperty("name_prefix") String namePrefix,
+      @JsonProperty("business_type") String businessType,
       @JsonProperty("user_id") long userId) {}
 
   public record InventoryCheckInput(

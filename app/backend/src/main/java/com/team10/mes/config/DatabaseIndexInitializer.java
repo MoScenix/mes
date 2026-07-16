@@ -37,6 +37,7 @@ public class DatabaseIndexInitializer implements ApplicationRunner {
           index("engineering_orders", "idx_engineering_orders_deleted_name_updated_id", "deleted_at, name, updated_at DESC, id DESC"),
           index("inventory_flows", "idx_inventory_flows_deleted_updated_id", "deleted_at, updated_at DESC, id DESC"),
           index("inventory_flows", "idx_inventory_flows_deleted_status_updated_id", "deleted_at, flow_status, updated_at DESC, id DESC"),
+          index("inventory_flows", "idx_inventory_flows_deleted_business_status_updated_id", "deleted_at, business_type, flow_status, updated_at DESC, id DESC"),
           index("inventory_flows", "idx_inventory_flows_deleted_from_updated_id", "deleted_at, from_user_id, updated_at DESC, id DESC"),
           index("inventory_flows", "idx_inventory_flows_deleted_to_updated_id", "deleted_at, to_user_id, updated_at DESC, id DESC"),
           index("inventory_flows", "idx_inventory_flows_deleted_from_status_updated_id", "deleted_at, from_user_id, flow_status, updated_at DESC, id DESC"),
@@ -65,6 +66,12 @@ public class DatabaseIndexInitializer implements ApplicationRunner {
 
   @Override
   public void run(ApplicationArguments args) {
+    ensureColumn(
+        "inventory_flows",
+        "business_type",
+        "ALTER TABLE inventory_flows ADD COLUMN business_type INT NOT NULL DEFAULT 1 AFTER flow_type");
+    jdbc.update(
+        "UPDATE inventory_flows SET business_type=2 WHERE flow_type=2 AND business_type=1");
     for (Index index : INDEXES) {
       Integer count =
           jdbc.queryForObject(
@@ -75,6 +82,16 @@ public class DatabaseIndexInitializer implements ApplicationRunner {
       if (count != null && count > 0) continue;
       jdbc.execute(index.sql());
     }
+  }
+
+  private void ensureColumn(String table, String column, String sql) {
+    Integer count =
+        jdbc.queryForObject(
+            "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name=? AND column_name=?",
+            Integer.class,
+            table,
+            column);
+    if (count == null || count == 0) jdbc.execute(sql);
   }
 
   private static Index index(String table, String name, String columns) {

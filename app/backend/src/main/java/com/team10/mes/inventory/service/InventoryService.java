@@ -436,12 +436,14 @@ public class InventoryService {
   }
 
   public Map<String, Object> flows(Map<String, Object> q) {
+    if (Boolean.TRUE.equals(q.get("onlyDraft"))) q.put("flowStatus", 1);
     return resultView(
         page(
             dal.flows(
                 optionalLong(q, "userId"),
                 Boolean.TRUE.equals(q.get("isTo")),
                 optionalInt(q, "flowStatus"),
+                optionalInt(q, "businessType"),
                 (String) q.get("namePrefix"),
                 optionalLong(q, "itemUnitId"),
                 q.containsKey("draftOwnerUserId") ? num(q, "draftOwnerUserId", 0) : null,
@@ -451,7 +453,13 @@ public class InventoryService {
   }
 
   private void validateFlow(Map<String, Object> r) {
-    required(r, "fromUserId", "toUserId", "flowType", "name");
+    required(r, "fromUserId", "toUserId", "flowType", "businessType", "name");
+    int businessType = (int) num(r, "businessType", 0);
+    if (businessType < 1 || businessType > 3)
+      throw new IllegalArgumentException("invalid inventory flow business type");
+    int expectedFlowType = businessType == 2 ? 2 : 1;
+    if (num(r, "flowType", 0) != expectedFlowType)
+      throw new IllegalArgumentException("inventory flow direction does not match business type");
     if (num(r, "fromUserId", 0) == num(r, "toUserId", 0))
       throw new IllegalArgumentException("from and to user must differ");
     r.putIfAbsent("description", "");
@@ -504,6 +512,7 @@ public class InventoryService {
                 optionalLong(q, "itemId"),
                 optionalLong(q, "processId"),
                 optionalInt(q, "status"),
+                optionalInt(q, "progressStatus"),
                 offset(q),
                 size(q)),
             q));

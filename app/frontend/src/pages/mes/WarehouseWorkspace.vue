@@ -9,6 +9,14 @@
         @select-item="selectSearchItem"
         @clear="clearSearch"
       />
+      <a-select
+        v-if="selectedType === 'audit' || selectedType === 'flows'"
+        v-model:value="businessTypeFilter"
+        allow-clear
+        placeholder="业务类型"
+        :options="businessTypeOptions"
+        @change="fetchData()"
+      />
       <a-button v-if="selectedType === 'workOrders'" type="primary" @click="createWorkOrder">
         新建工单
       </a-button>
@@ -29,8 +37,8 @@
           <template v-if="column.key === 'id'">
             <a class="id-link" @click="viewDetail(record)">#{{ record.id }}</a>
           </template>
-          <template v-else-if="column.dataIndex === 'flowType'">
-            <a-tag>{{ record.flowType === FLOW_TYPE_IN ? '入库' : '出库' }}</a-tag>
+          <template v-else-if="column.dataIndex === 'businessType'">
+            <a-tag>{{ businessTypeLabel(record.businessType) }}</a-tag>
           </template>
           <template v-else-if="column.dataIndex === 'description'">
             <span>{{ record.description || '-' }}</span>
@@ -122,6 +130,7 @@ import {
   FLOW_TYPE_IN,
   FLOW_TYPE_OUT,
   FLOW_STATUS_SUBMITTED,
+  FlowBusinessType,
   MesListScope,
   listInventoryFlow,
   auditInventoryFlow,
@@ -147,6 +156,12 @@ const panelFromRoute = () => {
     : 'audit'
 }
 const selectedType = ref<DataType>(panelFromRoute())
+const businessTypeFilter = ref<FlowBusinessType>()
+const businessTypeOptions = [
+  { label: '采购入库', value: FlowBusinessType.PurchaseInbound },
+  { label: '申请货物', value: FlowBusinessType.MaterialRequest },
+  { label: '生产入库', value: FlowBusinessType.ProductionInbound },
+]
 
 const searchText = ref('')
 const searchItemId = ref<number>()
@@ -176,7 +191,7 @@ const clearSearch = () => {
 const auditColumns = [
   { title: 'ID', key: 'id', width: 80 },
   { title: '名称', dataIndex: 'name', width: 180, ellipsis: true },
-  { title: '类型', dataIndex: 'flowType', width: 80 },
+  { title: '业务类型', dataIndex: 'businessType', width: 110 },
   { title: '申请人', dataIndex: 'fromUserId', width: 150 },
   { title: '说明', dataIndex: 'description', ellipsis: true },
   {
@@ -253,6 +268,7 @@ const fetchData = async (next = false) => {
         flowStatus: FLOW_STATUS_SUBMITTED,
         itemNamePrefix: searchText.value.trim() || undefined,
         scope: MesListScope.Audit,
+        businessType: businessTypeFilter.value,
         cursorUpdatedAt: next ? listPage.nextCursorUpdatedAt : undefined,
         cursorId: next ? listPage.nextCursorId : undefined,
       })
@@ -261,6 +277,7 @@ const fetchData = async (next = false) => {
         ...p,
         itemNamePrefix: searchText.value.trim() || undefined,
         scope: MesListScope.All,
+        businessType: businessTypeFilter.value,
         cursorUpdatedAt: next ? listPage.nextCursorUpdatedAt : undefined,
         cursorId: next ? listPage.nextCursorId : undefined,
       })
@@ -370,6 +387,8 @@ const handleAudit = async () => {
 }
 
 const formatTime = (t?: string) => (t ? dayjs(t).format('YYYY-MM-DD HH:mm') : '-')
+const businessTypeLabel = (type?: number) =>
+  type === 1 ? '采购入库' : type === 2 ? '申请货物' : type === 3 ? '生产入库' : '未知'
 
 watch(
   () => route.query.panel,

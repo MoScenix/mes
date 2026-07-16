@@ -45,12 +45,12 @@
         </template>
 
         <template v-else-if="type === 'flow'">
-          <a-form-item label="流转单名称" required>
-            <a-input v-model:value="flowForm.name" placeholder="请输入流转单名称" />
+          <a-form-item label="单据名称" required>
+            <a-input v-model:value="flowForm.name" placeholder="请输入单据名称" />
           </a-form-item>
           <div class="form-row">
-            <a-form-item label="流转方向">
-              <a-segmented v-model:value="flowForm.flowType" :options="flowTypeOptions" />
+            <a-form-item label="业务类型">
+              <a-segmented v-model:value="flowForm.businessType" :options="flowBusinessOptions" />
             </a-form-item>
             <a-form-item label="接收人">
               <MesUserPicker v-model="flowForm.toUserId" placeholder="输入人名、账号或 ID" />
@@ -163,8 +163,8 @@
           </template>
 
           <template v-if="engineeringForm.itemId && engineeringForm.processId">
-            <a-form-item label="工程单名称" required>
-              <a-input v-model:value="engineeringForm.name" placeholder="请输入工程单名称" />
+            <a-form-item label="生产计划名称" required>
+              <a-input v-model:value="engineeringForm.name" placeholder="请输入生产计划名称" />
             </a-form-item>
             <div class="form-row">
               <a-form-item label="预计产量">
@@ -222,6 +222,9 @@ import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { Modal, message } from 'ant-design-vue'
 import {
+  FLOW_BUSINESS_MATERIAL_REQUEST,
+  FLOW_BUSINESS_PRODUCTION_INBOUND,
+  FLOW_BUSINESS_PURCHASE_INBOUND,
   FLOW_TYPE_IN,
   FLOW_TYPE_OUT,
   QUALITY_STATUS_PENDING,
@@ -274,9 +277,9 @@ const canSaveDraft = computed(() =>
 const titleMap: Record<CreateType, string> = {
   item: '新建物品类型',
   itemUnit: '新建库存单体',
-  flow: '新建流转单',
+  flow: '新建库存业务单',
   process: '新建工艺',
-  engineering: '新建工程单',
+  engineering: '新建生产计划',
   workOrder: '新建工单',
 }
 
@@ -295,7 +298,8 @@ const unitForm = reactive({
 })
 const flowForm = reactive({
   name: '',
-  flowType: FLOW_TYPE_IN,
+  businessType:
+    Number(route.query.businessType || 0) || FLOW_BUSINESS_PURCHASE_INBOUND,
   toUserId: undefined as number | undefined,
   description: '',
   items: [{ itemId: undefined as number | undefined, applyQuantity: 1 }],
@@ -326,9 +330,10 @@ const qualityOptions = [
   { label: '合格', value: QUALITY_STATUS_QUALIFIED },
   { label: '不合格', value: QUALITY_STATUS_UNQUALIFIED },
 ]
-const flowTypeOptions = [
-  { label: '入库', value: FLOW_TYPE_IN },
-  { label: '出库', value: FLOW_TYPE_OUT },
+const flowBusinessOptions = [
+  { label: '采购入库', value: FLOW_BUSINESS_PURCHASE_INBOUND },
+  { label: '申请货物', value: FLOW_BUSINESS_MATERIAL_REQUEST },
+  { label: '生产入库', value: FLOW_BUSINESS_PRODUCTION_INBOUND },
 ]
 const processLoading = ref(false)
 const processOptions = ref<{ label: string; value: number }[]>([])
@@ -499,7 +504,14 @@ const hasContent = computed(() => {
 
 const draftPayload = () => {
   if (type.value === 'flow') {
-    return { ...flowForm, items: normalizedFlowItems() }
+    return {
+      ...flowForm,
+      flowType:
+        flowForm.businessType === FLOW_BUSINESS_MATERIAL_REQUEST
+          ? FLOW_TYPE_OUT
+          : FLOW_TYPE_IN,
+      items: normalizedFlowItems(),
+    }
   }
   if (type.value === 'process') {
     return { ...processForm, items: normalizedProcessItems() }
@@ -673,7 +685,7 @@ const loadDraft = async () => {
   }
   const flow = res.data.data
   flowForm.name = flow.name || ''
-  flowForm.flowType = flow.flowType || FLOW_TYPE_IN
+  flowForm.businessType = flow.businessType || FLOW_BUSINESS_PURCHASE_INBOUND
   flowForm.toUserId = flow.toUserId
   flowForm.description = flow.description || ''
   flowForm.items.splice(
