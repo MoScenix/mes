@@ -180,6 +180,7 @@ const scannerMessage = ref('打开摄像头后对准二维码')
 const videoRef = ref<HTMLVideoElement>()
 const stream = ref<MediaStream>()
 const scanning = ref(false)
+const scanSession = ref(0)
 const focused = ref(false)
 const buttonPlacement = computed(() => props.buttonPlacement)
 
@@ -227,15 +228,17 @@ const copyCode = async () => {
 }
 
 const stopScanner = () => {
+  scanSession.value += 1
   scanning.value = false
   stream.value?.getTracks().forEach((track) => track.stop())
   stream.value = undefined
 }
 
-const scanLoop = async (detector: BarcodeDetectorLike) => {
-  if (!scanning.value || !videoRef.value) return
+const scanLoop = async (detector: BarcodeDetectorLike, session: number) => {
+  if (!scanning.value || scanSession.value !== session || !videoRef.value) return
   try {
     const codes = await detector.detect(videoRef.value)
+    if (!scanning.value || scanSession.value !== session || !videoRef.value) return
     const rawValue = codes.find((code) => code.rawValue)?.rawValue
     if (rawValue) {
       emit('update:modelValue', rawValue)
@@ -250,10 +253,12 @@ const scanLoop = async (detector: BarcodeDetectorLike) => {
   } catch (error) {
     scannerMessage.value = error instanceof Error ? error.message : '扫码失败'
   }
-  requestAnimationFrame(() => scanLoop(detector))
+  requestAnimationFrame(() => scanLoop(detector, session))
 }
 
 const openScanner = async () => {
+  const session = scanSession.value + 1
+  scanSession.value = session
   const supportsDetector = Boolean(window.BarcodeDetector)
   scannerOpen.value = props.scannerDisplay === 'modal'
   scannerMessage.value = supportsDetector
@@ -261,16 +266,20 @@ const openScanner = async () => {
     : '当前浏览器不支持自动识别，请检查浏览器支持'
   await nextTick()
   try {
-    stream.value = await navigator.mediaDevices.getUserMedia({
+    const nextStream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode: { ideal: 'environment' } },
       audio: false,
     })
-    if (!videoRef.value) return
-    videoRef.value.srcObject = stream.value
+    if (scanSession.value !== session || !videoRef.value) {
+      nextStream.getTracks().forEach((track) => track.stop())
+      return
+    }
+    stream.value = nextStream
+    videoRef.value.srcObject = nextStream
     await videoRef.value.play()
-    if (supportsDetector && window.BarcodeDetector) {
+    if (scanSession.value === session && supportsDetector && window.BarcodeDetector) {
       scanning.value = true
-      scanLoop(new window.BarcodeDetector({ formats: ['qr_code'] }))
+      scanLoop(new window.BarcodeDetector({ formats: ['qr_code'] }), session)
     }
   } catch (error) {
     scannerMessage.value = '无法打开摄像头，请检查浏览器权限'

@@ -187,6 +187,17 @@ public final class MesAiTools {
     return inventory.item(in.id());
   }
 
+  @Tool(
+      name = "search_processes_by_item",
+      description =
+          "Search processes by item id before creating an engineering order. Never guess a process id; if no single process can be determined, ask the user to choose one.")
+  public Map<String, Object> searchProcessesByItem(SearchProcessesByItemInput in) {
+    Map<String, Object> q = page(in.pageNum(), in.pageSize());
+    q.put("itemId", in.itemId());
+    if (in.status() > 0) q.put("status", in.status());
+    return inventory.processes(q);
+  }
+
   @Tool(name = "list_item_units", description = "List concrete item units in inventory.")
   public Map<String, Object> listItemUnits(ListUnitsInput in) {
     Map<String, Object> q = page(in.pageNum(), in.pageSize());
@@ -318,7 +329,12 @@ public final class MesAiTools {
   public record EngineeringOrderInput(
       String name,
       @JsonProperty("leader_user_id") long leaderUserId,
-      @JsonProperty("process_id") long processId,
+      @JsonProperty("process_id")
+          @ToolParam(
+              required = true,
+              description =
+                  "Required process id. Search by item id first; if none is found, ask the user.")
+          long processId,
       @JsonProperty("item_id") long itemId,
       @JsonProperty("expected_quantity") long expectedQuantity,
       @JsonProperty("qualified_quantity") long qualifiedQuantity,
@@ -328,7 +344,12 @@ public final class MesAiTools {
       long id,
       String name,
       @JsonProperty("leader_user_id") long leaderUserId,
-      @JsonProperty("process_id") long processId,
+      @JsonProperty("process_id")
+          @ToolParam(
+              required = true,
+              description =
+                  "Required process id. Search by item id first; if none is found, ask the user.")
+          long processId,
       @JsonProperty("item_id") long itemId,
       @JsonProperty("expected_quantity") long expectedQuantity,
       @JsonProperty("qualified_quantity") long qualifiedQuantity,
@@ -369,6 +390,17 @@ public final class MesAiTools {
 
   public record SearchItemsInput(
       @JsonProperty("name_prefix") String namePrefix,
+      @JsonProperty("page_num") long pageNum,
+      @JsonProperty("page_size") long pageSize) {}
+
+  public record SearchProcessesByItemInput(
+      @JsonProperty("item_id")
+          @ToolParam(required = true, description = "Item id whose processes should be searched.")
+          long itemId,
+      @ToolParam(
+              required = false,
+              description = "Optional process status filter; use 2 for submitted processes.")
+          int status,
       @JsonProperty("page_num") long pageNum,
       @JsonProperty("page_size") long pageSize) {}
 

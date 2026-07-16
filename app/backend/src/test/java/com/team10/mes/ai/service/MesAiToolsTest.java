@@ -34,10 +34,11 @@ class MesAiToolsTest {
             .map(callback -> callback.getToolDefinition().name())
             .collect(Collectors.toSet());
 
-    assertEquals(18, callbacks.length);
+    assertEquals(19, callbacks.length);
     assertTrue(names.contains("list_work_orders"));
     assertTrue(names.contains("search_users"));
     assertTrue(names.contains("search_history_file"));
     assertTrue(names.contains("inventory_check"));
+    assertTrue(names.contains("search_processes_by_item"));
   }
 }

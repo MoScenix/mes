@@ -24,6 +24,10 @@ export const useInspectWorkflow = () => {
   const inspectOperationKey = ref(0)
 
   const loadInspectOrder = async (value: string) => {
+    if (inspectOrder.value?.id) {
+      await loadInspectUnit(value)
+      return
+    }
     const parsed = parseMesCode(value, 'ENGINEERING_ORDER')
     if (parsed.kind !== 'ENGINEERING_ORDER' || !parsed.id) {
       message.warning('请输入有效的工程单码')

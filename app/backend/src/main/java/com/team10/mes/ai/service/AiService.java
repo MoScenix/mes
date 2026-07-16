@@ -21,6 +21,7 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.*;
 import org.springframework.ai.support.ToolCallbacks;
@@ -31,6 +32,7 @@ import org.springframework.ai.tool.metadata.DefaultToolMetadata;
 import org.springframework.ai.tool.metadata.ToolMetadata;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import reactor.core.Disposable;
 
 @Service
 public class AiService {
@@ -56,6 +58,11 @@ public class AiService {
         supports that field. For inventory flow drafts, the from user is supplied by the backend from
         the current session; only ask for the receiver, item, quantity, type, or description when
         those are missing.
+
+        An engineering order must have a process_id. After identifying the item, use
+        search_processes_by_item to find its processes. Never invent or omit process_id. If the user
+        has not specified a process and the search result does not identify one unambiguously, use
+        ask_user so the user can choose or provide the process id.
         """;
 
   private final RedisAiStore store;
@@ -126,7 +133,7 @@ public class AiService {
         throw new IllegalArgumentException("message is required");
       historySessions.touch(historyId);
       store.resetEvents(historyId);
-      start(historyId, "task accepted", identity, false, "");
+      start(historyId, "task accepted", identity, false, "", "$");
     }
   }
 
@@ -222,7 +229,8 @@ public class AiService {
       String acceptedMessage,
       Identity identity,
       boolean resume,
-      String resumeAnswer) {
+      String resumeAnswer,
+      String controlCursor) {
     RuntimeTask previous = tasks.get(historyId);
     long generation = previous == null ? 1 : previous.generation.incrementAndGet();
     RuntimeTask runtime = new RuntimeTask(generation, identity, resumeAnswer);
@@ -238,6 +246,7 @@ public class AiService {
             ignored -> run(historyId, runtime),
             (task, status) -> markLifecycle(historyId, status));
     runtime.task.enqueue();
+    runtime.task.runtime().setControlCursor(controlCursor);
     workPool.submit(runtime.task);
   }
 
@@ -256,16 +265,22 @@ public class AiService {
                 if (!current(historyId, runtime)) return;
                 String text = trim(event.content());
                 if (text.isEmpty()) return;
+                runtime.disposeAi();
+                String partial = runtime.task.runtime().buffer().value();
+                if (!partial.isBlank())
+                  histories.append(
+                      historyId, runtime.identity.userId(), "assistant", partial, false);
                 histories.append(historyId, runtime.identity.userId(), "user", text, false);
                 publish(historyId, "push", AGENT, text, null, null, null, null);
                 cancelRuntime(historyId);
-                start(historyId, "push accepted", runtime.identity, false, "");
+                start(historyId, "push accepted", runtime.identity, false, "", event.id());
               }
 
               @Override
               public void onCancel(AiEvent event) {
                 runtime.task.runtime().setControlCursor(event.id());
                 if (!current(historyId, runtime)) return;
+                runtime.disposeAi();
                 runtime.task.cancel();
                 AiEvent cancelled =
                     publish(
@@ -312,8 +327,9 @@ public class AiService {
               historyId,
               runtime.identity.userId(),
               runtime.identity.admin());
-      StringBuilder output = new StringBuilder();
-      for (String chunk :
+      CountDownLatch finished = new CountDownLatch(1);
+      AtomicReference<Throwable> streamError = new AtomicReference<>();
+      Disposable subscription =
           chatClient
               .prompt()
               .system(systemPrompt)
@@ -321,14 +337,30 @@ public class AiService {
               .toolCallbacks(toolCallbacks(tools, runtime.identity.role(), historyId))
               .stream()
               .content()
-              .toIterable()) {
-        if (!current(historyId, runtime)) throw new CancellationException();
-        if (chunk != null && !chunk.isEmpty()) {
-          output.append(chunk);
-          runtime.task.runtime().buffer().append(chunk);
-          publish(historyId, "message", AGENT, chunk, null, null, null, null);
-        }
+              .subscribe(
+                  chunk -> {
+                    if (!current(historyId, runtime) || chunk == null || chunk.isEmpty()) return;
+                    runtime.task.runtime().buffer().append(chunk);
+                    publish(historyId, "message", AGENT, chunk, null, null, null, null);
+                  },
+                  error -> {
+                    streamError.set(error);
+                    finished.countDown();
+                  },
+                  finished::countDown);
+      runtime.aiSubscription = subscription;
+      try {
+        finished.await();
+      } finally {
+        runtime.clearAi(subscription);
       }
+      if (!current(historyId, runtime)) return;
+      Throwable streamFailure = streamError.get();
+      if (streamFailure != null) {
+        if (streamFailure instanceof RuntimeException runtimeFailure) throw runtimeFailure;
+        throw new IllegalStateException(streamFailure);
+      }
+      String output = runtime.task.runtime().buffer().value();
       histories.append(historyId, runtime.identity.userId(), "assistant", output.toString(), false);
       AiEvent done = publish(historyId, "done", AGENT, "", null, null, null, null);
       saveState(historyId, "done", AGENT, done.id(), "", List.of(), "", output.toString(), false);
@@ -515,6 +547,7 @@ public class AiService {
             "update_work_order_draft");
     Set<String> engineering =
         Set.of(
+            "search_processes_by_item",
             "create_engineering_order_draft",
             "update_engineering_order_draft",
             "list_engineering_orders",
@@ -788,6 +821,7 @@ public class AiService {
     RuntimeTask task = tasks.remove(historyId);
     if (task != null) {
       task.cancelled = true;
+      task.disposeAi();
       if (task.task != null) task.task.cancel();
     }
     pendingAsks
@@ -824,11 +858,21 @@ public class AiService {
     final String resumeAnswer;
     volatile ChatTask task;
     volatile boolean cancelled;
+    volatile Disposable aiSubscription;
 
     RuntimeTask(long generation, Identity identity, String resumeAnswer) {
       this.generation = new AtomicLong(generation);
       this.identity = identity;
       this.resumeAnswer = resumeAnswer;
+    }
+
+    void disposeAi() {
+      Disposable subscription = aiSubscription;
+      if (subscription != null) subscription.dispose();
+    }
+
+    void clearAi(Disposable subscription) {
+      if (aiSubscription == subscription) aiSubscription = null;
     }
   }
 

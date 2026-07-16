@@ -434,7 +434,6 @@ export function useAIEvents(historyId: Ref<any>, options?: { onDone?: () => void
     const res = await pushAI({ historyId: Number(historyId.value), content: content.trim() })
     if (res.data.code !== 0) return false
     const id = res.data.data || `push-${Date.now()}`
-    lastEventId = id
     finishAIMessage()
     messages.value.push({ id, type: 'user', content: content.trim(), isPush: true })
     messages.value.push({
@@ -444,7 +443,7 @@ export function useAIEvents(historyId: Ref<any>, options?: { onDone?: () => void
       loading: true,
       toolCalls: [],
     })
-    setLocalState('running', { lastEventId: id })
+    setLocalState('running')
     return true
   }
 
