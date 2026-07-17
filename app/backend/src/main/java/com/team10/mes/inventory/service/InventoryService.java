@@ -246,8 +246,9 @@ public class InventoryService {
     for (var x : xs) {
       if (num(x, "quantity", 0) <= 0)
         throw new IllegalArgumentException("quantity must be positive");
-      x.put("processId", id);
-      dal.insertProcessItem(x);
+      Map<String, Object> detail = new HashMap<>(x);
+      detail.put("processId", id);
+      dal.insertProcessItem(detail);
     }
   }
 
@@ -480,8 +481,9 @@ public class InventoryService {
     dal.deleteFlowItems(id);
     dal.deleteFlowUnits(id);
     for (var x : list(r, "items")) {
-      x.put("flowId", id);
-      dal.insertFlowItem(x);
+      Map<String, Object> detail = new HashMap<>(x);
+      detail.put("flowId", id);
+      dal.insertFlowItem(detail);
     }
   }
 

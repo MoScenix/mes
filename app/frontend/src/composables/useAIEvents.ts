@@ -469,12 +469,16 @@ export function useAIEvents(historyId: Ref<any>, options?: { onDone?: () => void
 
   async function cancelCurrentTask() {
     if (!historyId.value) return
-    await cancelAI({ historyId: Number(historyId.value), reason: '用户取消' })
     finishAIMessage()
     appendSystem('已取消')
     isGenerating.value = false
     setLocalState('cancelled', { message: '用户取消' })
     stopEventPolling()
+    try {
+      await cancelAI({ historyId: Number(historyId.value), reason: '用户取消' })
+    } catch {
+      appendSystem('取消请求发送失败，请重试')
+    }
   }
 
   return {

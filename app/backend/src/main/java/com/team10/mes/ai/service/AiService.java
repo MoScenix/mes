@@ -32,10 +32,13 @@ import org.springframework.ai.tool.metadata.DefaultToolMetadata;
 import org.springframework.ai.tool.metadata.ToolMetadata;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import reactor.core.Disposable;
 
 @Service
 public class AiService {
+  private static final Logger log = LoggerFactory.getLogger(AiService.class);
   private static final Set<String> ACTIVE =
       Set.of("queued", "running", "waiting_answer", "interrupted");
   private static final String AGENT = "Assistant";
@@ -68,6 +71,9 @@ public class AiService {
         purchase_inbound=1 and production_inbound=3 are inbound (flow_type=in/1), while
         material_request=2 is outbound (flow_type=out/2). Never send translated Chinese enum text,
         an undocumented number, or a business_type/flow_type combination that conflicts.
+        A tool result with error or failed status means the operation did not happen. Never claim
+        success, invent a created id, or describe a draft as saved after a failed tool call. Explain
+        the failure or ask for corrected information instead of repeatedly calling the same tool.
         """;
 
   private final RedisAiStore store;
@@ -285,6 +291,7 @@ public class AiService {
               public void onCancel(AiEvent event) {
                 runtime.task.runtime().setControlCursor(event.id());
                 if (!current(historyId, runtime)) return;
+                runtime.cancelled = true;
                 runtime.disposeAi();
                 runtime.task.cancel();
                 AiEvent cancelled =
@@ -622,10 +629,20 @@ public class AiService {
         String target = UUID.randomUUID().toString();
         String name = delegate.getToolDefinition().name();
         if ("ask_user".equals(name)) return callAskUser(historyId, input, target);
+        RuntimeTask runtime = tasks.get(historyId);
+        if (runtime != null && runtime.cancelled) throw new CancellationException();
+        String normalizedInput = normalizeToolInput(input);
         publish(
-            historyId, "tool_call", AGENT, "", target, name, "running", Map.of("arguments", input));
+            historyId,
+            "tool_call",
+            AGENT,
+            "",
+            target,
+            name,
+            "running",
+            Map.of("arguments", normalizedInput));
         try {
-          String result = delegate.call(input);
+          String result = delegate.call(normalizedInput);
           publish(
               historyId,
               "tool_result",
@@ -635,8 +652,15 @@ public class AiService {
               name,
               "success",
               null);
+          log.info("AI tool succeeded: historyId={}, tool={}", historyId, name);
           return result;
         } catch (RuntimeException error) {
+          log.error(
+              "AI tool failed: historyId={}, tool={}, arguments={}",
+              historyId,
+              name,
+              normalizedInput,
+              error);
           publish(
               historyId,
               "tool_result",
@@ -650,6 +674,17 @@ public class AiService {
         }
       }
     };
+  }
+
+  private String normalizeToolInput(String input) {
+    try {
+      JsonNode root = json.readTree(input);
+      if (root != null && root.isObject() && !root.has("in"))
+        return json.writeValueAsString(Map.of("in", root));
+    } catch (Exception ignored) {
+      // Let Spring AI report malformed input using its normal tool error path.
+    }
+    return input;
   }
 
   private ToolCallback askUserCallback(long historyId) {

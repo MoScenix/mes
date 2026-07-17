@@ -14,6 +14,36 @@ class InventoryMutationConsistencyTest {
   private final InventoryService service = new InventoryService(mapper);
 
   @Test
+  void creatingFlowAcceptsImmutableToolItemMaps() {
+    Map<String, Object> request =
+        new LinkedHashMap<>(
+            Map.of(
+                "fromUserId", 1L,
+                "toUserId", 27L,
+                "flowType", 2,
+                "businessType", 2,
+                "name", "申请100台血糖仪出库",
+                "items", List.of(Map.of("itemId", 1L, "applyQuantity", 100L))));
+    doAnswer(
+            invocation -> {
+              invocation.<Map<String, Object>>getArgument(0).put("id", 18L);
+              return 1;
+            })
+        .when(mapper)
+        .insertFlow(request);
+
+    assertEquals(0, service.createFlow(request).get("code"));
+
+    verify(mapper)
+        .insertFlowItem(
+            argThat(
+                detail ->
+                    detail.get("flowId").equals(18L)
+                        && detail.get("itemId").equals(1L)
+                        && detail.get("applyQuantity").equals(100L)));
+  }
+
+  @Test
   void addingBoundUnitMaintainsItemAndEngineeringOrderCounts() {
     when(mapper.item(3)).thenReturn(row("id", 3L));
     when(mapper.order(7))
