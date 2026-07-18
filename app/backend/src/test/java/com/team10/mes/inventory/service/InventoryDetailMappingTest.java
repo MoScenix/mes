@@ -98,9 +98,9 @@ class InventoryDetailMappingTest {
 
   @Test
   void traceListPassesItemUnitIdToMapperAndMapsFlowRows() {
-    when(
-            mapper.flows(
-                isNull(), eq(false), isNull(), isNull(), isNull(), isNull(), eq(9L), isNull(), eq(0L), eq(50L)))
+    when(mapper.flows(
+            isNull(), eq(false), isNull(), isNull(), isNull(), isNull(), eq(9L), isNull(), eq(0L),
+            eq(50L)))
         .thenReturn(List.of(row("id", 5L, "flow_type", 2, "flow_status", 3)));
 
     Map<String, Object> page =
@@ -120,9 +120,9 @@ class InventoryDetailMappingTest {
     assertFalse(scoped.containsKey("userId"));
     assertEquals(0L, scoped.get("draftOwnerUserId"));
 
-    when(
-            mapper.flows(
-                isNull(), eq(false), isNull(), isNull(), isNull(), isNull(), isNull(), eq(0L), eq(0L), eq(30L)))
+    when(mapper.flows(
+            isNull(), eq(false), isNull(), isNull(), isNull(), isNull(), isNull(), eq(0L), eq(0L),
+            eq(30L)))
         .thenReturn(List.of(row("id", 8L, "from_user_id", 13L, "flow_type", 2, "flow_status", 2)));
 
     Map<String, Object> page = data(service.flows(scoped));

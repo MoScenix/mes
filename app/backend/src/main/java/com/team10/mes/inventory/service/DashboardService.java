@@ -35,13 +35,17 @@ public class DashboardService {
     data.put("todayProduction", number(production, "today_production"));
     data.put("weekProduction", number(production, "week_production"));
     data.put("pendingInspection", number(production, "pending_inspection"));
-    data.put("planCompletionRate", expected == 0 ? 0 : Math.round(completedQuantity * 1000.0 / expected) / 10.0);
+    data.put(
+        "planCompletionRate",
+        expected == 0 ? 0 : Math.round(completedQuantity * 1000.0 / expected) / 10.0);
     data.put("planExpectedQuantity", expected);
     data.put("planCompletedQuantity", completedQuantity);
-    data.put("planStatus", Map.of(
-        "notStarted", number(plans, "not_started"),
-        "inProgress", number(plans, "in_progress"),
-        "completed", number(plans, "completed")));
+    data.put(
+        "planStatus",
+        Map.of(
+            "notStarted", number(plans, "not_started"),
+            "inProgress", number(plans, "in_progress"),
+            "completed", number(plans, "completed")));
     data.put("dailyProduction", trend);
     data.put("generatedAt", java.time.LocalDateTime.now().toString());
     return Map.of("code", 0, "message", "success", "data", data);

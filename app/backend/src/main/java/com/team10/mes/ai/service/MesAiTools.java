@@ -502,7 +502,8 @@ public final class MesAiTools {
       @JsonProperty("quality_status")
           @ToolParam(
               required = false,
-              description = "Optional quality status: pending (1), qualified (2), or unqualified (3).")
+              description =
+                  "Optional quality status: pending (1), qualified (2), or unqualified (3).")
           String qualityStatus,
       @JsonProperty("page_num") long pageNum,
       @JsonProperty("page_size") long pageSize) {}

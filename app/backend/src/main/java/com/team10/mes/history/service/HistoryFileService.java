@@ -91,6 +91,14 @@ public class HistoryFileService {
       chunkCount = longValue(indexed, "chunkCount");
       parentCount = longValue(indexed, "parentCount");
     }
+    String text = "";
+    if (!big) {
+      Path textFile = directory.resolve(textFilename).normalize();
+      if (!textFile.getParent().equals(directory.normalize())) {
+        throw new IllegalStateException("invalid extracted text filename");
+      }
+      text = Files.readString(textFile);
+    }
 
     FileMessageContent content =
         new FileMessageContent(
@@ -101,6 +109,7 @@ public class HistoryFileService {
             textFilename,
             textSize,
             big,
+            text,
             chunkCount,
             parentCount);
     HistoryMessage message =
@@ -170,6 +179,7 @@ public class HistoryFileService {
       String textFilename,
       long textSize,
       boolean isBig,
+      @JsonInclude(JsonInclude.Include.NON_EMPTY) String text,
       @JsonInclude(JsonInclude.Include.NON_DEFAULT) long chunkCount,
       @JsonInclude(JsonInclude.Include.NON_DEFAULT) long parentCount) {}
 }

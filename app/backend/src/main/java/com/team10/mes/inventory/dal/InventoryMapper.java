@@ -144,7 +144,5 @@ public interface InventoryMapper {
   int reserveItem(@Param("id") long id, @Param("quantity") long quantity);
 
   int completeItemFlow(
-      @Param("id") long id,
-      @Param("flowType") int flowType,
-      @Param("qualified") boolean qualified);
+      @Param("id") long id, @Param("flowType") int flowType, @Param("qualified") boolean qualified);
 }

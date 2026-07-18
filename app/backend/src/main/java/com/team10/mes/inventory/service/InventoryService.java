@@ -60,8 +60,7 @@ public class InventoryService {
     else if (scope == 2 || scope == 4) {
       q.remove("leaderUserId");
       q.put("draftOwnerLeaderId", uid);
-    }
-    else if (!admin) {
+    } else if (!admin) {
       Long leader = optionalLong(q, "leaderUserId");
       if (leader != null && leader != uid)
         throw new IllegalStateException("forbidden: no permission");
@@ -272,7 +271,8 @@ public class InventoryService {
       if (num(order, "item_id", 0) != itemId)
         throw new IllegalStateException("item unit item must match engineering order item");
       if (num(order, "produced_quantity", 0) + 1 > num(order, "expected_quantity", 0))
-        throw new IllegalStateException("engineering order produced quantity exceeds expected quantity");
+        throw new IllegalStateException(
+            "engineering order produced quantity exceeds expected quantity");
       r.put("engineeringOrderId", orderId);
     } else {
       r.putIfAbsent("engineeringOrderId", null);
@@ -368,15 +368,12 @@ public class InventoryService {
       for (Map<String, Object> item : dal.flowItems(id)) {
         long itemId = num(item, "item_id", 0);
         long quantity = num(item, "apply_quantity", 0);
-        if (itemId <= 0 || quantity <= 0)
-          throw new IllegalStateException("invalid flow item");
+        if (itemId <= 0 || quantity <= 0) throw new IllegalStateException("invalid flow item");
         changed(dal.reserveItem(itemId, quantity), "insufficient available item quantity");
       }
     }
     int next = approved ? 3 : 4;
-    changed(
-        dal.auditFlow(id, num(r, "approvedBy", 0), next),
-        "only submitted flow can be audited");
+    changed(dal.auditFlow(id, num(r, "approvedBy", 0), next), "only submitted flow can be audited");
     return result(true);
   }
 
@@ -385,7 +382,8 @@ public class InventoryService {
     var f = require(dal.flow(id), "inventory flow");
     if (num(f, "flow_status", 0) != 3)
       throw new IllegalStateException("only approved flow can be completed");
-    if (ids == null || ids.isEmpty()) throw new IllegalArgumentException("item unit ids are required");
+    if (ids == null || ids.isEmpty())
+      throw new IllegalArgumentException("item unit ids are required");
     int stock = num(f, "flow_type", 0) == 1 ? 1 : 3;
     Map<Long, Map<String, Object>> completedUnits = new HashMap<>();
     for (Map<String, Object> unit : dal.flowUnits(id)) completedUnits.put(num(unit, "id", 0), unit);
@@ -425,7 +423,8 @@ public class InventoryService {
       dal.bindFlowUnit(id, uid);
       dal.setUnitStock(uid, stock);
       changed(
-          dal.completeItemFlow(itemId, (int) num(f, "flow_type", 0), num(unit, "quality_status", 0) == 2),
+          dal.completeItemFlow(
+              itemId, (int) num(f, "flow_type", 0), num(unit, "quality_status", 0) == 2),
           "item not found");
       finishedInRequest.put(itemId, finishedInRequest.getOrDefault(itemId, 0L) + 1);
       completedUnits.put(uid, unit);
@@ -460,8 +459,7 @@ public class InventoryService {
       long flowId = num(row, "id", 0);
       if (flowId > 0) row.put("items", dal.flowItems(flowId));
     }
-    return resultView(
-        page(rows, q));
+    return resultView(page(rows, q));
   }
 
   private void validateFlow(Map<String, Object> r) {

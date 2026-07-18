@@ -18,12 +18,18 @@ class InventoryMutationConsistencyTest {
     Map<String, Object> request =
         new LinkedHashMap<>(
             Map.of(
-                "fromUserId", 1L,
-                "toUserId", 27L,
-                "flowType", 2,
-                "businessType", 2,
-                "name", "申请100台血糖仪出库",
-                "items", List.of(Map.of("itemId", 1L, "applyQuantity", 100L))));
+                "fromUserId",
+                1L,
+                "toUserId",
+                27L,
+                "flowType",
+                2,
+                "businessType",
+                2,
+                "name",
+                "申请100台血糖仪出库",
+                "items",
+                List.of(Map.of("itemId", 1L, "applyQuantity", 100L))));
     doAnswer(
             invocation -> {
               invocation.<Map<String, Object>>getArgument(0).put("id", 18L);
